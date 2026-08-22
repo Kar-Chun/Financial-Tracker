@@ -62,7 +62,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm font-medium text-emerald-700">Workspace</p>
+        <p className="text-sm font-medium text-primary">Workspace</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Settings</h1>
         <p className="mt-2 text-sm text-muted-foreground">Manage the small set of profile preferences supported in V1.</p>
       </header>
@@ -94,7 +94,11 @@ export function SettingsPage() {
                   name="timezone"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      items={timezones.map((timezone) => ({ value: timezone, label: timezone }))}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {timezones.map((timezone) => <SelectItem key={timezone} value={timezone}>{timezone}</SelectItem>)}

@@ -15,7 +15,7 @@ export function AppLogo({ compact = false, className }: AppLogoProps) {
       className={cn("inline-flex items-center gap-3", className)}
       aria-label="Ledgerly dashboard"
     >
-      <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
         <Landmark className="size-5" aria-hidden="true" />
       </span>
       {!compact && (

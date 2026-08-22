@@ -45,7 +45,7 @@ export function DashboardPage() {
         <DashboardHeader displayName={displayName} />
         <Card className="border-dashed bg-card/60 shadow-none">
           <CardContent className="flex min-h-80 flex-col items-center justify-center text-center">
-            <WalletCards className="size-10 text-emerald-700" />
+            <WalletCards className="size-10 text-primary" />
             <h2 className="mt-5 text-xl font-semibold">Start with your first account</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
               Add a bank, cash, or investment account. Your dashboard will then use real balances only.
@@ -60,7 +60,7 @@ export function DashboardPage() {
   const metrics = [
     { label: "Net Worth", amountMinor: latest?.total_value_base_minor ?? 0, helper: `In ${currencyCode}, excluding unconverted cash`, icon: PiggyBank },
     { label: "Bank + Cash", amountMinor: (latest?.bank_value_base_minor ?? 0) + (latest?.cash_value_base_minor ?? 0), helper: "Base-currency accounts only", icon: WalletCards },
-    { label: "Investments", amountMinor: latest?.investment_value_base_minor ?? 0, helper: "Latest manual base values", icon: Landmark },
+    { label: "Investments", amountMinor: latest?.investment_value_base_minor ?? 0, helper: "Manual values plus later base-currency transfers", icon: Landmark },
     { label: "Monthly Income", amountMinor: monthly.incomeMinor, helper: "Transfers and unconverted currencies excluded", icon: BanknoteArrowDown },
     { label: "Monthly Expenses", amountMinor: monthly.expensesMinor, helper: "Reserved types and unconverted currencies excluded", icon: BanknoteArrowUp },
     { label: "Net Cash Flow", amountMinor: monthly.netCashFlowMinor, helper: "Income minus expenses", icon: TrendingUp },
@@ -70,7 +70,7 @@ export function DashboardPage() {
     <div className="space-y-6">
       <DashboardHeader displayName={displayName} />
       {foreignAccounts.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
           {foreignAccounts.length} foreign-currency bank/cash {foreignAccounts.length === 1 ? "account is" : "accounts are"} shown in native currency but excluded from consolidated {currencyCode} net worth. No FX conversion is performed.
         </div>
       )}
@@ -90,7 +90,7 @@ function DashboardHeader({ displayName }: { displayName: string }) {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-sm font-medium text-emerald-700">Financial overview</p>
+        <p className="text-sm font-medium text-primary">Financial overview</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Good day, {displayName}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Your balances and activity from real account data.</p>
       </div>

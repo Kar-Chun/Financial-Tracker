@@ -50,6 +50,17 @@ type AccountFormDialogProps = {
   initialType?: AccountType
 }
 
+const accountTypeItems = [
+  { value: "bank", label: "Bank" },
+  { value: "cash", label: "Cash" },
+  { value: "investment", label: "Investment" },
+]
+
+const currencyItems = supportedCurrencies.map((currency) => ({
+  value: currency.code,
+  label: `${currency.code} · ${currency.label}`,
+}))
+
 export function AccountFormDialog({
   open,
   onOpenChange,
@@ -131,7 +142,7 @@ export function AccountFormDialog({
                 name="accountType"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select items={accountTypeItems} value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bank">Bank</SelectItem>
@@ -147,7 +158,7 @@ export function AccountFormDialog({
                 name="currencyCode"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select items={currencyItems} value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {supportedCurrencies.map((currency) => (

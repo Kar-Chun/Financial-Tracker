@@ -41,7 +41,7 @@ export function RecentTransactionsCard({ transactions }: { transactions: Transac
                   {account?.name ?? "Account"} · {formatShortDate(transaction.transaction_date)}
                 </span>
               </span>
-              <span className={cn("text-sm font-semibold", type === "income" && "text-emerald-700", type === "expense" && "text-rose-700")}>
+              <span className={cn("text-sm font-semibold", type === "income" && "text-emerald-400", type === "expense" && "text-rose-400")}>
                 {type === "income" ? "+" : type === "expense" ? "−" : ""}
                 {formatCurrency(getTransactionAmount(transaction), account?.currency_code ?? "SGD")}
               </span>

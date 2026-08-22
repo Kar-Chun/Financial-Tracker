@@ -66,6 +66,7 @@ type InvestmentValuationRow = {
   base_value_minor: number
   valued_at: string
   created_at: string
+  updated_at: string
 }
 
 type NetWorthSnapshotRow = {
@@ -117,8 +118,8 @@ export type Database = {
       >
       investment_valuations: TableDefinition<
         InvestmentValuationRow,
-        Partial<Omit<InvestmentValuationRow, "id" | "created_at">> & Pick<InvestmentValuationRow, "user_id" | "account_id" | "native_value_minor" | "base_value_minor" | "valued_at">,
-        Partial<Omit<InvestmentValuationRow, "id" | "user_id" | "created_at">>
+        Partial<Omit<InvestmentValuationRow, "id" | "created_at" | "updated_at">> & Pick<InvestmentValuationRow, "user_id" | "account_id" | "native_value_minor" | "base_value_minor" | "valued_at">,
+        Partial<Omit<InvestmentValuationRow, "id" | "user_id" | "created_at" | "updated_at">>
       >
       net_worth_snapshots: TableDefinition<
         NetWorthSnapshotRow,

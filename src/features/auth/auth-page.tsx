@@ -63,7 +63,7 @@ export function AuthPage({ mode }: AuthPageProps) {
       <AuthFrame>
         <Card className="shadow-lg shadow-slate-950/5">
           <CardContent className="py-10 text-center">
-            <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+            <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <MailCheck className="size-6" />
             </span>
             <h1 className="mt-5 text-xl font-semibold">Check your email</h1>
@@ -84,7 +84,7 @@ export function AuthPage({ mode }: AuthPageProps) {
     <AuthFrame>
       <Card className="shadow-lg shadow-slate-950/5">
         <CardHeader className="text-center">
-          <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+          <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <LockKeyhole className="size-5" />
           </span>
           <h1 className="font-heading text-xl font-medium leading-snug">
@@ -148,7 +148,7 @@ export function AuthPage({ mode }: AuthPageProps) {
             {isLogin ? "New to Ledgerly?" : "Already have an account?"}{" "}
             <Link
               to={isLogin ? "/signup" : "/login"}
-              className="font-medium text-emerald-700 hover:underline"
+              className="font-medium text-primary hover:underline"
             >
               {isLogin ? "Sign up" : "Log in"}
             </Link>

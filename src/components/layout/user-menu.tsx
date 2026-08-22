@@ -50,7 +50,7 @@ export function UserMenu({ compact = false }: UserMenuProps) {
         aria-label="Open user menu"
       >
         <Avatar>
-          <AvatarFallback className="bg-emerald-100 font-semibold text-emerald-800">
+          <AvatarFallback className="bg-primary/15 font-semibold text-primary">
             {initials}
           </AvatarFallback>
         </Avatar>

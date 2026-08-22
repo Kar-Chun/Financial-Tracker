@@ -13,7 +13,7 @@ const highlights = [
 
 export function WelcomePage() {
   return (
-    <main className="min-h-svh bg-[radial-gradient(circle_at_top_right,oklch(0.95_0.05_160),transparent_35%)] px-4">
+    <main className="min-h-svh bg-[radial-gradient(circle_at_top_right,oklch(0.28_0.08_254),transparent_38%)] px-4">
       <div className="mx-auto flex min-h-svh max-w-6xl flex-col">
         <header className="flex items-center justify-between py-5">
           <AppLogo />
@@ -24,7 +24,7 @@ export function WelcomePage() {
 
         <section className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
           <div>
-            <span className="inline-flex rounded-full border bg-background/80 px-3 py-1 text-xs font-semibold text-emerald-800 shadow-xs">
+            <span className="inline-flex rounded-full border bg-background/80 px-3 py-1 text-xs font-semibold text-primary shadow-xs">
               Secure personal finance tracking
             </span>
             <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-balance sm:text-6xl">
@@ -47,8 +47,8 @@ export function WelcomePage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border bg-background/90 p-3 shadow-2xl shadow-emerald-950/10 backdrop-blur">
-            <div className="rounded-2xl bg-slate-950 p-6 text-white sm:p-8">
+          <div className="rounded-3xl border bg-card/90 p-3 shadow-2xl shadow-black/30 backdrop-blur">
+            <div className="rounded-2xl bg-background/80 p-6 sm:p-8">
               <p className="text-sm text-slate-400">Your private workspace</p>
               <p className="mt-2 text-3xl font-semibold tracking-tight">
                 A clearer daily money habit
@@ -57,7 +57,7 @@ export function WelcomePage() {
                 {[38, 46, 43, 55, 59, 68, 63, 76, 72, 84, 88, 96].map((height, index) => (
                   <span
                     key={`${height}-${index}`}
-                    className="flex-1 rounded-t bg-emerald-400/80"
+                    className="flex-1 rounded-t bg-primary/80"
                     style={{ height: `${height}%` }}
                   />
                 ))}
@@ -65,7 +65,7 @@ export function WelcomePage() {
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
                 {highlights.map(({ icon: Icon, label }) => (
                   <div key={label} className="rounded-xl bg-white/8 p-3">
-                    <Icon className="size-4 text-emerald-300" />
+                    <Icon className="size-4 text-primary" />
                     <p className="mt-3 text-xs leading-5 text-slate-300">{label}</p>
                   </div>
                 ))}

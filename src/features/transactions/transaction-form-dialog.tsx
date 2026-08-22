@@ -25,6 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useSaveTransaction } from "@/features/transactions/transactions-hooks"
 import {
+  getCategoryDisplayName,
   getTransactionAmount,
   transactionFormSchema,
   validateTransactionDraft,
@@ -43,6 +44,12 @@ type TransactionFormDialogProps = {
   categories: Category[]
   transaction?: TransactionRecord | null
 }
+
+const transactionTypeItems = [
+  { value: "expense", label: "Expense" },
+  { value: "income", label: "Income" },
+  { value: "transfer", label: "Transfer" },
+]
 
 export function TransactionFormDialog({
   open,
@@ -71,7 +78,12 @@ export function TransactionFormDialog({
     [accounts, type],
   )
   const availableCategories = categories.filter((category) => category.category_type === type)
-  const parentNames = new Map(categories.map((category) => [category.id, category.name]))
+  const accountItems = availableAccounts.map((account) => ({ value: account.id, label: account.name }))
+  const destinationAccountItems = accounts.map((account) => ({ value: account.id, label: account.name }))
+  const categoryItems = availableCategories.map((category) => ({
+    value: category.id,
+    label: getCategoryDisplayName(category, categories),
+  }))
 
   useEffect(() => {
     if (open) reset(getDefaults(transaction))
@@ -129,7 +141,7 @@ export function TransactionFormDialog({
               name="transactionType"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select items={transactionTypeItems} value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="expense">Expense</SelectItem>
@@ -153,12 +165,12 @@ export function TransactionFormDialog({
               name="accountId"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select items={accountItems} value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="Select account" /></SelectTrigger>
                   <SelectContent>
                     {availableAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
-                        {account.name} · {account.currency_code}
+                        {account.name} · {account.institution ?? account.account_type} · {account.currency_code}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -173,12 +185,12 @@ export function TransactionFormDialog({
                 name="destinationAccountId"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select items={destinationAccountItems} value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full"><SelectValue placeholder="Select destination" /></SelectTrigger>
                     <SelectContent>
                       {accounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name} · {account.currency_code}
+                          {account.name} · {account.institution ?? account.account_type} · {account.currency_code}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -192,12 +204,12 @@ export function TransactionFormDialog({
                 name="categoryId"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select items={categoryItems} value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full"><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
                       {availableCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {category.parent_id ? `${parentNames.get(category.parent_id)} · ` : ""}{category.name}
+                          {getCategoryDisplayName(category, categories)}
                         </SelectItem>
                       ))}
                     </SelectContent>

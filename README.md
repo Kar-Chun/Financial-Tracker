@@ -75,6 +75,7 @@ Alternatively, open the Supabase SQL Editor and run these files in order:
 1. `supabase/migrations/202608220001_create_finance_schema.sql`
 2. `supabase/migrations/202608220002_create_financial_functions.sql`
 3. `supabase/migrations/202608220003_enable_rls_and_grants.sql`
+4. `supabase/migrations/202608220004_fix_investment_transfer_accounting.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -101,11 +102,18 @@ V1 does not track holdings or market prices. Each investment account has manual 
 - Native value in the account currency
 - Manually supplied value in the profile base currency
 
-The latest valuation on or before today is authoritative for investment net worth. Transaction entries into an investment account may describe contributions but are never added again as investment market value.
+The latest valuation on or before today is the investment value baseline. Transfers recorded after that valuation are treated as unvalued movements until the next manual valuation:
+
+- Native transfer movements adjust the displayed native investment value.
+- When the investment currency matches the profile base currency, the same movement also adjusts consolidated net worth.
+- For foreign-currency investments, the manually supplied base value remains unchanged because V1 does not invent an FX rate.
+- Saving a newer manual valuation resets the transfer adjustment boundary, so earlier contributions are not counted twice.
+
+This preserves net worth when money moves between base-currency bank/cash and investment accounts without treating investment transaction entries as market performance.
 
 ## Multi-currency limitation
 
-There is no automatic FX conversion. Foreign-currency bank/cash balances remain visible in native currency but are excluded from consolidated base-currency net worth, monthly totals, and spending aggregation. Investment accounts can be consolidated only because the user manually supplies `base_value_minor`.
+There is no automatic FX conversion. Foreign-currency bank/cash balances remain visible in native currency but are excluded from consolidated base-currency net worth, monthly totals, and spending aggregation. Foreign investment transfers update native value only; their base value remains the latest manual `base_value_minor` until the user supplies another valuation.
 
 ## Daily snapshots
 

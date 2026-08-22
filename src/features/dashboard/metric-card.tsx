@@ -17,7 +17,7 @@ export function MetricCard({ label, amountMinor, currencyCode, helper, icon: Ico
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Icon className="size-4.5" />
           </span>
         </div>

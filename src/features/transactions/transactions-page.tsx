@@ -31,7 +31,7 @@ import {
   useSoftDeleteTransaction,
   useTransactions,
 } from "@/features/transactions/transactions-hooks"
-import { getTransactionAmount } from "@/features/transactions/transaction-logic"
+import { getCategoryDisplayName, getTransactionAmount } from "@/features/transactions/transaction-logic"
 import { formatCurrency } from "@/lib/currency"
 import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
@@ -84,12 +84,23 @@ export function TransactionsPage() {
 
   const isLoading = transactionsQuery.isLoading || accountsQuery.isLoading || categoriesQuery.isLoading
   const hasError = transactionsQuery.isError || accountsQuery.isError || categoriesQuery.isError
+  const accountFilterItems = [
+    { value: "all", label: "All accounts" },
+    ...(accountsQuery.data ?? []).map((account) => ({ value: account.id, label: account.name })),
+  ]
+  const categoryFilterItems = [
+    { value: "all", label: "All categories" },
+    ...(categoriesQuery.data ?? []).map((category) => ({
+      value: category.id,
+      label: getCategoryDisplayName(category, categoriesQuery.data ?? []),
+    })),
+  ]
 
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-emerald-700">Daily activity</p>
+          <p className="text-sm font-medium text-primary">Daily activity</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Transactions</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Record income, expenses, and same-currency transfers.
@@ -103,24 +114,19 @@ export function TransactionsPage() {
       <Card className="py-0 shadow-xs">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
           <Input type="month" value={month} onChange={(event) => setMonth(event.target.value)} aria-label="Filter month" />
-          <FilterSelect value={typeFilter} onValueChange={setTypeFilter} placeholder="All types">
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="expense">Expense</SelectItem>
-            <SelectItem value="income">Income</SelectItem>
-            <SelectItem value="transfer">Transfer</SelectItem>
-          </FilterSelect>
-          <FilterSelect value={accountFilter} onValueChange={setAccountFilter} placeholder="All accounts">
-            <SelectItem value="all">All accounts</SelectItem>
-            {(accountsQuery.data ?? []).map((account) => (
-              <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
-            ))}
-          </FilterSelect>
-          <FilterSelect value={categoryFilter} onValueChange={setCategoryFilter} placeholder="All categories">
-            <SelectItem value="all">All categories</SelectItem>
-            {(categoriesQuery.data ?? []).map((category) => (
-              <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
-            ))}
-          </FilterSelect>
+          <FilterSelect
+            value={typeFilter}
+            onValueChange={setTypeFilter}
+            placeholder="All types"
+            items={[
+              { value: "all", label: "All types" },
+              { value: "expense", label: "Expense" },
+              { value: "income", label: "Income" },
+              { value: "transfer", label: "Transfer" },
+            ]}
+          />
+          <FilterSelect value={accountFilter} onValueChange={setAccountFilter} placeholder="All accounts" items={accountFilterItems} />
+          <FilterSelect value={categoryFilter} onValueChange={setCategoryFilter} placeholder="All categories" items={categoryFilterItems} />
         </CardContent>
       </Card>
 
@@ -201,7 +207,7 @@ function TransactionRow({ transaction, onEdit, onDelete }: { transaction: Transa
       <CardContent className="flex items-center gap-3 p-4">
         <span className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-xl",
-          type === "income" ? "bg-emerald-50 text-emerald-700" : type === "expense" ? "bg-rose-50 text-rose-700" : "bg-sky-50 text-sky-700",
+          type === "income" ? "bg-emerald-400/10 text-emerald-400" : type === "expense" ? "bg-rose-400/10 text-rose-400" : "bg-primary/10 text-primary",
         )}>
           <Icon className="size-5" />
         </span>
@@ -212,7 +218,7 @@ function TransactionRow({ transaction, onEdit, onDelete }: { transaction: Transa
           </div>
           <p className="truncate text-xs text-muted-foreground">{subtitle} · {formatLongDate(transaction.transaction_date)}</p>
         </div>
-        <p className={cn("text-sm font-semibold", type === "income" && "text-emerald-700", type === "expense" && "text-rose-700")}>
+        <p className={cn("text-sm font-semibold", type === "income" && "text-emerald-400", type === "expense" && "text-rose-400")}>
           {type === "income" ? "+" : type === "expense" ? "−" : ""}{formatCurrency(amount, account?.currency_code ?? source?.currency_code ?? "SGD")}
         </p>
         {editable && (
@@ -226,11 +232,23 @@ function TransactionRow({ transaction, onEdit, onDelete }: { transaction: Transa
   )
 }
 
-function FilterSelect({ value, onValueChange, placeholder, children }: { value: string; onValueChange: (value: string) => void; placeholder: string; children: React.ReactNode }) {
+function FilterSelect({
+  value,
+  onValueChange,
+  placeholder,
+  items,
+}: {
+  value: string
+  onValueChange: (value: string) => void
+  placeholder: string
+  items: Array<{ value: string; label: string }>
+}) {
   return (
-    <Select value={value} onValueChange={(nextValue) => nextValue && onValueChange(nextValue)}>
+    <Select items={items} value={value} onValueChange={(nextValue) => nextValue && onValueChange(nextValue)}>
       <SelectTrigger className="w-full"><SelectValue placeholder={placeholder} /></SelectTrigger>
-      <SelectContent>{children}</SelectContent>
+      <SelectContent>
+        {items.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+      </SelectContent>
     </Select>
   )
 }
@@ -239,7 +257,7 @@ function EmptyState({ title, description, actionLabel, onAction, actionHref }: {
   return (
     <Card className="border-dashed bg-card/60 shadow-none">
       <CardContent className="flex min-h-64 flex-col items-center justify-center text-center">
-        <ReceiptText className="size-9 text-emerald-700" />
+        <ReceiptText className="size-9 text-primary" />
         <h2 className="mt-4 text-lg font-semibold">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
         {actionHref ? (

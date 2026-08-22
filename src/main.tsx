@@ -5,6 +5,8 @@ import App from "@/App"
 import { AppProviders } from "@/app/providers"
 import "@/index.css"
 
+document.documentElement.classList.add("dark")
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppProviders>

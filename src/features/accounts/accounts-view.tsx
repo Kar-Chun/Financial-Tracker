@@ -77,7 +77,7 @@ export function AccountsView({
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-emerald-700">Your money</p>
+          <p className="text-sm font-medium text-primary">Your money</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{description}</p>
         </div>
@@ -93,7 +93,7 @@ export function AccountsView({
       ) : accounts.length === 0 ? (
         <Card className="border-dashed bg-card/60 shadow-none">
           <CardContent className="flex min-h-72 flex-col items-center justify-center text-center">
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+            <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <WalletCards className="size-7" />
             </span>
             <h2 className="mt-5 text-lg font-semibold">No {filterType ? "investment " : ""}accounts yet</h2>
@@ -172,7 +172,7 @@ function AccountCard({
     <Card className="shadow-xs">
       <CardContent className="space-y-5">
         <div className="flex items-start justify-between gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Icon className="size-5" />
           </span>
           <Badge variant="secondary" className="capitalize">{account.account_type}</Badge>
@@ -192,8 +192,15 @@ function AccountCard({
               {account.valued_at ? ` · ${formatShortDate(account.valued_at)}` : " · Not valued yet"}
             </p>
           )}
+          {isInvestment && (
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              {account.currency_code === baseCurrency
+                ? "Transfers after the latest manual valuation are included until you update the value again."
+                : "Native transfers are reflected; update the manual base value after foreign-currency transfers."}
+            </p>
+          )}
           {!isInvestment && !account.included_in_net_worth && (
-            <p className="mt-2 text-xs text-amber-700">
+            <p className="mt-2 text-xs text-amber-300">
               Excluded from {baseCurrency} net worth until FX conversion is available.
             </p>
           )}

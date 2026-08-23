@@ -10,7 +10,7 @@ export function PwaInstallCard() {
 
   return (
     <Card>
-      <CardHeader className="border-b">
+      <CardHeader className="border-b border-border/25">
         <CardTitle className="flex items-center gap-2"><Smartphone className="size-4" /> Install on this device</CardTitle>
       </CardHeader>
       <CardContent>

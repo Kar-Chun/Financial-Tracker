@@ -1,11 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom"
 
 import { AppShell } from "@/components/layout/app-shell"
+import { RouteErrorPage } from "@/app/route-error-page"
 import { ProtectedRoute, PublicOnlyRoute } from "@/features/auth/route-guards"
 
 export const router = createBrowserRouter([
   {
     path: "/",
+    errorElement: <RouteErrorPage />,
     lazy: async () => {
       const { WelcomePage } = await import("@/features/auth/welcome-page")
       return { Component: WelcomePage }
@@ -13,6 +15,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <PublicOnlyRoute />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         path: "/login",
@@ -32,6 +35,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <ProtectedRoute />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         element: <AppShell />,

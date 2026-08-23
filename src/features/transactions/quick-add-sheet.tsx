@@ -47,11 +47,12 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[min(92svh,52rem)] overflow-hidden rounded-t-3xl border-x sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
+        className="max-h-[min(92svh,52rem)] overflow-hidden rounded-t-[2rem] border-x border-border/40 bg-popover shadow-2xl shadow-black/35 sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
       >
-        <SheetHeader className="border-b px-4 pt-4 pb-3 text-left">
-          <SheetTitle className="text-lg">Quick Add</SheetTitle>
-          <SheetDescription>Expense is ready by default. Amounts are saved only after Supabase confirms the transaction.</SheetDescription>
+        <SheetHeader className="border-b border-border/25 px-5 pt-5 pb-4 text-left">
+          <p className="eyebrow">New transaction</p>
+          <SheetTitle className="text-2xl font-semibold tracking-tight">Quick Add</SheetTitle>
+          <SheetDescription>Expense is ready by default. Your transaction is added only after it is securely saved.</SheetDescription>
         </SheetHeader>
         {isLoading ? (
           <div className="grid min-h-72 place-items-center text-sm text-muted-foreground">Preparing your accounts and categories…</div>

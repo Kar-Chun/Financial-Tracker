@@ -1,54 +1,59 @@
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { buttonVariants } from "@/components/ui/button-variants"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getTransactionAmount } from "@/features/transactions/transaction-logic"
 import { formatCurrency } from "@/lib/currency"
 import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import type { TransactionRecord } from "@/types/finance"
 
-export function RecentTransactionsCard({ transactions, className }: { transactions: TransactionRecord[]; className?: string }) {
+export function RecentTransactionsCard({ transactions, todayDate, className }: { transactions: TransactionRecord[]; todayDate: string; className?: string }) {
   return (
-    <Card className={cn("shadow-xs xl:col-span-3", className)}>
-      <CardHeader className="border-b sm:grid-cols-[1fr_auto]">
-        <div>
-          <CardTitle>Recent transactions</CardTitle>
-          <p className="text-xs text-muted-foreground">Your latest recorded activity</p>
-        </div>
-        <Link to="/transactions" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "hidden sm:inline-flex")}>
-          View all
-        </Link>
-      </CardHeader>
-      <CardContent className="divide-y px-0">
+    <section className={className} aria-labelledby="recent-heading">
+      <div className="mb-3 flex items-center justify-between px-1">
+        <h2 id="recent-heading" className="section-heading">Recent</h2>
+        <Link to="/transactions" className="text-xs font-semibold text-primary hover:text-primary/80">See all</Link>
+      </div>
+      <div className="overflow-hidden rounded-2xl bg-card/75 ring-1 ring-white/4">
         {transactions.length === 0 ? (
           <p className="px-4 py-12 text-center text-sm text-muted-foreground">No transactions recorded yet.</p>
-        ) : transactions.slice(0, 5).map((transaction) => {
+        ) : transactions.slice(0, 6).map((transaction, index) => {
           const type = transaction.transaction_type
           const Icon = type === "income" ? ArrowDownLeft : type === "transfer" ? ArrowRightLeft : ArrowUpRight
+          const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account
+          const destination = transaction.entries.find((entry) => entry.amount_minor > 0)?.account
           const account = transaction.entries[0]?.account
+          const category = transaction.category?.name ?? (type === "transfer" ? "Transfer" : "Uncategorised")
+          const title = type === "transfer"
+            ? transaction.description || `${source?.name ?? "Account"} → ${destination?.name ?? "Account"}`
+            : transaction.description || category
+          const date = transaction.transaction_date === todayDate ? "Today" : formatShortDate(transaction.transaction_date)
+          const currency = account?.currency_code ?? source?.currency_code ?? "SGD"
           return (
-            <div key={transaction.id} className="flex items-center gap-3 px-4 py-3.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <Icon className="size-4" />
+            <div key={transaction.id} className={cn("grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5", index > 0 && "border-t border-border/20")}>
+              <span className={cn(
+                "flex size-9 items-center justify-center rounded-full",
+                type === "income" ? "bg-positive/10 text-positive" : type === "expense" ? "bg-negative/10 text-negative" : "bg-primary/10 text-primary",
+              )}>
+                <Icon className="size-4" aria-hidden="true" />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                  {transaction.description || transaction.category?.name || (type === "transfer" ? "Transfer" : "Transaction")}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {account?.name ?? "Account"} · {formatShortDate(transaction.transaction_date)}
-                </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">{title}</span>
+                <span className="block truncate text-xs text-muted-foreground">{category} · {date}</span>
               </span>
-              <span className={cn("text-sm font-semibold", type === "income" && "text-emerald-400", type === "expense" && "text-rose-400")}>
-                {type === "income" ? "+" : type === "expense" ? "−" : ""}
-                {formatCurrency(getTransactionAmount(transaction), account?.currency_code ?? "SGD")}
+              <span className={cn(
+                "text-right text-sm font-semibold tabular-nums",
+                type === "income" && "text-positive",
+                type === "expense" && "text-negative",
+                type === "transfer" && "text-brand-secondary",
+              )}>
+                <span className="sr-only">{type}: </span>
+                {type === "income" ? "+" : type === "expense" ? "−" : ""}{formatCurrency(getTransactionAmount(transaction), currency)}
               </span>
             </div>
           )
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

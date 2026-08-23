@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 
 export function AppSidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-sidebar lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border/60 bg-sidebar lg:flex">
       <div className="px-6 py-6">
         <AppLogo />
       </div>

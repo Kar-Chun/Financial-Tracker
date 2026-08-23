@@ -140,7 +140,7 @@ export function TransactionForm({
   }
 
   const fields = (
-    <div className={cn("space-y-4", quickAdd && "min-h-0 flex-1 overflow-y-auto px-4 pb-4")}>
+    <div className={cn("space-y-4", quickAdd && "min-h-0 flex-1 overflow-y-auto px-5 pt-1 pb-5")}>
       {quickAdd ? (
         <div className="grid grid-cols-3 gap-2" role="group" aria-label="Transaction type">
           {transactionTypeItems.map((item) => (
@@ -150,8 +150,8 @@ export function TransactionForm({
               aria-pressed={type === item.value}
               onClick={() => setValue("transactionType", item.value, { shouldValidate: true })}
               className={cn(
-                "flex min-h-12 items-center justify-center gap-1.5 rounded-xl border px-2 text-sm font-medium transition-colors",
-                type === item.value ? "border-primary bg-primary/15 text-primary" : "border-border bg-muted/20 text-muted-foreground",
+                "flex min-h-12 items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-medium transition-colors ring-1",
+                type === item.value ? "bg-primary text-primary-foreground ring-primary" : "bg-surface text-muted-foreground ring-border/30 hover:text-foreground",
               )}
             >
               <item.icon className="size-4" /> {item.label}
@@ -169,14 +169,14 @@ export function TransactionForm({
         </FormField>
       )}
 
-      <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message}>
+      <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message} emphasis={quickAdd}>
         <Input
           inputMode="decimal"
           enterKeyHint="next"
           autoComplete="off"
           placeholder="0.00"
           autoFocus
-          className={cn(quickAdd && "h-15 px-4 text-3xl font-semibold tracking-tight md:text-3xl")}
+          className={cn(quickAdd && "h-20 rounded-2xl border-border/30 bg-surface px-4 text-center text-4xl font-semibold tracking-[-0.04em] tabular-nums md:text-4xl")}
           {...register("amount")}
         />
       </FormField>
@@ -210,8 +210,8 @@ export function TransactionForm({
                   aria-pressed={categoryId === category.id}
                   onClick={() => setValue("categoryId", category.id, { shouldValidate: true })}
                   className={cn(
-                    "min-h-10 shrink-0 rounded-full border px-3 text-sm font-medium",
-                    categoryId === category.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/25 text-muted-foreground",
+                    "min-h-10 shrink-0 rounded-full px-3 text-sm font-medium ring-1",
+                    categoryId === category.id ? "bg-primary text-primary-foreground ring-primary" : "bg-surface text-muted-foreground ring-border/30",
                   )}
                 >
                   {getCategoryDisplayName(category, categories)}
@@ -229,7 +229,7 @@ export function TransactionForm({
       )}
 
       {quickAdd ? (
-        <details className="group rounded-xl border bg-muted/15 p-3">
+        <details className="group rounded-xl bg-surface p-3 ring-1 ring-border/25">
           <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between text-sm font-medium text-muted-foreground">
             Date and description <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
           </summary>
@@ -251,9 +251,9 @@ export function TransactionForm({
     <form className={cn(quickAdd ? "flex min-h-0 flex-1 flex-col" : "space-y-4")} onSubmit={handleSubmit(onSubmit)}>
       {fields}
       {quickAdd ? (
-        <div className="grid grid-cols-[auto_1fr] gap-2 border-t bg-popover px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <Button type="button" size="lg" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" size="lg" disabled={mutation.isPending || availableAccounts.length === 0}>{mutation.isPending && <LoaderCircle className="animate-spin" />}Save {type}</Button>
+        <div className="grid grid-cols-[auto_1fr] gap-2 border-t border-border/25 bg-popover px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <Button className="h-12 rounded-xl" type="button" size="lg" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button className="h-12 rounded-xl" type="submit" size="lg" disabled={mutation.isPending || availableAccounts.length === 0}>{mutation.isPending && <LoaderCircle className="animate-spin" />}Save {type}</Button>
         </div>
       ) : (
         <DialogFooter>
@@ -287,6 +287,6 @@ function getDefaults(
   }
 }
 
-function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
-  return <div className="space-y-2"><Label>{label}</Label>{children}{error && <p className="text-xs text-destructive">{error}</p>}</div>
+function FormField({ label, error, children, emphasis = false }: { label: string; error?: string; children: React.ReactNode; emphasis?: boolean }) {
+  return <div className="space-y-2"><Label className={cn(emphasis && "eyebrow")}>{label}</Label>{children}{error && <p className="text-xs text-destructive">{error}</p>}</div>
 }

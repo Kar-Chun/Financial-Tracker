@@ -13,7 +13,7 @@ describe("mobile bottom navigation", () => {
     const onQuickAdd = vi.fn()
     render(<MemoryRouter initialEntries={["/dashboard"]}><MobileBottomNavigation onQuickAdd={onQuickAdd} /></MemoryRouter>)
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard")
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/dashboard")
     expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute("href", "/transactions")
     expect(screen.getByRole("link", { name: "Analytics" })).toHaveAttribute("href", "/analytics")
     fireEvent.click(screen.getByRole("button", { name: "Quick add transaction" }))

@@ -62,18 +62,18 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <header>
-        <p className="text-sm font-medium text-primary">Workspace</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Settings</h1>
+        <p className="eyebrow">Workspace</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Settings</h1>
         <p className="mt-2 text-sm text-muted-foreground">Manage your profile preferences and transaction categories.</p>
       </header>
 
       {profileQuery.isLoading ? <Skeleton className="h-96 max-w-2xl rounded-xl" /> : profileQuery.isError ? (
         <Card className="border-destructive/30"><CardContent className="py-10">Profile settings could not be loaded.</CardContent></Card>
       ) : (
-        <Card className="max-w-2xl shadow-xs">
-          <CardHeader className="border-b">
+        <Card className="max-w-2xl border-0 bg-card/65 shadow-none ring-1 ring-white/4">
+          <CardHeader className="border-b border-border/25">
             <CardTitle className="flex items-center gap-2"><Settings className="size-4" /> Profile</CardTitle>
           </CardHeader>
           <CardContent>

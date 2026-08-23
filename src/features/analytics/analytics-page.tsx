@@ -29,17 +29,17 @@ export function AnalyticsPage() {
   const currency = profileQuery.data?.base_currency ?? "SGD"
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-primary">Spending insights</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Analytics</h1>
+          <p className="eyebrow">Spending insights</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Analytics</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Understand how much you spend, where it goes, and how it compares with an equivalent previous period.
           </p>
         </div>
         <Select items={analyticsPeriodOptions} value={preset} onValueChange={(value) => setPreset(value as AnalyticsPeriodPreset)}>
-          <SelectTrigger className="w-full sm:w-48"><CalendarDays /><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full rounded-xl bg-card/70 sm:w-48"><CalendarDays /><SelectValue /></SelectTrigger>
           <SelectContent>
             {analyticsPeriodOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
           </SelectContent>
@@ -81,13 +81,13 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
       </section>
 
       {data.excluded_foreign_expense_count > 0 && (
-        <div className="rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-amber-100">
+        <div className="rounded-2xl bg-amber-400/8 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-400/20">
           {data.excluded_foreign_expense_count} foreign-currency expense{data.excluded_foreign_expense_count === 1 ? " was" : "s were"} excluded because V1.1 does not perform automatic FX conversion.
         </div>
       )}
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
-        <Card>
+        <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
           <CardHeader><CardTitle>Spending over time</CardTitle></CardHeader>
           <CardContent className="px-2 sm:px-6">
             <div className="h-60 w-full sm:h-72" role="img" aria-label="Bar chart of spending over time">
@@ -109,10 +109,10 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
           <CardHeader><CardTitle>Deterministic insights</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {insights.map((insight) => <p key={insight} className="rounded-lg border bg-muted/30 p-3 text-sm leading-6">{insight}</p>)}
+            {insights.map((insight) => <p key={insight} className="rounded-xl bg-surface p-3.5 text-sm leading-6 text-secondary-foreground">{insight}</p>)}
           </CardContent>
         </Card>
       </section>
@@ -125,7 +125,7 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
 function SpendingByCategory({ data, currency }: { data: SpendingAnalytics; currency: string }) {
   const [expanded, setExpanded] = useState<string | null>(null)
   return (
-    <Card>
+    <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
       <CardHeader><CardTitle>Spending by Category</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {data.categories.map((category) => {
@@ -134,7 +134,7 @@ function SpendingByCategory({ data, currency }: { data: SpendingAnalytics; curre
           const canExpand = category.subcategories.length > 0 || category.direct_amount_minor > 0
           const isExpanded = expanded === key
           return (
-            <div key={key} className="overflow-hidden rounded-lg border bg-muted/15">
+            <div key={key} className="overflow-hidden rounded-xl bg-surface/75 ring-1 ring-white/3">
               <button type="button" disabled={!canExpand} onClick={() => setExpanded(isExpanded ? null : key)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-4 p-4 text-left disabled:cursor-default">
                 <div className="min-w-0">
                   <div className="flex items-center justify-between gap-4">
@@ -151,7 +151,7 @@ function SpendingByCategory({ data, currency }: { data: SpendingAnalytics; curre
                 </div>
               </button>
               {isExpanded && (
-                <div className="border-t px-4 py-3">
+                <div className="border-t border-border/25 px-4 py-3">
                   {category.direct_amount_minor > 0 && <CategoryDetail label={`${category.name} (direct)`} value={category.direct_amount_minor} currency={currency} />}
                   {category.subcategories.map((subcategory) => <CategoryDetail key={subcategory.category_id} label={subcategory.name} value={subcategory.amount_minor} currency={currency} />)}
                 </div>
@@ -172,12 +172,12 @@ function ComparisonLabel({ comparison }: { comparison: ReturnType<typeof getSpen
   if (comparison.direction === "no_prior") return <span>No prior spending to compare</span>
   if (comparison.direction === "same") return <span>Unchanged vs previous period</span>
   const decrease = comparison.direction === "decrease"
-  return <span className={cn("inline-flex items-center gap-1", decrease ? "text-emerald-400" : "text-rose-400")}>{decrease ? <ArrowDownRight className="size-3.5" /> : <ArrowUpRight className="size-3.5" />}{comparison.percentage}% {decrease ? "less" : "more"} vs previous period</span>
+  return <span className={cn("inline-flex items-center gap-1", decrease ? "text-positive" : "text-negative")}>{decrease ? <ArrowDownRight className="size-3.5" /> : <ArrowUpRight className="size-3.5" />}{comparison.percentage}% {decrease ? "less" : "more"} vs previous period</span>
 }
 
 function MetricCard({ label, value, detail, icon: Icon }: { label: string; value: string; detail: React.ReactNode; icon: React.ComponentType<{ className?: string }> }) {
   return (
-    <Card><CardContent className="pt-6"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 truncate text-2xl font-semibold tracking-tight">{value}</p></div><div className="rounded-lg bg-primary/10 p-2 text-primary"><Icon className="size-4" /></div></div><div className="mt-3 text-xs text-muted-foreground">{detail}</div></CardContent></Card>
+    <Card className="border-0 bg-card/75 shadow-none ring-1 ring-white/4"><CardContent className="pt-6"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow leading-5">{label}</p><p className="mt-2 truncate text-2xl font-semibold tracking-tight">{value}</p></div><div className="rounded-full bg-primary/10 p-2 text-primary"><Icon className="size-4" /></div></div><div className="mt-3 text-xs leading-5 text-muted-foreground">{detail}</div></CardContent></Card>
   )
 }
 

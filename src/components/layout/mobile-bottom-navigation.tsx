@@ -11,7 +11,7 @@ type MobileBottomNavigationProps = {
 }
 
 const primaryItems = [
-  { label: "Dashboard", href: "/dashboard", icon: CircleGauge },
+  { label: "Home", href: "/dashboard", icon: CircleGauge },
   { label: "Transactions", href: "/transactions", icon: ReceiptText },
   { label: "Analytics", href: "/analytics", icon: ChartNoAxesCombined },
 ]
@@ -47,16 +47,16 @@ export function MobileBottomNavigation({ onQuickAdd }: MobileBottomNavigationPro
     <>
       <nav
         aria-label="Mobile navigation"
-        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(0.5rem,env(safe-area-inset-left))] pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[max(0.75rem,env(safe-area-inset-left))] z-40 rounded-2xl bg-surface-elevated/95 px-1 shadow-lg shadow-black/20 ring-1 ring-white/5 backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 items-end">
+        <div className="mx-auto grid max-w-lg grid-cols-5 items-center">
           {routeItem(primaryItems[0])}
           {routeItem(primaryItems[1])}
           <button
             type="button"
             onClick={onQuickAdd}
             aria-label="Quick add transaction"
-            className="mx-auto -mt-5 flex size-15 items-center justify-center rounded-full border-4 border-background bg-primary text-primary-foreground shadow-xl shadow-primary/25 outline-none transition-transform active:scale-95 focus-visible:ring-3 focus-visible:ring-ring"
+            className="mx-auto -mt-6 flex size-15 items-center justify-center rounded-full border-[5px] border-background bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring"
           >
             <Plus className="size-7" aria-hidden="true" />
           </button>
@@ -78,8 +78,8 @@ export function MobileBottomNavigation({ onQuickAdd }: MobileBottomNavigationPro
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-[env(safe-area-inset-bottom)]">
-          <SheetHeader className="border-b text-left">
+        <SheetContent side="bottom" className="rounded-t-3xl border-border/40 bg-popover pb-[env(safe-area-inset-bottom)]">
+          <SheetHeader className="border-b border-border/35 text-left">
             <SheetTitle>More</SheetTitle>
             <SheetDescription>Accounts, investments, settings, and your session.</SheetDescription>
           </SheetHeader>
@@ -89,13 +89,13 @@ export function MobileBottomNavigation({ onQuickAdd }: MobileBottomNavigationPro
                 key={item.href}
                 to={item.href}
                 onClick={() => setMoreOpen(false)}
-                className="flex min-h-12 items-center gap-3 rounded-xl border bg-muted/15 px-4 text-sm font-medium"
+              className="flex min-h-13 items-center gap-3 rounded-xl bg-surface px-4 text-sm font-medium ring-1 ring-border/25 transition-colors hover:bg-accent"
               >
                 <item.icon className="size-5 text-primary" /> {item.label}
               </NavLink>
             ))}
           </nav>
-          <div className="border-t p-4"><UserMenu /></div>
+          <div className="border-t border-border/35 p-4"><UserMenu /></div>
         </SheetContent>
       </Sheet>
     </>

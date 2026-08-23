@@ -10,11 +10,11 @@ export function AppShell() {
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
   return (
-    <div className="min-h-svh bg-muted/30">
+    <div className="min-h-svh bg-background">
       <AppSidebar />
       <MobileHeader />
       <main className="lg:pl-64">
-        <div className="mx-auto w-full max-w-[100rem] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 lg:px-8 lg:py-8">
+        <div className="mx-auto w-full max-w-[92rem] pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] pt-3 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-7 sm:pt-6 lg:px-10 lg:py-9">
           <Outlet />
         </div>
       </main>

@@ -72,18 +72,18 @@ export function CategoryManagement() {
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
+    <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
+      <CardHeader className="border-b border-border/25">
         <CardTitle className="flex items-center gap-2"><Tags className="size-4" /> Categories</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="flex rounded-lg border bg-muted/20 p-1">
+        <div className="flex rounded-xl bg-surface p-1 ring-1 ring-border/25">
           {(["expense", "income"] as const).map((categoryType) => (
             <button
               key={categoryType}
               type="button"
               onClick={() => setType(categoryType)}
-              className={cn("flex-1 rounded-md px-3 py-2 text-sm font-medium capitalize text-muted-foreground transition-colors", type === categoryType && "bg-primary text-primary-foreground")}
+              className={cn("flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize text-muted-foreground transition-colors", type === categoryType && "bg-primary text-primary-foreground")}
             >
               {categoryType} Categories
             </button>
@@ -125,7 +125,7 @@ export function CategoryManagement() {
                 <p className="mt-1 text-xs text-muted-foreground">Archived categories remain attached to historical transactions.</p>
                 <div className="mt-3 space-y-2">
                   {archived.sort(byName).map((category) => (
-                    <div key={category.id} className="flex items-center justify-between gap-4 rounded-lg border bg-muted/10 px-3 py-2.5">
+                    <div key={category.id} className="flex items-center justify-between gap-4 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-border/20">
                       <span className="text-sm text-muted-foreground">{getCategoryDisplayName(category, categories)}</span>
                       <Button variant="ghost" size="sm" disabled={archiveMutation.isPending} onClick={() => changeArchivedState(category, false)}><ArchiveRestore /> Restore</Button>
                     </div>
@@ -165,7 +165,7 @@ function CategoryRow({ category, subcategories, onAddChild, onRename, onArchive 
   onArchive: (category: Category) => void
 }) {
   return (
-    <div className="rounded-lg border bg-muted/10">
+    <div className="rounded-xl bg-surface/80 ring-1 ring-border/20">
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
         <span className="font-medium">{category.name}</span>
         <div className="flex items-center gap-1">
@@ -175,7 +175,7 @@ function CategoryRow({ category, subcategories, onAddChild, onRename, onArchive 
         </div>
       </div>
       {subcategories.length > 0 && (
-        <div className="border-t px-3 py-2">
+        <div className="border-t border-border/25 px-3 py-2">
           {subcategories.map((child) => (
             <div key={child.id} className="flex items-center justify-between gap-4 border-l border-primary/30 py-2 pl-4">
               <span className="text-sm text-muted-foreground">{child.name}</span>

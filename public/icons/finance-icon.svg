@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Finance Tracker app icon">
+  <rect width="512" height="512" rx="112" fill="#0b132b"/>
+  <rect x="104" y="132" width="304" height="248" rx="62" fill="#111f3d" stroke="#315ea8" stroke-width="18"/>
+  <path d="M152 308l72-68 58 42 82-94" fill="none" stroke="#5b9cff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="152" cy="308" r="18" fill="#86b7ff"/>
+  <circle cx="224" cy="240" r="18" fill="#86b7ff"/>
+  <circle cx="282" cy="282" r="18" fill="#86b7ff"/>
+  <circle cx="364" cy="188" r="18" fill="#86b7ff"/>
+</svg>

@@ -90,13 +90,42 @@
     @apply border-border outline-ring/50;
     }
   body {
-    @apply min-w-80 bg-background text-foreground antialiased;
+    @apply min-w-80 overflow-x-hidden bg-background text-foreground antialiased;
     }
   html {
-    @apply font-sans;
+    @apply bg-background font-sans;
     }
   button,
   a {
     -webkit-tap-highlight-color: transparent;
     }
+}
+
+@media (max-width: 767px) {
+  [data-slot="input"],
+  [data-slot="select-trigger"] {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+
+  [data-slot="button"] {
+    min-height: 2.75rem;
+  }
+
+  [data-slot="select-item"] {
+    min-height: 2.75rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  [data-slot="dialog-content"] {
+    max-height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem);
+    overflow-y: auto;
+  }
+}
+
+@media (display-mode: standalone) {
+  body {
+    min-height: 100svh;
+  }
 }

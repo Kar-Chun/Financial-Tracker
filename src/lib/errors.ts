@@ -3,6 +3,7 @@ type ErrorWithMessage = {
 }
 
 const friendlyErrors: Array<[string, string]> = [
+  ["You're offline.", "You're offline. Reconnect before saving financial changes."],
   ["Invalid login credentials", "The email or password is incorrect."],
   ["Email not confirmed", "Confirm your email before signing in."],
   ["User already registered", "An account already exists for this email."],

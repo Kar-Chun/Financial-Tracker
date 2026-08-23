@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 
 import {
   getCategories,
+  getFrequentExpenseCategories,
   getTransactions,
   saveTransaction,
   softDeleteTransaction,
@@ -9,6 +10,7 @@ import {
 
 export const transactionsQueryKey = ["transactions"] as const
 export const categoriesQueryKey = ["categories"] as const
+export const frequentExpenseCategoriesQueryKey = ["transactions", "frequent-expense-categories"] as const
 
 export function useTransactions() {
   return useQuery({ queryKey: transactionsQueryKey, queryFn: getTransactions })
@@ -18,16 +20,26 @@ export function useCategories() {
   return useQuery({ queryKey: categoriesQueryKey, queryFn: getCategories, staleTime: 5 * 60_000 })
 }
 
+export function useFrequentExpenseCategories() {
+  return useQuery({
+    queryKey: frequentExpenseCategoriesQueryKey,
+    queryFn: getFrequentExpenseCategories,
+    staleTime: 5 * 60_000,
+  })
+}
+
+export async function invalidateTransactionFinanceData(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: transactionsQueryKey }),
+    queryClient.invalidateQueries({ queryKey: ["accounts"] }),
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+    queryClient.invalidateQueries({ queryKey: ["analytics"] }),
+  ])
+}
+
 function useInvalidateFinanceData() {
   const queryClient = useQueryClient()
-  return async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: transactionsQueryKey }),
-      queryClient.invalidateQueries({ queryKey: ["accounts"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
-      queryClient.invalidateQueries({ queryKey: ["analytics"] }),
-    ])
-  }
+  return () => invalidateTransactionFinanceData(queryClient)
 }
 
 export function useSaveTransaction() {

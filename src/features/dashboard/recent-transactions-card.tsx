@@ -9,9 +9,9 @@ import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import type { TransactionRecord } from "@/types/finance"
 
-export function RecentTransactionsCard({ transactions }: { transactions: TransactionRecord[] }) {
+export function RecentTransactionsCard({ transactions, className }: { transactions: TransactionRecord[]; className?: string }) {
   return (
-    <Card className="shadow-xs xl:col-span-3">
+    <Card className={cn("shadow-xs xl:col-span-3", className)}>
       <CardHeader className="border-b sm:grid-cols-[1fr_auto]">
         <div>
           <CardTitle>Recent transactions</CardTitle>

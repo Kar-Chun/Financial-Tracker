@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/currency"
+import { cn } from "@/lib/utils"
 
 type MetricCardProps = {
   label: string
@@ -9,11 +10,12 @@ type MetricCardProps = {
   currencyCode: string
   helper: string
   icon: LucideIcon
+  className?: string
 }
 
-export function MetricCard({ label, amountMinor, currencyCode, helper, icon: Icon }: MetricCardProps) {
+export function MetricCard({ label, amountMinor, currencyCode, helper, icon: Icon, className }: MetricCardProps) {
   return (
-    <Card className="py-0 shadow-xs">
+    <Card className={cn("py-0 shadow-xs", className)}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <p className="text-sm font-medium text-muted-foreground">{label}</p>

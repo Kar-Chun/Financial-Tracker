@@ -1,5 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase"
-import type { Category } from "@/types/database"
+import { performFinancialMutation } from "@/lib/network"
+import type { Category, FrequentExpenseCategoryRow } from "@/types/database"
 import type { TransactionRecord } from "@/types/finance"
 
 export type SaveTransactionInput = {
@@ -62,25 +63,38 @@ export async function getTransactions() {
   return transactions
 }
 
-export async function saveTransaction(input: SaveTransactionInput) {
-  const { data, error } = await getSupabaseClient().rpc("upsert_financial_transaction", {
-    p_transaction_id: input.id ?? null,
-    p_transaction_type: input.transactionType,
-    p_amount_minor: input.amountMinor,
-    p_account_id: input.accountId,
-    p_destination_account_id: input.destinationAccountId ?? null,
-    p_category_id: input.categoryId ?? null,
-    p_transaction_date: input.transactionDate,
-    p_description: input.description || null,
+export async function getFrequentExpenseCategories() {
+  const { data, error } = await getSupabaseClient().rpc("get_frequent_expense_categories", {
+    p_limit: 5,
+    p_days: 90,
   })
-
   if (error) throw error
-  return data
+  return (data ?? []) as FrequentExpenseCategoryRow[]
+}
+
+export async function saveTransaction(input: SaveTransactionInput) {
+  return performFinancialMutation(async () => {
+    const { data, error } = await getSupabaseClient().rpc("upsert_financial_transaction", {
+      p_transaction_id: input.id ?? null,
+      p_transaction_type: input.transactionType,
+      p_amount_minor: input.amountMinor,
+      p_account_id: input.accountId,
+      p_destination_account_id: input.destinationAccountId ?? null,
+      p_category_id: input.categoryId ?? null,
+      p_transaction_date: input.transactionDate,
+      p_description: input.description || null,
+    })
+
+    if (error) throw error
+    return data
+  })
 }
 
 export async function softDeleteTransaction(transactionId: string) {
-  const { error } = await getSupabaseClient().rpc("soft_delete_transaction", {
-    p_transaction_id: transactionId,
+  return performFinancialMutation(async () => {
+    const { error } = await getSupabaseClient().rpc("soft_delete_transaction", {
+      p_transaction_id: transactionId,
+    })
+    if (error) throw error
   })
-  if (error) throw error
 }

@@ -1,19 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/currency"
+import { cn } from "@/lib/utils"
 
 const colors = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"]
 
 export function SpendingBreakdownCard({
   groups,
   currencyCode,
+  className,
 }: {
   groups: Array<{ label: string; amountMinor: number }>
   currencyCode: string
+  className?: string
 }) {
   const total = groups.reduce((sum, group) => sum + group.amountMinor, 0)
 
   return (
-    <Card className="shadow-xs">
+    <Card className={cn("shadow-xs", className)}>
       <CardHeader className="border-b">
         <CardTitle>Spending breakdown</CardTitle>
         <p className="text-xs text-muted-foreground">Current month by parent category</p>

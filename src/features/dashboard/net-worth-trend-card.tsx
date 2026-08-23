@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/currency"
 import { formatShortDate } from "@/lib/dates"
+import { cn } from "@/lib/utils"
 import type { NetWorthSnapshot } from "@/types/database"
 
-export function NetWorthTrendCard({ snapshots, currencyCode }: { snapshots: NetWorthSnapshot[]; currencyCode: string }) {
+export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snapshots: NetWorthSnapshot[]; currencyCode: string; className?: string }) {
   const chronological = [...snapshots].reverse()
   const values = chronological.map((snapshot) => snapshot.total_value_base_minor)
   const min = Math.min(...values, 0)
@@ -11,7 +12,7 @@ export function NetWorthTrendCard({ snapshots, currencyCode }: { snapshots: NetW
   const range = Math.max(max - min, 1)
 
   return (
-    <Card className="shadow-xs xl:col-span-2">
+    <Card className={cn("shadow-xs xl:col-span-2", className)}>
       <CardHeader className="border-b">
         <CardTitle>Net worth trend</CardTitle>
         <p className="text-xs text-muted-foreground">Daily snapshots when you use Ledgerly</p>

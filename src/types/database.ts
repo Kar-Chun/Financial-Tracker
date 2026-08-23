@@ -147,6 +147,13 @@ export type Database = {
         }
         Returns: Json
       }
+      get_frequent_expense_categories: {
+        Args: {
+          p_limit?: number
+          p_days?: number
+        }
+        Returns: FrequentExpenseCategoryRow[]
+      }
       refresh_net_worth_snapshot: {
         Args: Record<string, never>
         Returns: string
@@ -229,3 +236,9 @@ export type AccountSummaryRow = {
 export type Profile = ProfileRow
 export type Category = CategoryRow
 export type NetWorthSnapshot = NetWorthSnapshotRow
+
+export type FrequentExpenseCategoryRow = {
+  category_id: string
+  usage_count: number
+  last_used_on: string
+}

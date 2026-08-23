@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { PwaInstallCard } from "@/components/shared/pwa-install-card"
 import { useProfile, useUpdateProfile } from "@/features/auth/profile-service"
 import { CategoryManagement } from "@/features/categories/category-management"
 import { getErrorMessage } from "@/lib/errors"
@@ -119,6 +120,7 @@ export function SettingsPage() {
       )}
 
       <CategoryManagement />
+      <PwaInstallCard />
     </div>
   )
 }

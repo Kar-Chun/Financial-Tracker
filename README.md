@@ -1,6 +1,6 @@
 # Ledgerly
 
-Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, and seeing where money is spent. V1.1 adds real spending analytics and user-managed categories without changing the established accounting model.
+Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, and seeing where money is spent. V1.2 adds an installable, mobile-first experience without changing the established accounting model.
 
 ## Capabilities
 
@@ -13,6 +13,9 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Spending analytics with period presets, equivalent-period comparisons, parent/subcategory breakdowns, responsive charts, and factual deterministic insights
 - Expense and income category management: create, rename, archive, restore, and one-level subcategories
 - Explicit warnings/exclusions where foreign values cannot safely be consolidated
+- Installable PWA support with iOS home-screen metadata and a static-shell service worker
+- Mobile bottom navigation, one-handed Quick Add, safe-area handling, and offline mutation protection
+- User-scoped last expense account and deterministic frequent expense category shortcuts
 
 ## Stack and architecture
 
@@ -23,6 +26,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - React Hook Form and Zod for forms
 - Supabase Auth, Postgres, RPC functions, and Row Level Security
 - Recharts for responsive analytics visualisation
+- vite-plugin-pwa and Workbox for static application-shell caching
 - Vitest and React Testing Library
 
 Frontend code is feature-based under `src/features`. Supabase access lives in small feature services/hooks instead of page components. The versioned database contract lives under `supabase/migrations`.
@@ -71,6 +75,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 3. `202608220003_enable_rls_and_grants.sql`
 4. `202608220004_fix_investment_transfer_accounting.sql`
 5. `202608230001_add_spending_analytics_and_category_management.sql`
+6. `202608230002_add_frequent_expense_categories.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -108,6 +113,18 @@ Settings separates expense and income categories. Category type and parent are i
 ## Daily snapshots
 
 At most one snapshot exists per user/local calendar date. Financial RPCs refresh today, and dashboard loading self-heals it. There is no cron job or artificial row for unused days.
+
+## V1.2 mobile and PWA behaviour
+
+Authenticated phone layouts use a persistent bottom bar for Dashboard, Transactions, Quick Add, Analytics, and More. Quick Add defaults to Expense, puts the amount first, defaults the date using the profile timezone, and keeps optional date/description fields secondary.
+
+After a confirmed expense save, the app stores only that account UUID in local storage under a key scoped to the authenticated user. It is reused only when the account is still present in the user's RLS-filtered active account list and is a bank/cash account. Another user on the same device receives a different preference key.
+
+The `get_frequent_expense_categories` RPC ranks up to five active expense categories by usage count over the previous 90 local-calendar days, with most recent use as the tie-breaker. It derives the user from `auth.uid()`, excludes soft-deleted/non-expense transactions and archived/income categories, and performs no per-category query. With no history, Quick Add falls back to sensible active expense categories.
+
+The service worker precaches only the static application shell, generated JS/CSS, local fonts, and icons. It has no Supabase API runtime cache, background sync, financial mutation queue, or private financial response cache. Read-only screens may remain visible only where the browser already has them in memory. Every transaction, transfer, account, category, and valuation write checks connectivity before calling Supabase; offline attempts remain in the open form and are never replayed automatically.
+
+Install on supported browsers using their **Install app** or **Add to Home Screen** action. On iPhone/iPad, open the production site in Safari, tap **Share**, then **Add to Home Screen**. The installed app uses standalone display mode and safe-area spacing for notches and the home indicator.
 
 ## Development and validation
 
@@ -148,6 +165,8 @@ After Vercel provides the production URL, open Supabase Dashboard > Authenticati
 
 Signup does not hardcode a host. Supabase uses the configured Site URL for email-confirmation redirects, and the browser client detects the returned session in the URL. Do not deploy until migration status and the production environment variables have been confirmed.
 
+V1.2 does not change `vercel.json` or require additional Vercel environment variables. Apply migration `202608230002_add_frequent_expense_categories.sql`, then rebuild/redeploy so the manifest, icons, and generated service worker are published. Existing users may need to close and reopen the installed app once after an automatic service-worker update.
+
 ## Intentionally deferred
 
-V1.1 does not include credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, budgets, goals, CSV import, AI, notifications, or scheduled jobs. Budgets and goals remain honest placeholders.
+V1.2 does not include offline financial writes/background sync, push notifications, credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, budgets, goals, CSV import, or AI. Budgets and goals remain honest placeholders.

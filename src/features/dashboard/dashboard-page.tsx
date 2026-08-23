@@ -58,12 +58,12 @@ export function DashboardPage() {
   }
 
   const metrics = [
-    { label: "Net Worth", amountMinor: latest?.total_value_base_minor ?? 0, helper: `In ${currencyCode}, excluding unconverted cash`, icon: PiggyBank },
-    { label: "Bank + Cash", amountMinor: (latest?.bank_value_base_minor ?? 0) + (latest?.cash_value_base_minor ?? 0), helper: "Base-currency accounts only", icon: WalletCards },
-    { label: "Investments", amountMinor: latest?.investment_value_base_minor ?? 0, helper: "Manual values plus later base-currency transfers", icon: Landmark },
-    { label: "Monthly Income", amountMinor: monthly.incomeMinor, helper: "Transfers and unconverted currencies excluded", icon: BanknoteArrowDown },
-    { label: "Monthly Expenses", amountMinor: monthly.expensesMinor, helper: "Reserved types and unconverted currencies excluded", icon: BanknoteArrowUp },
-    { label: "Net Cash Flow", amountMinor: monthly.netCashFlowMinor, helper: "Income minus expenses", icon: TrendingUp },
+    { label: "Net Worth", amountMinor: latest?.total_value_base_minor ?? 0, helper: `In ${currencyCode}, excluding unconverted cash`, icon: PiggyBank, className: "order-1 xl:order-none" },
+    { label: "Bank + Cash", amountMinor: (latest?.bank_value_base_minor ?? 0) + (latest?.cash_value_base_minor ?? 0), helper: "Base-currency accounts only", icon: WalletCards, className: "order-5 xl:order-none" },
+    { label: "Investments", amountMinor: latest?.investment_value_base_minor ?? 0, helper: "Manual values plus later base-currency transfers", icon: Landmark, className: "order-6 xl:order-none" },
+    { label: "Monthly Income", amountMinor: monthly.incomeMinor, helper: "Transfers and unconverted currencies excluded", icon: BanknoteArrowDown, className: "order-3 xl:order-none" },
+    { label: "Monthly Expenses", amountMinor: monthly.expensesMinor, helper: "Reserved types and unconverted currencies excluded", icon: BanknoteArrowUp, className: "order-2 xl:order-none" },
+    { label: "Net Cash Flow", amountMinor: monthly.netCashFlowMinor, helper: "Income minus expenses", icon: TrendingUp, className: "order-4 xl:order-none" },
   ]
 
   return (
@@ -78,9 +78,9 @@ export function DashboardPage() {
         {metrics.map((metric) => <MetricCard key={metric.label} {...metric} currencyCode={currencyCode} />)}
       </section>
       <section className="grid gap-4 xl:grid-cols-3" aria-label="Financial insights">
-        <NetWorthTrendCard snapshots={snapshots} currencyCode={currencyCode} />
-        <SpendingBreakdownCard groups={spendingGroups} currencyCode={currencyCode} />
-        <RecentTransactionsCard transactions={transactions} />
+        <NetWorthTrendCard className="order-2 xl:order-1" snapshots={snapshots} currencyCode={currencyCode} />
+        <SpendingBreakdownCard className="order-3 xl:order-2" groups={spendingGroups} currencyCode={currencyCode} />
+        <RecentTransactionsCard className="order-1 xl:order-3" transactions={transactions} />
       </section>
     </div>
   )

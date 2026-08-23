@@ -22,6 +22,17 @@ export function getTodayDateInput(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
+export function getDateInputInTimeZone(timezone: string, date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date)
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value
+  return `${value("year")}-${value("month")}-${value("day")}`
+}
+
 export function getCurrentMonthInput(date = new Date()) {
   return getTodayDateInput(date).slice(0, 7)
 }

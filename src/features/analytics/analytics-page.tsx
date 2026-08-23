@@ -89,8 +89,8 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
         <Card>
           <CardHeader><CardTitle>Spending over time</CardTitle></CardHeader>
-          <CardContent>
-            <div className="h-72 w-full" role="img" aria-label="Bar chart of spending over time">
+          <CardContent className="px-2 sm:px-6">
+            <div className="h-60 w-full sm:h-72" role="img" aria-label="Bar chart of spending over time">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                   <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />

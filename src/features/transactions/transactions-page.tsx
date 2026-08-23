@@ -106,7 +106,7 @@ export function TransactionsPage() {
             Record income, expenses, and same-currency transfers.
           </p>
         </div>
-        <Button onClick={openCreate} disabled={(accountsQuery.data?.length ?? 0) === 0}>
+        <Button className="hidden lg:inline-flex" onClick={openCreate} disabled={(accountsQuery.data?.length ?? 0) === 0}>
           <Plus /> Add transaction
         </Button>
       </header>
@@ -204,7 +204,7 @@ function TransactionRow({ transaction, onEdit, onDelete }: { transaction: Transa
 
   return (
     <Card className="py-0 shadow-xs">
-      <CardContent className="flex items-center gap-3 p-4">
+      <CardContent className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 p-3 sm:flex sm:p-4">
         <span className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-xl",
           type === "income" ? "bg-emerald-400/10 text-emerald-400" : type === "expense" ? "bg-rose-400/10 text-rose-400" : "bg-primary/10 text-primary",
@@ -218,13 +218,13 @@ function TransactionRow({ transaction, onEdit, onDelete }: { transaction: Transa
           </div>
           <p className="truncate text-xs text-muted-foreground">{subtitle} · {formatLongDate(transaction.transaction_date)}</p>
         </div>
-        <p className={cn("text-sm font-semibold", type === "income" && "text-emerald-400", type === "expense" && "text-rose-400")}>
+        <p className={cn("text-right text-sm font-semibold", type === "income" && "text-emerald-400", type === "expense" && "text-rose-400")}>
           {type === "income" ? "+" : type === "expense" ? "−" : ""}{formatCurrency(amount, account?.currency_code ?? source?.currency_code ?? "SGD")}
         </p>
         {editable && (
-          <div className="flex gap-1">
-            <Button size="icon-sm" variant="ghost" aria-label="Edit transaction" onClick={onEdit}><Pencil /></Button>
-            <Button size="icon-sm" variant="ghost" aria-label="Delete transaction" onClick={onDelete}><Trash2 /></Button>
+          <div className="col-start-2 col-end-4 flex justify-end gap-1 sm:flex">
+            <Button size="icon-sm" variant="ghost" aria-label={`Edit ${type} transaction`} onClick={onEdit}><Pencil /></Button>
+            <Button size="icon-sm" variant="ghost" aria-label={`Delete ${type} transaction`} onClick={onDelete}><Trash2 /></Button>
           </div>
         )}
       </CardContent>

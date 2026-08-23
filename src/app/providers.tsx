@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { Toaster } from "@/components/ui/sonner"
+import { OfflineIndicator } from "@/components/shared/offline-indicator"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AuthProvider } from "@/features/auth/auth-provider"
 
@@ -26,6 +27,7 @@ export function AppProviders({ children }: AppProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>{children}</TooltipProvider>
+        <OfflineIndicator />
         <Toaster position="top-right" richColors />
       </AuthProvider>
     </QueryClientProvider>

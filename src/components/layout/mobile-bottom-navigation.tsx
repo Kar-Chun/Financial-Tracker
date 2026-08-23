@@ -1,4 +1,4 @@
-import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, Plus, ReceiptText, Settings, WalletCards } from "lucide-react"
+import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, WalletCards } from "lucide-react"
 import { useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 
@@ -13,6 +13,7 @@ const primaryItems = [
 ]
 
 const moreItems = [
+  { label: "Budgets", href: "/budgets", icon: PiggyBank },
   { label: "Accounts", href: "/accounts", icon: WalletCards },
   { label: "Investments", href: "/investments", icon: Landmark },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -69,7 +70,7 @@ export function MobileBottomNavigation() {
         <SheetContent side="bottom" className="rounded-t-3xl border-border/40 bg-popover pb-[env(safe-area-inset-bottom)]">
           <SheetHeader className="border-b border-border/35 text-left">
             <SheetTitle>More</SheetTitle>
-            <SheetDescription>Accounts, investments, settings, and your session.</SheetDescription>
+            <SheetDescription>Budgets, accounts, investments, settings, and your session.</SheetDescription>
           </SheetHeader>
           <nav className="grid gap-2 px-4" aria-label="More navigation">
             {moreItems.map((item) => (

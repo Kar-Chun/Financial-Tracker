@@ -11,6 +11,7 @@ function useInvalidateCategoryData() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] }),
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       queryClient.invalidateQueries({ queryKey: ["analytics"] }),
+      queryClient.invalidateQueries({ queryKey: ["budgets"] }),
     ])
   }
 }

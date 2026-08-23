@@ -7,6 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useProfile } from "@/features/auth/profile-service"
 import { AccountOverview } from "@/features/dashboard/account-overview"
 import { useDashboard } from "@/features/dashboard/dashboard-hooks"
+import { MonthlyBudgetCard } from "@/features/dashboard/monthly-budget-card"
+import { useBudgetSummary } from "@/features/budgets/budget-hooks"
+import { getCurrentMonthStart } from "@/features/budgets/budget-dates"
 import { getMonthlySummary, groupExpensesByParent } from "@/features/dashboard/dashboard-logic"
 import { MetricCard } from "@/features/dashboard/metric-card"
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
@@ -20,6 +23,8 @@ export function DashboardPage() {
   const profileQuery = useProfile()
   const profile = profileQuery.data
   const currencyCode = profile?.base_currency ?? "SGD"
+  const timezone = profile?.timezone ?? "Asia/Singapore"
+  const budgetQuery = useBudgetSummary(getCurrentMonthStart(timezone), Boolean(profile))
 
   if (dashboardQuery.isLoading || profileQuery.isLoading) return <DashboardSkeleton />
   if (dashboardQuery.isError || profileQuery.isError || !dashboardQuery.data) {
@@ -38,7 +43,6 @@ export function DashboardPage() {
   const spendingGroups = groupExpensesByParent(transactions, categories, currencyCode)
   const foreignAccounts = accounts.filter((account) => account.account_type !== "investment" && !account.included_in_net_worth)
   const displayName = profile?.display_name?.trim() || "there"
-  const timezone = profile?.timezone ?? "Asia/Singapore"
   const todayDate = getDateInputInTimeZone(timezone)
 
   if (accounts.length === 0) {
@@ -55,6 +59,7 @@ export function DashboardPage() {
             <Link className={cn(buttonVariants(), "mt-5")} to="/accounts">Add an account</Link>
           </CardContent>
         </Card>
+        {!budgetQuery.isError && <MonthlyBudgetCard summary={budgetQuery.data} />}
       </div>
     )
   }
@@ -75,6 +80,8 @@ export function DashboardPage() {
         <MetricCard label="Monthly spent" amountMinor={monthly.expensesMinor} currencyCode={currencyCode} helper="Recorded expenses" icon={BanknoteArrowUp} tone="negative" />
         <MetricCard className="col-span-2 lg:col-span-1" label="Net cash flow" amountMinor={monthly.netCashFlowMinor} currencyCode={currencyCode} helper="Income minus expenses" icon={TrendingUp} showSign />
       </section>
+
+      {!budgetQuery.isError && <MonthlyBudgetCard summary={budgetQuery.data} />}
 
       <section className="grid gap-7 xl:grid-cols-[minmax(20rem,0.9fr)_minmax(0,1.1fr)]">
         <AccountOverview accounts={accounts} baseCurrency={currencyCode} />

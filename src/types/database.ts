@@ -81,6 +81,25 @@ type NetWorthSnapshotRow = {
   updated_at: string
 }
 
+type MonthlyBudgetRow = {
+  id: string
+  user_id: string
+  month_start: string
+  currency_code: string
+  amount_minor: number
+  created_at: string
+  updated_at: string
+}
+
+type CategoryBudgetRow = {
+  id: string
+  monthly_budget_id: string
+  category_id: string
+  amount_minor: number
+  created_at: string
+  updated_at: string
+}
+
 type TableDefinition<Row, Insert, Update> = {
   Row: Row
   Insert: Insert
@@ -126,6 +145,16 @@ export type Database = {
         Partial<Omit<NetWorthSnapshotRow, "id" | "created_at" | "updated_at">> & Pick<NetWorthSnapshotRow, "user_id" | "snapshot_date" | "bank_value_base_minor" | "cash_value_base_minor" | "investment_value_base_minor" | "total_value_base_minor">,
         Partial<Omit<NetWorthSnapshotRow, "id" | "user_id" | "created_at" | "updated_at">>
       >
+      monthly_budgets: TableDefinition<
+        MonthlyBudgetRow,
+        Partial<Omit<MonthlyBudgetRow, "id" | "created_at" | "updated_at">> & Pick<MonthlyBudgetRow, "user_id" | "month_start" | "currency_code" | "amount_minor">,
+        Partial<Omit<MonthlyBudgetRow, "id" | "user_id" | "created_at" | "updated_at">>
+      >
+      category_budgets: TableDefinition<
+        CategoryBudgetRow,
+        Partial<Omit<CategoryBudgetRow, "id" | "created_at" | "updated_at">> & Pick<CategoryBudgetRow, "monthly_budget_id" | "category_id" | "amount_minor">,
+        Partial<Omit<CategoryBudgetRow, "id" | "created_at" | "updated_at">>
+      >
     }
     Views: Record<string, never>
     Functions: {
@@ -153,6 +182,26 @@ export type Database = {
           p_days?: number
         }
         Returns: FrequentExpenseCategoryRow[]
+      }
+      get_monthly_budget_summary: {
+        Args: { p_month_start: string }
+        Returns: Json
+      }
+      upsert_monthly_budget: {
+        Args: { p_month_start: string; p_amount_minor: number }
+        Returns: string
+      }
+      upsert_category_budget: {
+        Args: { p_month_start: string; p_category_id: string; p_amount_minor: number }
+        Returns: string
+      }
+      remove_category_budget: {
+        Args: { p_month_start: string; p_category_id: string }
+        Returns: undefined
+      }
+      copy_monthly_budget: {
+        Args: { p_source_month_start: string; p_destination_month_start: string }
+        Returns: Json
       }
       refresh_net_worth_snapshot: {
         Args: Record<string, never>

@@ -19,6 +19,9 @@ const friendlyErrors: Array<[string, string]> = [
   ["same type as its parent", "A subcategory must have the same type as its parent."],
   ["Archived parents", "Archived categories cannot receive new subcategories."],
   ["Category not found", "The category could not be found."],
+  ["budget already exists", "A budget already exists for that month."],
+  ["Previous month budget not found", "The previous month does not have a budget to copy."],
+  ["parent expense category", "Choose an active parent expense category."],
 ]
 
 export function getErrorMessage(error: unknown, fallback: string) {

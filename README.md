@@ -1,6 +1,6 @@
 # Ledgerly
 
-Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, and seeing where money is spent. V1.2 adds an installable, mobile-first experience without changing the established accounting model.
+Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, seeing where money is spent, and planning monthly spending. V1.4 adds transaction-derived monthly budgeting without changing the established accounting model.
 
 ## Capabilities
 
@@ -16,6 +16,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Installable PWA support with iOS home-screen metadata and a static-shell service worker
 - Mobile bottom navigation, full-screen transaction entry, safe-area handling, and offline mutation protection
 - User-scoped last expense account and deterministic frequent expense category shortcuts
+- Independent monthly overall budgets, optional parent-category limits, spending pace, and safe daily guidance
 
 ## Stack and architecture
 
@@ -76,6 +77,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 4. `202608220004_fix_investment_transfer_accounting.sql`
 5. `202608230001_add_spending_analytics_and_category_management.sql`
 6. `202608230002_add_frequent_expense_categories.sql`
+7. `202608240001_add_monthly_budgets.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -113,6 +115,18 @@ Settings separates expense and income categories. Category type and parent are i
 ## Daily snapshots
 
 At most one snapshot exists per user/local calendar date. Financial RPCs refresh today, and dashboard loading self-heals it. There is no cron job or artificial row for unused days.
+
+## Monthly budgeting
+
+Each calendar month has an independent overall limit in the profile base currency; unused amounts never roll over. Optional category limits apply to an active parent expense category and all its direct children, but do not need to add up to the overall limit. Archived categories remain readable historically and cannot receive new limits.
+
+Budget spending uses the same definition as Analytics: non-deleted `expense` transactions on base-currency accounts in the selected month. Income, transfers, adjustments, refunds, soft-deleted expenses, and unconverted foreign-currency expenses are excluded. No `spent` value is stored; the authenticated summary RPC aggregates current transactions whenever the budget is read.
+
+For the current month, safe daily spend is `max(overall limit - spent, 0) / remaining calendar days including today`, rounded to integer minor units. Expected pace is `overall limit × elapsed calendar days / days in month`: actual spend at or below that value is **On track**, spend above pace but within the limit is **Spending ahead of pace**, and spend above the limit is **Over budget**. Historical months show final performance and future months do not show current guidance.
+
+Copy Previous Month creates the destination month's overall/category limits only. It never copies transactions, spending, unused balance, or rollover, rejects an existing destination, and skips categories that are no longer active/valid. Budget currency is snapshotted when a month is created so a later profile-currency change cannot silently reinterpret historical limits; the UI still keeps base currency locked.
+
+Migration `202608240001_add_monthly_budgets.sql` adds both budget tables, ownership RLS, validated mutation RPCs, and the aggregated monthly summary RPC. Follow [V1.4 budget verification](supabase/V1_4_VERIFICATION.md) for two-user and accounting checks.
 
 ## V1.2 mobile and PWA behaviour
 
@@ -167,8 +181,8 @@ After Vercel provides the production URL, open Supabase Dashboard > Authenticati
 
 Signup does not hardcode a host. Supabase uses the configured Site URL for email-confirmation redirects, and the browser client detects the returned session in the URL. Do not deploy until migration status and the production environment variables have been confirmed.
 
-V1.2 does not change `vercel.json` or require additional Vercel environment variables. Apply migration `202608230002_add_frequent_expense_categories.sql`, then rebuild/redeploy so the manifest, icons, and generated service worker are published. Existing users may need to close and reopen the installed app once after an automatic service-worker update.
+V1.4 does not change `vercel.json` or require additional Vercel environment variables. Apply migration `202608240001_add_monthly_budgets.sql`, then rebuild/redeploy. Existing users may need to close and reopen the installed app once after an automatic service-worker update.
 
 ## Intentionally deferred
 
-V1.2 does not include offline financial writes/background sync, push notifications, credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, budgets, goals, CSV import, or AI. Budgets and goals remain honest placeholders.
+V1.4 does not include rollover/payday/weekly budgets, subcategory limits, offline financial writes/background sync, push notifications, credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, goals, CSV import, or AI.

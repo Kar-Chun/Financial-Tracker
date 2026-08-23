@@ -22,7 +22,7 @@ import { useAccounts } from "@/features/accounts/accounts-hooks"
 import { TransactionFormDialog } from "@/features/transactions/transaction-form-dialog"
 import { useCategories, useSoftDeleteTransaction, useTransactions } from "@/features/transactions/transactions-hooks"
 import { getCategoryDisplayName, getTransactionAmount } from "@/features/transactions/transaction-logic"
-import { formatCurrency } from "@/lib/currency"
+import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
 import { cn } from "@/lib/utils"
@@ -163,6 +163,12 @@ function TransactionRow({ transaction, bordered, onEdit, onDelete }: { transacti
     ? `Transfer · ${formatLongDate(transaction.transaction_date)}`
     : `${category} · ${account?.name ?? "Account"} · ${formatLongDate(transaction.transaction_date)}`
   const editable = type === "expense" || type === "income" || type === "transfer"
+  const currency = account?.currency_code ?? source?.currency_code ?? "SGD"
+  const displayAmount = type === "income"
+    ? formatSignedCurrency(amount, currency)
+    : type === "expense"
+      ? formatSignedCurrency(-amount, currency)
+      : formatCurrency(amount, currency)
 
   return (
     <div className={cn("grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3.5 sm:flex sm:px-5 sm:py-4", bordered && "border-t border-border/20")}>
@@ -173,12 +179,12 @@ function TransactionRow({ transaction, bordered, onEdit, onDelete }: { transacti
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{title}</p>
+        <p className="line-clamp-2 text-sm leading-5 font-medium">{title}</p>
         <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
       </div>
-      <p className={cn("text-right text-sm font-semibold tabular-nums", type === "income" && "text-positive", type === "expense" && "text-negative", type === "transfer" && "text-brand-secondary")}>
+      <p className={cn("max-w-[42vw] shrink-0 whitespace-nowrap text-right text-[clamp(0.78rem,3.5vw,0.875rem)] font-semibold tabular-nums sm:max-w-none", type === "income" && "text-positive", type === "expense" && "text-negative", type === "transfer" && "text-brand-secondary")}>
         <span className="sr-only">{type}: </span>
-        {type === "income" ? "+" : type === "expense" ? "−" : ""}{formatCurrency(amount, account?.currency_code ?? source?.currency_code ?? "SGD")}
+        {displayAmount}
       </p>
       {editable && (
         <div className="col-start-2 col-end-4 flex justify-end gap-1">

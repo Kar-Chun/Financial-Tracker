@@ -17,10 +17,10 @@ describe("RecentTransactionsCard", () => {
 
     expect(screen.getByText("Lunch")).toBeInTheDocument()
     expect(screen.getByText("Eating Out · Today")).toBeInTheDocument()
-    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "expense: −$8.5")).toBeInTheDocument()
+    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "expense: -$8.50")).toBeInTheDocument()
     expect(screen.getByText("DBS Savings → Cash Wallet")).toBeInTheDocument()
     expect(screen.getByText("Transfer · Today")).toBeInTheDocument()
-    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "transfer: $200")).toBeInTheDocument()
+    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "transfer: $200.00")).toBeInTheDocument()
     expect(screen.queryByText("account-source-id")).not.toBeInTheDocument()
   })
 })

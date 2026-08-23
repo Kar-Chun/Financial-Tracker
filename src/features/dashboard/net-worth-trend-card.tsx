@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 import { formatSnapshotTooltipLabel, netWorthChartKeys, type NetWorthChartDatum } from "@/features/dashboard/net-worth-trend"
-import { formatCurrency } from "@/lib/currency"
+import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { isValidIsoCalendarDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import type { NetWorthSnapshot } from "@/types/database"
@@ -45,7 +45,7 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
           <span className="size-1.5 rounded-full bg-positive" aria-hidden="true" />
           <span className="text-[0.68rem] text-muted-foreground">Updated today</span>
         </div>
-        <p className="mt-2 font-serif text-[clamp(2.8rem,13vw,4.75rem)] leading-none font-normal tracking-[-0.055em] text-foreground tabular-nums">
+        <p className="mt-2 whitespace-nowrap font-serif text-[clamp(2.15rem,11.5vw,4.75rem)] leading-none font-normal tracking-[-0.055em] text-foreground tabular-nums">
           {formatCurrency(latest?.total_value_base_minor ?? 0, currencyCode)}
         </p>
         {changeMinor !== null && (
@@ -54,7 +54,7 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
               "rounded-full px-2.5 py-1 font-semibold tabular-nums",
               changeMinor >= 0 ? "bg-positive/10 text-positive" : "bg-negative/10 text-negative",
             )}>
-              {changeMinor >= 0 ? "+" : "−"}{formatCurrency(Math.abs(changeMinor), currencyCode)}
+              {formatSignedCurrency(changeMinor, currencyCode)}
             </span>
             <span className="text-muted-foreground">
               {changePercentage !== null ? `${changePercentage.toFixed(1)}% ` : ""}over {period === 30 ? "1 month" : "3 months"}

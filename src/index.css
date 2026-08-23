@@ -93,6 +93,9 @@
     --sidebar-accent-foreground: oklch(0.97 0.014 248);
     --sidebar-border: oklch(0.27 0.045 257);
     --sidebar-ring: oklch(0.68 0.17 250);
+    --mobile-navigation-height: 4rem;
+    --mobile-navigation-edge-gap: 0.375rem;
+    --mobile-floating-action-gap: 0.75rem;
 }
 
 @layer base {

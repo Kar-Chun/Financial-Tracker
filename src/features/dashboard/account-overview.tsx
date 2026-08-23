@@ -31,12 +31,12 @@ export function AccountOverview({ accounts, baseCurrency }: { accounts: AccountS
                 <Icon className="size-4" aria-hidden="true" />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">{account.name}</span>
+                <span className="line-clamp-2 text-sm leading-5 font-medium">{account.name}</span>
                 <span className="block truncate text-xs capitalize text-muted-foreground">
                   {[account.institution, account.account_type, account.currency_code].filter(Boolean).join(" · ")}
                 </span>
               </span>
-              <span className="text-right text-sm font-semibold tabular-nums">{value}</span>
+              <span className="max-w-[45vw] shrink-0 whitespace-nowrap text-right text-[clamp(0.8rem,3.6vw,0.95rem)] font-semibold tabular-nums sm:max-w-none">{value}</span>
             </Link>
           )
         })}

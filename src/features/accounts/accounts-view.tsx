@@ -176,13 +176,13 @@ function AccountRow({
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <h2 className="truncate text-sm font-semibold sm:text-base">{account.name}</h2>
+        <h2 className="line-clamp-2 text-sm leading-5 font-semibold sm:text-base">{account.name}</h2>
         <p className="truncate text-xs capitalize text-muted-foreground">
           {[account.institution, account.account_type, account.currency_code].filter(Boolean).join(" · ")}
         </p>
       </div>
       <div className="text-right">
-        <p className="text-base font-semibold tracking-tight tabular-nums sm:text-lg">{primaryValue}</p>
+        <p className="max-w-[45vw] whitespace-nowrap text-[clamp(0.85rem,3.8vw,1.125rem)] font-semibold tracking-tight tabular-nums sm:max-w-none">{primaryValue}</p>
         <p className="text-[0.68rem] text-muted-foreground">{isInvestment ? "Base value" : "Calculated"}</p>
       </div>
       <div className="col-start-2 col-end-4 min-w-0">

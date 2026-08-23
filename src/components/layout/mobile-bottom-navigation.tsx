@@ -6,7 +6,7 @@ import { UserMenu } from "@/components/layout/user-menu"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
-type MobileBottomNavigationProps = {
+type MobileQuickAddButtonProps = {
   onQuickAdd: () => void
 }
 
@@ -22,7 +22,7 @@ const moreItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
-export function MobileBottomNavigation({ onQuickAdd }: MobileBottomNavigationProps) {
+export function MobileBottomNavigation() {
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
   const routeItem = (item: typeof primaryItems[number]) => {
@@ -47,19 +47,11 @@ export function MobileBottomNavigation({ onQuickAdd }: MobileBottomNavigationPro
     <>
       <nav
         aria-label="Mobile navigation"
-        className="fixed right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[max(0.75rem,env(safe-area-inset-left))] z-40 rounded-2xl bg-surface-elevated/95 px-1 shadow-lg shadow-black/20 ring-1 ring-white/5 backdrop-blur-xl lg:hidden"
+        className="fixed right-[max(0.75rem,calc(env(safe-area-inset-right)+0.5rem))] bottom-[calc(var(--mobile-navigation-edge-gap)+env(safe-area-inset-bottom))] left-[max(0.75rem,calc(env(safe-area-inset-left)+0.5rem))] z-40 min-h-(--mobile-navigation-height) rounded-2xl bg-surface-elevated/95 px-1 shadow-lg shadow-black/20 ring-1 ring-white/5 backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 items-center">
+        <div className="mx-auto grid min-h-(--mobile-navigation-height) max-w-lg grid-cols-4 items-center">
           {routeItem(primaryItems[0])}
           {routeItem(primaryItems[1])}
-          <button
-            type="button"
-            onClick={onQuickAdd}
-            aria-label="Quick add transaction"
-            className="mx-auto -mt-6 flex size-15 items-center justify-center rounded-full border-[5px] border-background bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring"
-          >
-            <Plus className="size-7" aria-hidden="true" />
-          </button>
           {routeItem(primaryItems[2])}
           <button
             type="button"
@@ -99,5 +91,18 @@ export function MobileBottomNavigation({ onQuickAdd }: MobileBottomNavigationPro
         </SheetContent>
       </Sheet>
     </>
+  )
+}
+
+export function MobileQuickAddButton({ onQuickAdd }: MobileQuickAddButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onQuickAdd}
+      aria-label="Quick add transaction"
+      className="fixed right-[max(1.25rem,calc(env(safe-area-inset-right)+1rem))] bottom-[calc(var(--mobile-navigation-height)+var(--mobile-navigation-edge-gap)+var(--mobile-floating-action-gap)+env(safe-area-inset-bottom))] z-45 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring lg:hidden"
+    >
+      <Plus className="size-6" aria-hidden="true" />
+    </button>
   )
 }

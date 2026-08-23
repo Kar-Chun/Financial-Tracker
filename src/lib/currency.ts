@@ -62,9 +62,14 @@ export function formatCurrency(amountInMinorUnits: number, currencyCode = "SGD")
   return new Intl.NumberFormat("en-SG", {
     style: "currency",
     currency: currencyCode.toUpperCase(),
-    minimumFractionDigits: 0,
+    minimumFractionDigits: minorDigits,
     maximumFractionDigits: minorDigits,
   }).format(amountInMinorUnits / scale)
+}
+
+export function formatSignedCurrency(amountInMinorUnits: number, currencyCode = "SGD") {
+  const formatted = formatCurrency(amountInMinorUnits, currencyCode)
+  return amountInMinorUnits > 0 ? `+${formatted}` : formatted
 }
 
 export function minorUnitsToInput(amountInMinorUnits: number, currencyCode: string) {

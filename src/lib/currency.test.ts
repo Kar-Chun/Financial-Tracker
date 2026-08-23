@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   formatCurrency,
+  formatSignedCurrency,
   minorUnitsToInput,
   parseCurrencyToMinor,
 } from "@/lib/currency"
@@ -18,7 +19,15 @@ describe("currency minor-unit utilities", () => {
   })
 
   it("formats safe integer minor units for display", () => {
-    expect(formatCurrency(1_250, "SGD")).toContain("12.5")
+    expect(formatCurrency(1_250, "SGD")).toBe("$12.50")
+    expect(formatCurrency(51_580, "SGD")).toBe("$515.80")
+    expect(formatCurrency(51_580, "USD")).toBe("US$515.80")
     expect(minorUnitsToInput(1_250, "USD")).toBe("12.50")
+  })
+
+  it("formats positive and negative signed values at the currency precision", () => {
+    expect(formatSignedCurrency(48_420, "SGD")).toBe("+$484.20")
+    expect(formatSignedCurrency(-48_420, "SGD")).toBe("-$484.20")
+    expect(formatSignedCurrency(0, "SGD")).toBe("$0.00")
   })
 })

@@ -15,8 +15,8 @@ describe("NetWorthTrendCard", () => {
       snapshot("earlier", "2026-08-01", 100_000),
     ]} currencyCode="SGD" />)
 
-    expect(screen.getByText("$1,100")).toBeInTheDocument()
-    expect(screen.getByText("+$100")).toBeInTheDocument()
+    expect(screen.getByText("$1,100.00")).toBeInTheDocument()
+    expect(screen.getByText("+$100.00")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "1M" })).toHaveAttribute("aria-pressed", "true")
     fireEvent.click(screen.getByRole("button", { name: "3M" }))
     expect(screen.getByRole("button", { name: "3M" })).toHaveAttribute("aria-pressed", "true")
@@ -35,7 +35,7 @@ describe("NetWorthTrendCard", () => {
       snapshot("latest", "invalid-date", 110_000),
     ]} currencyCode="SGD" />)).not.toThrow()
 
-    expect(screen.getByText("$1,100")).toBeInTheDocument()
+    expect(screen.getByText("$1,100.00")).toBeInTheDocument()
     expect(screen.getByText("More daily snapshots will build your trend.")).toBeInTheDocument()
   })
 })

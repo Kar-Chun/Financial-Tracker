@@ -47,7 +47,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[min(92svh,52rem)] overflow-hidden rounded-t-[2rem] border-x border-border/40 bg-popover shadow-2xl shadow-black/35 sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
+        className="max-h-[min(92svh,52rem)] overflow-hidden rounded-t-[2rem] border-x border-border/40 bg-popover shadow-2xl shadow-black/35 supports-[height:100dvh]:max-h-[min(92dvh,52rem)] sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
       >
         <SheetHeader className="border-b border-border/25 px-5 pt-5 pb-4 text-left">
           <p className="eyebrow">New transaction</p>

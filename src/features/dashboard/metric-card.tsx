@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/currency"
+import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 
 type MetricCardProps = {
@@ -16,10 +16,10 @@ type MetricCardProps = {
 }
 
 export function MetricCard({ label, amountMinor, currencyCode, helper, icon: Icon, className, tone = "neutral", showSign = false }: MetricCardProps) {
-  const value = `${showSign && amountMinor > 0 ? "+" : ""}${formatCurrency(amountMinor, currencyCode)}`
+  const value = showSign ? formatSignedCurrency(amountMinor, currencyCode) : formatCurrency(amountMinor, currencyCode)
   return (
     <Card className={cn("border-0 bg-card/80 py-0 shadow-none ring-1 ring-white/4", className)}>
-      <CardContent className="p-4 sm:p-5">
+      <CardContent className="min-w-0 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
           <p className="eyebrow leading-5">{label}</p>
           <span className={cn(
@@ -30,7 +30,7 @@ export function MetricCard({ label, amountMinor, currencyCode, helper, icon: Ico
           </span>
         </div>
         <p className={cn(
-          "mt-3 text-xl font-semibold tracking-tight tabular-nums sm:text-2xl",
+          "mt-3 whitespace-nowrap text-[clamp(1rem,5vw,1.5rem)] font-semibold tracking-tight tabular-nums",
           showSign && amountMinor > 0 && "text-positive",
           showSign && amountMinor < 0 && "text-negative",
         )}>

@@ -120,6 +120,34 @@ npm run build
 git diff --check
 ```
 
+## Vercel deployment
+
+This project is a Vite single-page application. Vite produces the production site in `dist/`, and the root `vercel.json` rewrites direct route requests to `index.html` so React Router can handle routes such as `/dashboard`, `/transactions`, and `/analytics` after a refresh.
+
+Import the repository into Vercel and keep the detected Vite settings:
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- Install command: `npm install`
+
+Configure these browser-safe environment variables in the Vercel project:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+No Supabase secret or service-role credential belongs in Vercel's frontend environment.
+
+After Vercel provides the production URL, open Supabase Dashboard > Authentication > URL Configuration:
+
+1. Set **Site URL** to the exact HTTPS production URL.
+2. Add the exact production URL to **Redirect URLs** if it is not already allowed.
+3. Keep the local Vite URL as an additional redirect only if local confirmation testing is needed.
+4. If Vercel preview signups need email confirmation, add an appropriately scoped preview redirect pattern separately; prefer an exact production redirect for production.
+
+Signup does not hardcode a host. Supabase uses the configured Site URL for email-confirmation redirects, and the browser client detects the returned session in the URL. Do not deploy until migration status and the production environment variables have been confirmed.
+
 ## Intentionally deferred
 
 V1.1 does not include credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, budgets, goals, CSV import, AI, notifications, or scheduled jobs. Budgets and goals remain honest placeholders.

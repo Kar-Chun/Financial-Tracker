@@ -18,6 +18,7 @@ function useInvalidateFinanceData() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] }),
       queryClient.invalidateQueries({ queryKey: ["analytics"] }),
       queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+      queryClient.invalidateQueries({ queryKey: ["goals"] }),
     ])
   }
 }

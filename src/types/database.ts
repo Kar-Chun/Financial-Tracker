@@ -100,6 +100,28 @@ type CategoryBudgetRow = {
   updated_at: string
 }
 
+type SavingsGoalRow = {
+  id: string
+  user_id: string
+  name: string
+  target_amount_minor: number
+  currency_code: string
+  target_date: string | null
+  note: string | null
+  archived_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+type GoalAllocationRow = {
+  id: string
+  goal_id: string
+  amount_minor: number
+  allocation_date: string
+  note: string | null
+  created_at: string
+}
+
 type TableDefinition<Row, Insert, Update> = {
   Row: Row
   Insert: Insert
@@ -155,6 +177,16 @@ export type Database = {
         Partial<Omit<CategoryBudgetRow, "id" | "created_at" | "updated_at">> & Pick<CategoryBudgetRow, "monthly_budget_id" | "category_id" | "amount_minor">,
         Partial<Omit<CategoryBudgetRow, "id" | "created_at" | "updated_at">>
       >
+      savings_goals: TableDefinition<
+        SavingsGoalRow,
+        Partial<Omit<SavingsGoalRow, "id" | "created_at" | "updated_at">> & Pick<SavingsGoalRow, "user_id" | "name" | "target_amount_minor" | "currency_code">,
+        Partial<Omit<SavingsGoalRow, "id" | "user_id" | "currency_code" | "created_at" | "updated_at">>
+      >
+      goal_allocations: TableDefinition<
+        GoalAllocationRow,
+        Partial<Omit<GoalAllocationRow, "id" | "created_at">> & Pick<GoalAllocationRow, "goal_id" | "amount_minor" | "allocation_date">,
+        Partial<Omit<GoalAllocationRow, "id" | "goal_id" | "created_at">>
+      >
     }
     Views: Record<string, never>
     Functions: {
@@ -201,6 +233,38 @@ export type Database = {
       }
       copy_monthly_budget: {
         Args: { p_source_month_start: string; p_destination_month_start: string }
+        Returns: Json
+      }
+      upsert_savings_goal: {
+        Args: {
+          p_name: string
+          p_target_amount_minor: number
+          p_target_date?: string | null
+          p_note?: string | null
+          p_goal_id?: string | null
+        }
+        Returns: string
+      }
+      set_savings_goal_archived: {
+        Args: { p_goal_id: string; p_archived: boolean }
+        Returns: string
+      }
+      record_goal_allocation: {
+        Args: {
+          p_goal_id: string
+          p_operation: "allocate" | "reduce"
+          p_amount_minor: number
+          p_allocation_date: string
+          p_note?: string | null
+        }
+        Returns: string
+      }
+      get_savings_goals_summary: {
+        Args: { p_include_archived?: boolean }
+        Returns: Json
+      }
+      get_savings_goal_detail: {
+        Args: { p_goal_id: string }
         Returns: Json
       }
       refresh_net_worth_snapshot: {

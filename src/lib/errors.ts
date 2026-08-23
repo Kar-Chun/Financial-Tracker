@@ -22,6 +22,10 @@ const friendlyErrors: Array<[string, string]> = [
   ["budget already exists", "A budget already exists for that month."],
   ["Previous month budget not found", "The previous month does not have a budget to copy."],
   ["parent expense category", "Choose an active parent expense category."],
+  ["Allocation cannot be reduced below zero", "You cannot reduce more than the currently allocated amount."],
+  ["Archived savings goals", "Restore the savings goal before changing its allocation."],
+  ["Savings goal not found", "The savings goal could not be found."],
+  ["Goal target must be greater", "Enter a target amount greater than zero."],
 ]
 
 export function getErrorMessage(error: unknown, fallback: string) {

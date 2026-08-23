@@ -1,6 +1,6 @@
 # Ledgerly
 
-Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, seeing where money is spent, and planning monthly spending. V1.4 adds transaction-derived monthly budgeting without changing the established accounting model.
+Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, planning monthly spending, and earmarking existing cash for savings goals. V1.5 adds virtual savings allocation without changing the established accounting model.
 
 ## Capabilities
 
@@ -17,6 +17,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Mobile bottom navigation, full-screen transaction entry, safe-area handling, and offline mutation protection
 - User-scoped last expense account and deterministic frequent expense category shortcuts
 - Independent monthly overall budgets, optional parent-category limits, spending pace, and safe daily guidance
+- Multiple base-currency savings goals with virtual allocations, progress, target-date guidance, history, and archival
 
 ## Stack and architecture
 
@@ -78,6 +79,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 5. `202608230001_add_spending_analytics_and_category_management.sql`
 6. `202608230002_add_frequent_expense_categories.sql`
 7. `202608240001_add_monthly_budgets.sql`
+8. `202608240002_add_savings_goals.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -127,6 +129,18 @@ For the current month, safe daily spend is `max(overall limit - spent, 0) / rema
 Copy Previous Month creates the destination month's overall/category limits only. It never copies transactions, spending, unused balance, or rollover, rejects an existing destination, and skips categories that are no longer active/valid. Budget currency is snapshotted when a month is created so a later profile-currency change cannot silently reinterpret historical limits; the UI still keeps base currency locked.
 
 Migration `202608240001_add_monthly_budgets.sql` adds both budget tables, ownership RLS, validated mutation RPCs, and the aggregated monthly summary RPC. Follow [V1.4 budget verification](supabase/V1_4_VERIFICATION.md) for two-user and accounting checks.
+
+## Savings goals
+
+Savings goals virtually earmark money the user already owns. Allocating or reducing a goal creates only a signed `goal_allocations` history row; it never creates a transaction/entry, moves account money, changes net worth or snapshots, or affects budgets, Analytics, income, expenses, transfers, or cash flow. Goal currency is snapshotted from the authenticated user's current profile base currency and cannot be chosen by the browser.
+
+Allocated amount is the exact sum of signed allocation rows. Remaining is `max(target - allocated, 0)` and a goal is reached when allocation is at least its target; visual progress caps at 100% while the real percentage remains visible. Allocations above the target are valid, while reductions that would make the cumulative allocation negative are rejected atomically.
+
+Available goal cash reuses the application's represented balances for active base-currency Bank and Cash accounts. Investments and unconverted foreign balances are excluded. `unallocated cash = available cash - allocations for active goals in the profile base currency`; a negative result is a planning warning, never an automatic correction or hard block.
+
+For an unreached dated goal, the approximate monthly amount is `ceil(remaining / calendar months from the current profile-timezone month through the target month, inclusive)`. Passed targets show no misleading monthly guidance. Archiving preserves the goal and complete history but excludes its allocation from current totals; restoring includes the existing allocation again.
+
+Migration `202608240002_add_savings_goals.sql` adds goal/allocation tables, RLS, validated mutation RPCs, and aggregated summary/detail RPCs. Follow [V1.5 savings-goal verification](supabase/V1_5_VERIFICATION.md) for accounting-isolation and two-user checks.
 
 ## V1.2 mobile and PWA behaviour
 
@@ -181,8 +195,8 @@ After Vercel provides the production URL, open Supabase Dashboard > Authenticati
 
 Signup does not hardcode a host. Supabase uses the configured Site URL for email-confirmation redirects, and the browser client detects the returned session in the URL. Do not deploy until migration status and the production environment variables have been confirmed.
 
-V1.4 does not change `vercel.json` or require additional Vercel environment variables. Apply migration `202608240001_add_monthly_budgets.sql`, then rebuild/redeploy. Existing users may need to close and reopen the installed app once after an automatic service-worker update.
+V1.5 does not change `vercel.json` or require additional Vercel environment variables. Apply migration `202608240002_add_savings_goals.sql`, then rebuild/redeploy. Existing users may need to close and reopen the installed app once after an automatic service-worker update.
 
 ## Intentionally deferred
 
-V1.4 does not include rollover/payday/weekly budgets, subcategory limits, offline financial writes/background sync, push notifications, credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, goals, CSV import, or AI.
+V1.5 does not include automatic/recurring goal contributions, account-linked or investment-backed goals, interest projections, shared goals, goal-spending transactions, rollover/payday/weekly budgets, offline financial writes/background sync, push notifications, credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, CSV import, or AI.

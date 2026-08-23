@@ -90,6 +90,20 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "/goals/new",
+            lazy: async () => {
+              const { NewGoalPage } = await import("@/features/goals/new-goal-page")
+              return { Component: NewGoalPage }
+            },
+          },
+          {
+            path: "/goals/:goalId",
+            lazy: async () => {
+              const { GoalDetailPage } = await import("@/features/goals/goal-detail-page")
+              return { Component: GoalDetailPage }
+            },
+          },
+          {
             path: "/analytics",
             lazy: async () => {
               const { AnalyticsPage } = await import("@/features/analytics/analytics-page")

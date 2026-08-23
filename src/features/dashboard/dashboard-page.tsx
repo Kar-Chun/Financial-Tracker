@@ -15,6 +15,8 @@ import { MetricCard } from "@/features/dashboard/metric-card"
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
 import { RecentTransactionsCard } from "@/features/dashboard/recent-transactions-card"
 import { SpendingBreakdownCard } from "@/features/dashboard/spending-breakdown-card"
+import { SavingsGoalsCard } from "@/features/dashboard/savings-goals-card"
+import { useSavingsGoals } from "@/features/goals/goals-hooks"
 import { formatLongDate, getDateInputInTimeZone, getGreetingInTimeZone } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 
@@ -25,6 +27,7 @@ export function DashboardPage() {
   const currencyCode = profile?.base_currency ?? "SGD"
   const timezone = profile?.timezone ?? "Asia/Singapore"
   const budgetQuery = useBudgetSummary(getCurrentMonthStart(timezone), Boolean(profile))
+  const goalsQuery = useSavingsGoals(false, Boolean(profile))
 
   if (dashboardQuery.isLoading || profileQuery.isLoading) return <DashboardSkeleton />
   if (dashboardQuery.isError || profileQuery.isError || !dashboardQuery.data) {
@@ -60,6 +63,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
         {!budgetQuery.isError && <MonthlyBudgetCard summary={budgetQuery.data} />}
+        {!goalsQuery.isError && <SavingsGoalsCard summary={goalsQuery.data} />}
       </div>
     )
   }
@@ -87,6 +91,8 @@ export function DashboardPage() {
         <AccountOverview accounts={accounts} baseCurrency={currencyCode} />
         <RecentTransactionsCard transactions={transactions} todayDate={todayDate} />
       </section>
+
+      {!goalsQuery.isError && <SavingsGoalsCard summary={goalsQuery.data} />}
 
       <SpendingBreakdownCard groups={spendingGroups} currencyCode={currencyCode} />
     </div>

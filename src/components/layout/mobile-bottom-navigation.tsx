@@ -1,4 +1,4 @@
-import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, WalletCards } from "lucide-react"
+import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, Target, WalletCards } from "lucide-react"
 import { useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 
@@ -14,6 +14,7 @@ const primaryItems = [
 
 const moreItems = [
   { label: "Budgets", href: "/budgets", icon: PiggyBank },
+  { label: "Savings Goals", href: "/goals", icon: Target },
   { label: "Accounts", href: "/accounts", icon: WalletCards },
   { label: "Investments", href: "/investments", icon: Landmark },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -22,6 +23,7 @@ const moreItems = [
 export function MobileBottomNavigation() {
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
+  const moreActive = moreItems.some((item) => location.pathname === item.href || location.pathname.startsWith(`${item.href}/`))
   const routeItem = (item: typeof primaryItems[number]) => {
     const active = location.pathname === item.href
     return (
@@ -54,10 +56,10 @@ export function MobileBottomNavigation() {
             type="button"
             onClick={() => setMoreOpen(true)}
             aria-label="More navigation options"
-            aria-current={moreItems.some((item) => item.href === location.pathname) ? "page" : undefined}
+            aria-current={moreActive ? "page" : undefined}
             className={cn(
               "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-muted-foreground",
-              moreItems.some((item) => item.href === location.pathname) && "text-primary",
+              moreActive && "text-primary",
             )}
           >
             <Menu className="size-5" aria-hidden="true" />
@@ -70,7 +72,7 @@ export function MobileBottomNavigation() {
         <SheetContent side="bottom" className="rounded-t-3xl border-border/40 bg-popover pb-[env(safe-area-inset-bottom)]">
           <SheetHeader className="border-b border-border/35 text-left">
             <SheetTitle>More</SheetTitle>
-            <SheetDescription>Budgets, accounts, investments, settings, and your session.</SheetDescription>
+            <SheetDescription>Goals, budgets, accounts, investments, settings, and your session.</SheetDescription>
           </SheetHeader>
           <nav className="grid gap-2 px-4" aria-label="More navigation">
             {moreItems.map((item) => (

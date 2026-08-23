@@ -14,7 +14,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Expense and income category management: create, rename, archive, restore, and one-level subcategories
 - Explicit warnings/exclusions where foreign values cannot safely be consolidated
 - Installable PWA support with iOS home-screen metadata and a static-shell service worker
-- Mobile bottom navigation, one-handed Quick Add, safe-area handling, and offline mutation protection
+- Mobile bottom navigation, full-screen transaction entry, safe-area handling, and offline mutation protection
 - User-scoped last expense account and deterministic frequent expense category shortcuts
 
 ## Stack and architecture
@@ -116,7 +116,9 @@ At most one snapshot exists per user/local calendar date. Financial RPCs refresh
 
 ## V1.2 mobile and PWA behaviour
 
-Authenticated phone layouts use a persistent bottom bar for Dashboard, Transactions, Quick Add, Analytics, and More. Quick Add defaults to Expense, puts the amount first, defaults the date using the profile timezone, and keeps optional date/description fields secondary.
+Authenticated phone layouts use a four-item bottom bar for Home, Transactions, Analytics, and More, plus a separate safe-area-aware floating Add button. The button and every other create action open the protected `/transactions/new` route. The dedicated page defaults to Expense, puts the amount first, keeps Note visible, defaults the date using the profile timezone, and returns to the originating screen after Supabase confirms the save. Editing remains in the existing focused dialog.
+
+The user-facing **Note** field maps to the existing `transactions.description` column and `p_description` RPC parameter; no duplicate note column exists. When present, Note is the transaction row title while category/account remain secondary context. Without a Note, expense/income rows fall back to category and transfers fall back to their source-to-destination account labels.
 
 After a confirmed expense save, the app stores only that account UUID in local storage under a key scoped to the authenticated user. It is reused only when the account is still present in the user's RLS-filtered active account list and is a bank/cash account. Another user on the same device receives a different preference key.
 

@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAccounts } from "@/features/accounts/accounts-hooks"
 import { TransactionFormDialog } from "@/features/transactions/transaction-form-dialog"
 import { useCategories, useSoftDeleteTransaction, useTransactions } from "@/features/transactions/transactions-hooks"
-import { getCategoryDisplayName, getTransactionAmount } from "@/features/transactions/transaction-logic"
+import { getCategoryDisplayName, getTransactionAmount, getTransactionDisplayDetails } from "@/features/transactions/transaction-logic"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
@@ -33,7 +33,6 @@ export function TransactionsPage() {
   const accountsQuery = useAccounts()
   const categoriesQuery = useCategories()
   const deleteMutation = useSoftDeleteTransaction()
-  const [formOpen, setFormOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<TransactionRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<TransactionRecord | null>(null)
   const [month, setMonth] = useState(getCurrentMonthInput())
@@ -49,13 +48,8 @@ export function TransactionsPage() {
     return true
   }), [accountFilter, categoryFilter, month, transactionsQuery.data, typeFilter])
 
-  const openCreate = () => {
-    setEditingTransaction(null)
-    setFormOpen(true)
-  }
   const openEdit = (transaction: TransactionRecord) => {
     setEditingTransaction(transaction)
-    setFormOpen(true)
   }
   const confirmDelete = () => {
     if (!deleteTarget) return
@@ -90,9 +84,13 @@ export function TransactionsPage() {
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Transactions</h1>
           <p className="mt-2 text-sm text-muted-foreground">Record income, expenses, and same-currency transfers.</p>
         </div>
-        <Button className="hidden lg:inline-flex" onClick={openCreate} disabled={(accountsQuery.data?.length ?? 0) === 0}>
-          <Plus /> Add transaction
-        </Button>
+        {(accountsQuery.data?.length ?? 0) > 0 ? (
+          <Button className="hidden lg:inline-flex" render={<Link to="/transactions/new" state={{ returnTo: "/transactions" }} />}>
+            <Plus /> Add transaction
+          </Button>
+        ) : (
+          <Button className="hidden lg:inline-flex" disabled><Plus /> Add transaction</Button>
+        )}
       </header>
 
       <Card className="border-0 bg-card/55 py-0 shadow-none ring-1 ring-white/4">
@@ -116,7 +114,7 @@ export function TransactionsPage() {
       ) : (accountsQuery.data?.length ?? 0) === 0 ? (
         <EmptyState title="Add an account first" description="Transactions need an active bank or cash account." actionLabel="Go to accounts" actionHref="/accounts" />
       ) : filteredTransactions.length === 0 ? (
-        <EmptyState title="No transactions found" description="Add your first transaction or adjust the filters above." onAction={openCreate} actionLabel="Add transaction" />
+        <EmptyState title="No transactions found" description="Add your first transaction or adjust the filters above." actionHref="/transactions/new" actionLabel="Add transaction" />
       ) : (
         <div className="overflow-hidden rounded-2xl bg-card/70 ring-1 ring-white/4">
           {filteredTransactions.map((transaction, index) => (
@@ -131,7 +129,13 @@ export function TransactionsPage() {
         </div>
       )}
 
-      <TransactionFormDialog open={formOpen} onOpenChange={setFormOpen} accounts={accountsQuery.data ?? []} categories={categoriesQuery.data ?? []} transaction={editingTransaction} />
+      <TransactionFormDialog
+        open={Boolean(editingTransaction)}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+        accounts={accountsQuery.data ?? []}
+        categories={categoriesQuery.data ?? []}
+        transaction={editingTransaction}
+      />
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -148,20 +152,14 @@ export function TransactionsPage() {
   )
 }
 
-function TransactionRow({ transaction, bordered, onEdit, onDelete }: { transaction: TransactionRecord; bordered: boolean; onEdit: () => void; onDelete: () => void }) {
+export function TransactionRow({ transaction, bordered, onEdit, onDelete }: { transaction: TransactionRecord; bordered: boolean; onEdit: () => void; onDelete: () => void }) {
   const type = transaction.transaction_type
   const Icon = type === "income" ? ArrowDownLeft : type === "transfer" ? ArrowRightLeft : ArrowUpRight
   const amount = getTransactionAmount(transaction)
   const account = transaction.entries[0]?.account
   const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account
-  const destination = transaction.entries.find((entry) => entry.amount_minor > 0)?.account
-  const category = transaction.category?.name ?? "Uncategorised"
-  const title = type === "transfer"
-    ? transaction.description || `${source?.name ?? "Account"} → ${destination?.name ?? "Account"}`
-    : transaction.description || category
-  const subtitle = type === "transfer"
-    ? `Transfer · ${formatLongDate(transaction.transaction_date)}`
-    : `${category} · ${account?.name ?? "Account"} · ${formatLongDate(transaction.transaction_date)}`
+  const display = getTransactionDisplayDetails(transaction)
+  const subtitle = `${display.context} · ${formatLongDate(transaction.transaction_date)}`
   const editable = type === "expense" || type === "income" || type === "transfer"
   const currency = account?.currency_code ?? source?.currency_code ?? "SGD"
   const displayAmount = type === "income"
@@ -179,7 +177,7 @@ function TransactionRow({ transaction, bordered, onEdit, onDelete }: { transacti
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm leading-5 font-medium">{title}</p>
+        <p className="line-clamp-2 text-sm leading-5 font-medium">{display.title}</p>
         <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
       </div>
       <p className={cn("max-w-[42vw] shrink-0 whitespace-nowrap text-right text-[clamp(0.78rem,3.5vw,0.875rem)] font-semibold tabular-nums sm:max-w-none", type === "income" && "text-positive", type === "expense" && "text-negative", type === "transfer" && "text-brand-secondary")}>
@@ -205,18 +203,16 @@ function FilterSelect({ value, onValueChange, placeholder, items }: { value: str
   )
 }
 
-function EmptyState({ title, description, actionLabel, onAction, actionHref }: { title: string; description: string; actionLabel: string; onAction?: () => void; actionHref?: string }) {
+function EmptyState({ title, description, actionLabel, actionHref }: { title: string; description: string; actionLabel: string; actionHref: string }) {
   return (
     <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
       <CardContent className="flex min-h-64 flex-col items-center justify-center text-center">
         <ReceiptText className="size-9 text-primary" />
         <h2 className="mt-4 text-lg font-semibold">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-        {actionHref ? (
-          <Button className="mt-5" render={<Link to={actionHref} />}>{actionLabel}</Button>
-        ) : (
-          <Button className="mt-5" onClick={onAction}><Plus /> {actionLabel}</Button>
-        )}
+        <Button className="mt-5" render={<Link to={actionHref} state={actionHref === "/transactions/new" ? { returnTo: "/transactions" } : undefined} />}>
+          {actionHref === "/transactions/new" && <Plus />} {actionLabel}
+        </Button>
       </CardContent>
     </Card>
   )

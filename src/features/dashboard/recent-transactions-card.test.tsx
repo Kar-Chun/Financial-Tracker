@@ -11,13 +11,15 @@ describe("RecentTransactionsCard", () => {
   it("renders readable, signed expense and transfer information without internal IDs", () => {
     render(
       <MemoryRouter>
-        <RecentTransactionsCard transactions={[expense(), transfer()]} todayDate="2026-08-23" />
+        <RecentTransactionsCard transactions={[expense("Caifan"), expense(null, "empty-expense"), transfer()]} todayDate="2026-08-23" />
       </MemoryRouter>,
     )
 
-    expect(screen.getByText("Lunch")).toBeInTheDocument()
-    expect(screen.getByText("Eating Out · Today")).toBeInTheDocument()
-    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "expense: -$8.50")).toBeInTheDocument()
+    expect(screen.getByText("Caifan")).toBeInTheDocument()
+    expect(screen.getByText("Eating Out · DBS Savings · Today")).toBeInTheDocument()
+    expect(screen.getByText("Eating Out")).toBeInTheDocument()
+    expect(screen.getByText("DBS Savings · Today")).toBeInTheDocument()
+    expect(screen.getAllByText((_, element) => element?.tagName === "SPAN" && element.textContent === "expense: -$8.50")).toHaveLength(2)
     expect(screen.getByText("DBS Savings → Cash Wallet")).toBeInTheDocument()
     expect(screen.getByText("Transfer · Today")).toBeInTheDocument()
     expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "transfer: $200.00")).toBeInTheDocument()
@@ -25,12 +27,12 @@ describe("RecentTransactionsCard", () => {
   })
 })
 
-function expense(): TransactionRecord {
+function expense(description: string | null, id = "expense-id"): TransactionRecord {
   return {
-    id: "expense-id",
+    id,
     transaction_type: "expense",
     category_id: "category-id",
-    description: "Lunch",
+    description,
     transaction_date: "2026-08-23",
     created_at: "2026-08-23T00:00:00Z",
     category: { id: "category-id", name: "Eating Out", parent_id: "food-id", category_type: "expense" },

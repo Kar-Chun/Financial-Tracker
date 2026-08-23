@@ -1,7 +1,7 @@
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { getTransactionAmount } from "@/features/transactions/transaction-logic"
+import { getTransactionAmount, getTransactionDisplayDetails } from "@/features/transactions/transaction-logic"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
@@ -21,12 +21,8 @@ export function RecentTransactionsCard({ transactions, todayDate, className }: {
           const type = transaction.transaction_type
           const Icon = type === "income" ? ArrowDownLeft : type === "transfer" ? ArrowRightLeft : ArrowUpRight
           const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account
-          const destination = transaction.entries.find((entry) => entry.amount_minor > 0)?.account
           const account = transaction.entries[0]?.account
-          const category = transaction.category?.name ?? (type === "transfer" ? "Transfer" : "Uncategorised")
-          const title = type === "transfer"
-            ? transaction.description || `${source?.name ?? "Account"} → ${destination?.name ?? "Account"}`
-            : transaction.description || category
+          const display = getTransactionDisplayDetails(transaction)
           const date = transaction.transaction_date === todayDate ? "Today" : formatShortDate(transaction.transaction_date)
           const currency = account?.currency_code ?? source?.currency_code ?? "SGD"
           const amountMinor = getTransactionAmount(transaction)
@@ -44,8 +40,8 @@ export function RecentTransactionsCard({ transactions, todayDate, className }: {
                 <Icon className="size-4" aria-hidden="true" />
               </span>
               <span className="min-w-0">
-                <span className="line-clamp-2 text-sm leading-5 font-medium">{title}</span>
-                <span className="block truncate text-xs text-muted-foreground">{category} · {date}</span>
+                <span className="line-clamp-2 text-sm leading-5 font-medium">{display.title}</span>
+                <span className="block truncate text-xs text-muted-foreground">{display.context} · {date}</span>
               </span>
               <span className={cn(
                 "max-w-[42vw] shrink-0 whitespace-nowrap text-right text-[clamp(0.78rem,3.5vw,0.875rem)] font-semibold tabular-nums sm:max-w-none",

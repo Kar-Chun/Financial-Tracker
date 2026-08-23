@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent, render, screen } from "@testing-library/react"
-import { MemoryRouter } from "react-router-dom"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { describe, expect, it, vi } from "vitest"
 
 import { MobileBottomNavigation, MobileQuickAddButton } from "@/components/layout/mobile-bottom-navigation"
@@ -25,10 +25,17 @@ describe("mobile bottom navigation", () => {
     expect(screen.getByRole("link", { name: /Settings/ })).toHaveAttribute("href", "/settings")
   })
 
-  it("opens Quick Add from the separate floating action", () => {
-    const onQuickAdd = vi.fn()
-    render(<MobileQuickAddButton onQuickAdd={onQuickAdd} />)
-    fireEvent.click(screen.getByRole("button", { name: "Quick add transaction" }))
-    expect(onQuickAdd).toHaveBeenCalledOnce()
+  it("navigates to the dedicated Add Transaction route from the floating action", () => {
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <MobileQuickAddButton />
+        <Routes><Route path="/transactions/new" element={<p>Add Transaction page</p>} /></Routes>
+      </MemoryRouter>,
+    )
+
+    const quickAdd = screen.getByRole("link", { name: "Quick add transaction" })
+    expect(quickAdd).toHaveAttribute("href", "/transactions/new")
+    fireEvent.click(quickAdd)
+    expect(screen.getByText("Add Transaction page")).toBeInTheDocument()
   })
 })

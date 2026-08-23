@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, ChevronDown, LoaderCircle } from "lucide-react"
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, LoaderCircle } from "lucide-react"
 import { useEffect, useMemo } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
@@ -35,7 +35,7 @@ type TransactionFormProps = {
   initialAccountId?: string | null
   initialDate?: string
   frequentCategories?: Category[]
-  quickAdd?: boolean
+  entryPage?: boolean
   sessionKey: string | number | boolean
   onCancel: () => void
   onSaved?: (input: SaveTransactionInput) => void
@@ -55,7 +55,7 @@ export function TransactionForm({
   initialAccountId,
   initialDate,
   frequentCategories = [],
-  quickAdd = false,
+  entryPage = false,
   sessionKey,
   onCancel,
   onSaved,
@@ -139,9 +139,78 @@ export function TransactionForm({
     })
   }
 
+  const accountField = (
+    <FormField label={type === "transfer" ? "From account" : "Account"} error={errors.accountId?.message}>
+      <Controller name="accountId" control={control} render={({ field }) => (
+        <Select items={accountItems} value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger aria-label={type === "transfer" ? "From account" : "Account"} className={cn("w-full", entryPage && "h-12 rounded-xl text-base")}><SelectValue placeholder="Select account" /></SelectTrigger>
+          <SelectContent>{availableAccounts.map((account) => <SelectItem key={account.id} value={account.id}>{account.name} · {account.institution ?? account.account_type} · {account.currency_code}</SelectItem>)}</SelectContent>
+        </Select>
+      )} />
+    </FormField>
+  )
+
+  const categoryField = type !== "transfer" ? (
+    <FormField label="Category" error={errors.categoryId?.message}>
+      {entryPage && type === "expense" && frequentCategories.length > 0 && (
+        <div className="mb-2 flex gap-2 overflow-x-auto pb-1" aria-label="Frequently used expense categories">
+          {frequentCategories.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              aria-pressed={categoryId === category.id}
+              onClick={() => setValue("categoryId", category.id, { shouldValidate: true })}
+              className={cn(
+                "min-h-10 shrink-0 rounded-full px-3 text-sm font-medium ring-1 transition-colors",
+                categoryId === category.id ? "bg-primary text-primary-foreground ring-primary" : "bg-surface text-muted-foreground ring-border/30 hover:text-foreground",
+              )}
+            >
+              {getCategoryDisplayName(category, categories)}
+            </button>
+          ))}
+        </div>
+      )}
+      <Controller name="categoryId" control={control} render={({ field }) => (
+        <Select items={categoryItems} value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger aria-label="Category" className={cn("w-full", entryPage && "h-12 rounded-xl text-base")}><SelectValue placeholder="Select category" /></SelectTrigger>
+          <SelectContent>{availableCategories.map((category) => <SelectItem key={category.id} value={category.id}>{getCategoryDisplayName(category, categories)}{category.archived_at ? " (Archived)" : ""}</SelectItem>)}</SelectContent>
+        </Select>
+      )} />
+    </FormField>
+  ) : null
+
+  const destinationField = type === "transfer" ? (
+    <FormField label="To account" error={errors.destinationAccountId?.message}>
+      <Controller name="destinationAccountId" control={control} render={({ field }) => (
+        <Select items={destinationAccountItems} value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger aria-label="To account" className={cn("w-full", entryPage && "h-12 rounded-xl text-base")}><SelectValue placeholder="Select destination" /></SelectTrigger>
+          <SelectContent>{accounts.map((account) => <SelectItem key={account.id} value={account.id}>{account.name} · {account.institution ?? account.account_type} · {account.currency_code}</SelectItem>)}</SelectContent>
+        </Select>
+      )} />
+    </FormField>
+  ) : null
+
+  const noteField = (
+    <FormField label="Note (optional)" error={errors.description?.message}>
+      <Textarea
+        className={cn("resize-none", entryPage && "min-h-20 rounded-xl bg-input/30 text-base md:text-sm")}
+        rows={entryPage ? 2 : 3}
+        aria-label="Note"
+        placeholder="Caifan, Grab home, lunch with friends…"
+        {...register("description")}
+      />
+    </FormField>
+  )
+
+  const dateField = (
+    <FormField label="Date" error={errors.transactionDate?.message}>
+      <Input aria-label="Date" className={cn(entryPage && "h-12 rounded-xl text-base md:text-sm")} type="date" {...register("transactionDate")} />
+    </FormField>
+  )
+
   const fields = (
-    <div className={cn("space-y-4", quickAdd && "min-h-0 flex-1 overflow-y-auto px-5 pt-1 pb-5")}>
-      {quickAdd ? (
+    <div className={cn("space-y-4", entryPage && "flex-1 space-y-5 px-5 py-6 sm:px-8")}>
+      {entryPage ? (
         <div className="grid grid-cols-3 gap-2" role="group" aria-label="Transaction type">
           {transactionTypeItems.map((item) => (
             <button
@@ -169,91 +238,36 @@ export function TransactionForm({
         </FormField>
       )}
 
-      <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message} emphasis={quickAdd}>
+      <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message} emphasis={entryPage}>
         <Input
           inputMode="decimal"
+          aria-label="Amount"
           enterKeyHint="next"
           autoComplete="off"
           placeholder="0.00"
           autoFocus
-          className={cn(quickAdd && "h-20 rounded-2xl border-border/30 bg-surface px-4 text-center text-4xl font-semibold tracking-[-0.04em] tabular-nums md:text-4xl")}
+          className={cn(entryPage && "h-24 rounded-2xl border-border/30 bg-surface px-4 text-center text-[clamp(2rem,10vw,2.75rem)] font-semibold tracking-[-0.04em] tabular-nums")}
           {...register("amount")}
         />
       </FormField>
 
-      <FormField label={type === "transfer" ? "From account" : "Account"} error={errors.accountId?.message}>
-        <Controller name="accountId" control={control} render={({ field }) => (
-          <Select items={accountItems} value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger className={cn("w-full", quickAdd && "h-11 text-base")}><SelectValue placeholder="Select account" /></SelectTrigger>
-            <SelectContent>{availableAccounts.map((account) => <SelectItem key={account.id} value={account.id}>{account.name} · {account.institution ?? account.account_type} · {account.currency_code}</SelectItem>)}</SelectContent>
-          </Select>
-        )} />
-      </FormField>
-
-      {type === "transfer" ? (
-        <FormField label="To account" error={errors.destinationAccountId?.message}>
-          <Controller name="destinationAccountId" control={control} render={({ field }) => (
-            <Select items={destinationAccountItems} value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={cn("w-full", quickAdd && "h-11 text-base")}><SelectValue placeholder="Select destination" /></SelectTrigger>
-              <SelectContent>{accounts.map((account) => <SelectItem key={account.id} value={account.id}>{account.name} · {account.institution ?? account.account_type} · {account.currency_code}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </FormField>
+      {entryPage ? (
+        type === "transfer" ? <>{accountField}{destinationField}</> : <>{categoryField}{accountField}</>
       ) : (
-        <FormField label="Category" error={errors.categoryId?.message}>
-          {quickAdd && type === "expense" && frequentCategories.length > 0 && (
-            <div className="mb-2 flex gap-2 overflow-x-auto pb-1" aria-label="Frequently used expense categories">
-              {frequentCategories.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  aria-pressed={categoryId === category.id}
-                  onClick={() => setValue("categoryId", category.id, { shouldValidate: true })}
-                  className={cn(
-                    "min-h-10 shrink-0 rounded-full px-3 text-sm font-medium ring-1",
-                    categoryId === category.id ? "bg-primary text-primary-foreground ring-primary" : "bg-surface text-muted-foreground ring-border/30",
-                  )}
-                >
-                  {getCategoryDisplayName(category, categories)}
-                </button>
-              ))}
-            </div>
-          )}
-          <Controller name="categoryId" control={control} render={({ field }) => (
-            <Select items={categoryItems} value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={cn("w-full", quickAdd && "h-11 text-base")}><SelectValue placeholder="Select category" /></SelectTrigger>
-              <SelectContent>{availableCategories.map((category) => <SelectItem key={category.id} value={category.id}>{getCategoryDisplayName(category, categories)}{category.archived_at ? " (Archived)" : ""}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </FormField>
+        <>{accountField}{destinationField}{categoryField}</>
       )}
-
-      {quickAdd ? (
-        <details className="group rounded-xl bg-surface p-3 ring-1 ring-border/25">
-          <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between text-sm font-medium text-muted-foreground">
-            Date and description <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="mt-3 space-y-4 border-t pt-3">
-            <FormField label="Date" error={errors.transactionDate?.message}><Input className="h-11" type="date" {...register("transactionDate")} /></FormField>
-            <FormField label="Description (optional)" error={errors.description?.message}><Textarea className="text-base md:text-sm" rows={2} placeholder="What was this for?" {...register("description")} /></FormField>
-          </div>
-        </details>
-      ) : (
-        <>
-          <FormField label="Date" error={errors.transactionDate?.message}><Input type="date" {...register("transactionDate")} /></FormField>
-          <FormField label="Description (optional)" error={errors.description?.message}><Textarea rows={3} placeholder="What was this for?" {...register("description")} /></FormField>
-        </>
-      )}
+      {entryPage ? <>{noteField}{dateField}</> : <>{dateField}{noteField}</>}
     </div>
   )
 
   return (
-    <form className={cn(quickAdd ? "flex min-h-0 flex-1 flex-col" : "space-y-4")} onSubmit={handleSubmit(onSubmit)}>
+    <form className={cn(entryPage ? "flex min-h-0 flex-1 flex-col" : "space-y-4")} onSubmit={handleSubmit(onSubmit)}>
       {fields}
-      {quickAdd ? (
-        <div className="grid grid-cols-[auto_1fr] gap-2 border-t border-border/25 bg-popover px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <Button className="h-12 rounded-xl" type="button" size="lg" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button className="h-12 rounded-xl" type="submit" size="lg" disabled={mutation.isPending || availableAccounts.length === 0}>{mutation.isPending && <LoaderCircle className="animate-spin" />}Save {type}</Button>
+      {entryPage ? (
+        <div className="sticky bottom-0 z-10 border-t border-border/25 bg-background/95 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-8 lg:bg-card/95">
+          <Button className="h-13 w-full rounded-xl text-base" type="submit" size="lg" disabled={mutation.isPending || availableAccounts.length === 0}>
+            {mutation.isPending && <LoaderCircle className="animate-spin" />}Save {type}
+          </Button>
         </div>
       ) : (
         <DialogFooter>

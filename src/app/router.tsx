@@ -62,6 +62,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "/transactions/new",
+            lazy: async () => {
+              const { AddTransactionPage } = await import("@/features/transactions/add-transaction-page")
+              return { Component: AddTransactionPage }
+            },
+          },
+          {
             path: "/investments",
             lazy: async () => {
               const { InvestmentsPage } = await import("@/features/investments/investments-page")

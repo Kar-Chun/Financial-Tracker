@@ -11,7 +11,7 @@ export const transactionFormSchema = z.object({
   destinationAccountId: z.string(),
   categoryId: z.string(),
   transactionDate: z.string().min(1, "Date is required."),
-  description: z.string().trim().max(500, "Description is too long."),
+  description: z.string().trim().max(500, "Note is too long."),
 }).superRefine((values, context) => {
   if (values.transactionType === "transfer") {
     if (!values.destinationAccountId) {
@@ -113,4 +113,25 @@ export function getCategoryDisplayName(category: Category, categories: Category[
     ? categories.find((candidate) => candidate.id === category.parent_id)
     : undefined
   return parent ? `${parent.name} › ${category.name}` : category.name
+}
+
+export function getTransactionDisplayDetails(transaction: TransactionRecord) {
+  const note = transaction.description?.trim() || null
+  const category = transaction.category?.name ?? "Uncategorised"
+  const account = transaction.entries[0]?.account?.name ?? "Account"
+  const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account?.name ?? "Account"
+  const destination = transaction.entries.find((entry) => entry.amount_minor > 0)?.account?.name ?? "Account"
+
+  if (transaction.transaction_type === "transfer") {
+    const accountMovement = `${source} → ${destination}`
+    return {
+      title: note ?? accountMovement,
+      context: note ? accountMovement : "Transfer",
+    }
+  }
+
+  return {
+    title: note ?? category,
+    context: note ? `${category} · ${account}` : account,
+  }
 }

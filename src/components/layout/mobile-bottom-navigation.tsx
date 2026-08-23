@@ -1,14 +1,10 @@
 import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, Plus, ReceiptText, Settings, WalletCards } from "lucide-react"
 import { useState } from "react"
-import { NavLink, useLocation } from "react-router-dom"
+import { Link, NavLink, useLocation } from "react-router-dom"
 
 import { UserMenu } from "@/components/layout/user-menu"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-
-type MobileQuickAddButtonProps = {
-  onQuickAdd: () => void
-}
 
 const primaryItems = [
   { label: "Home", href: "/dashboard", icon: CircleGauge },
@@ -94,15 +90,17 @@ export function MobileBottomNavigation() {
   )
 }
 
-export function MobileQuickAddButton({ onQuickAdd }: MobileQuickAddButtonProps) {
+export function MobileQuickAddButton() {
+  const location = useLocation()
+
   return (
-    <button
-      type="button"
-      onClick={onQuickAdd}
+    <Link
+      to="/transactions/new"
+      state={{ returnTo: `${location.pathname}${location.search}` }}
       aria-label="Quick add transaction"
       className="fixed right-[max(1.25rem,calc(env(safe-area-inset-right)+1rem))] bottom-[calc(var(--mobile-navigation-height)+var(--mobile-navigation-edge-gap)+var(--mobile-floating-action-gap)+env(safe-area-inset-bottom))] z-45 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring lg:hidden"
     >
       <Plus className="size-6" aria-hidden="true" />
-    </button>
+    </Link>
   )
 }

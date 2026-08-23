@@ -92,7 +92,7 @@ export function TransactionsPage() {
     { value: "all", label: "All categories" },
     ...(categoriesQuery.data ?? []).map((category) => ({
       value: category.id,
-      label: getCategoryDisplayName(category, categoriesQuery.data ?? []),
+      label: `${getCategoryDisplayName(category, categoriesQuery.data ?? [])}${category.archived_at ? " (Archived)" : ""}`,
     })),
   ]
 

@@ -1,34 +1,35 @@
 # Ledgerly
 
-Ledgerly is a secure V1 personal finance tracker for answering three daily questions: how much money do I have, what income or expense happened today, and where is my money being spent?
+Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, and seeing where money is spent. V1.1 adds real spending analytics and user-managed categories without changing the established accounting model.
 
-## V1 capabilities
+## Capabilities
 
-- Email/password signup, login, persistent sessions, email-confirmation handling, protected routes, and logout
-- User profiles with display name, locked base currency, and timezone
-- Active bank, cash, and investment accounts with edit and archive flows
-- Calculated bank/cash balances from opening balance plus transaction entries
-- Income, expense, and same-currency transfer creation, editing, history, filtering, and soft deletion
-- Default income/expense categories and one-level subcategories created for every user
+- Email/password Supabase Auth with persistent sessions, confirmation handling, protected routes, and logout
+- Profiles with display name, locked base currency, and timezone
+- Bank, cash, and investment accounts with edit/archive flows
+- Transaction-derived bank/cash balances; atomic income, expense, and same-currency transfers
 - Manual total investment valuations in native and base currency
-- Real dashboard metrics, current-month parent-category spending, recent transactions, and daily net-worth snapshots
-- Explicit exclusion warnings for foreign-currency bank/cash values that cannot safely be consolidated
+- Real dashboard metrics and timezone-aware daily net-worth snapshots
+- Spending analytics with period presets, equivalent-period comparisons, parent/subcategory breakdowns, responsive charts, and factual deterministic insights
+- Expense and income category management: create, rename, archive, restore, and one-level subcategories
+- Explicit warnings/exclusions where foreign values cannot safely be consolidated
 
 ## Stack and architecture
 
 - React 19, strict TypeScript, and Vite
 - Tailwind CSS and focused shadcn/ui components
-- React Router protected/public-only route guards
+- React Router with protected/public-only route guards
 - TanStack Query for server state and mutation invalidation
 - React Hook Form and Zod for forms
 - Supabase Auth, Postgres, RPC functions, and Row Level Security
+- Recharts for responsive analytics visualisation
 - Vitest and React Testing Library
 
-Frontend code remains feature-based under `src/features`. Supabase queries and mutations live in small feature services/hooks instead of page components. The database contract is versioned under `supabase/migrations`.
+Frontend code is feature-based under `src/features`. Supabase access lives in small feature services/hooks instead of page components. The versioned database contract lives under `supabase/migrations`.
 
-## Environment variables
+## Environment
 
-Create `.env.local` with the browser-safe values from Supabase Project Settings > API:
+Create `.env.local` with browser-safe values from Supabase Project Settings > API:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -37,28 +38,25 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 
 `.env.local` is ignored by Git. Never place a Supabase `service_role` key, database password, or access token in frontend environment variables.
 
-## Project structure
+## High-level structure
 
 ```text
 src/
-├── app/                 # Router and top-level providers
-├── components/          # Reusable layout, shared, and shadcn UI components
-├── features/            # Auth, accounts, transactions, dashboard, and placeholders
-├── lib/                 # Supabase, currency, date, error, and styling utilities
-├── test/                # Shared Vitest setup
-└── types/               # Database and finance contracts
+|-- app/                 # Router and top-level providers
+|-- components/          # Layout, shared, and shadcn UI components
+|-- features/            # Auth, accounts, transactions, dashboard, analytics, categories
+|-- lib/                 # Supabase, exact currency, date, error, and styling utilities
+|-- test/                # Shared Vitest setup
+`-- types/               # Database and finance contracts
 supabase/
-├── migrations/          # Versioned schema, functions, RLS, and grants
-└── RLS_VERIFICATION.md  # Manual two-user isolation procedure
+|-- migrations/          # Versioned schema, functions, RLS, and grants
+|-- RLS_VERIFICATION.md  # V1 two-user isolation procedure
+`-- V1_1_VERIFICATION.md # Analytics/category verification
 ```
 
-## Apply the Supabase migrations
+## Apply Supabase migrations
 
-The migration files must be applied in filename order.
-
-### Supabase CLI
-
-The CLI is not required as a project dependency and Docker is not needed for a remote push:
+Apply migrations in filename order. For a safely confirmed project link:
 
 ```bash
 npx supabase@latest login
@@ -66,64 +64,50 @@ npx supabase@latest link --project-ref YOUR_PROJECT_REF
 npx supabase@latest db push
 ```
 
-Confirm the project reference before approving the push. This repository has not been linked automatically.
+Confirm the project reference before pushing. This repository is not linked automatically. Alternatively, use Supabase SQL Editor and run the files in order:
 
-### Supabase SQL Editor
-
-Alternatively, open the Supabase SQL Editor and run these files in order:
-
-1. `supabase/migrations/202608220001_create_finance_schema.sql`
-2. `supabase/migrations/202608220002_create_financial_functions.sql`
-3. `supabase/migrations/202608220003_enable_rls_and_grants.sql`
-4. `supabase/migrations/202608220004_fix_investment_transfer_accounting.sql`
+1. `202608220001_create_finance_schema.sql`
+2. `202608220002_create_financial_functions.sql`
+3. `202608220003_enable_rls_and_grants.sql`
+4. `202608220004_fix_investment_transfer_accounting.sql`
+5. `202608230001_add_spending_analytics_and_category_management.sql`
 
 Do not recreate tables manually in the Table Editor.
 
-## Authentication behaviour
+## Authentication and security
 
-New Auth users receive a `public.profiles` row and default categories through a database trigger. If email confirmation is enabled, signup shows a confirmation message and no protected route is opened until an active session exists. Authenticated users are redirected away from `/login` and `/signup`; unauthenticated users are redirected to `/login` for application routes.
+New Auth users receive a profile and default categories through a database trigger. If email confirmation is enabled, signup shows a confirmation message and protected routes remain unavailable until a session exists.
 
-## Money and balance model
+RLS is enabled on every user/financial table. Direct financial and category mutations are withheld from browser roles. Validated `SECURITY DEFINER` RPCs use an empty `search_path`, derive ownership from `auth.uid()`, and validate every referenced row. Follow [V1 RLS verification](supabase/RLS_VERIFICATION.md) and [V1.1 verification](supabase/V1_1_VERIFICATION.md) after migration.
 
-Ordinary currency is stored as `BIGINT` integer minor units: SGD 1.00 is `100`, and SGD 12.50 is `1250`. User input is parsed as strings with integer/`BigInt` arithmetic rather than `parseFloat(input) * 100`.
+## Money, balances, and investments
 
-Bank and cash balances are calculated as:
+Ordinary currency is stored as `BIGINT` integer minor units: SGD 1.00 is `100`. User input is parsed with integer/`BigInt` arithmetic, not `parseFloat(input) * 100`.
 
-```text
-opening_balance_minor + non-deleted transaction entries through today
-```
+Bank/cash balance = opening balance + non-deleted transaction entries through today. Income creates one positive entry, expense one negative entry, and a transfer two opposite entries in one atomic RPC. Transfers do not affect net worth, income, expenses, or net cash flow.
 
-Income creates one positive entry, expense creates one negative entry, and transfers create two opposite entries inside one atomic PostgreSQL RPC. The browser never supplies or controls `user_id`.
+An investment account uses its latest manual native/base valuation plus transfer movements recorded after that valuation. A newer valuation resets that boundary, avoiding double-counting. Base-currency investment transfer movements can remain represented in net worth; foreign investment movements update native value only because V1.1 does not invent FX.
 
-## Investment valuation model
+Foreign-currency bank/cash values remain visible in native currency but are excluded from consolidated base-currency net worth and spending totals.
 
-V1 does not track holdings or market prices. Each investment account has manual dated valuations containing:
+## Spending analytics definitions
 
-- Native value in the account currency
-- Manually supplied value in the profile base currency
+Analytics includes only non-deleted `expense` transactions against accounts in the profile base currency. Income, transfers, adjustments, and refunds are excluded. Foreign-currency expenses produce an exclusion warning but are not converted. Refund-specific analytics remains deferred until refund UX/semantics are designed.
 
-The latest valuation on or before today is the investment value baseline. Transfers recorded after that valuation are treated as unvalued movements until the next manual valuation:
+- This Month: month-to-date versus the same elapsed dates in the previous month (for example 1–22 August versus 1–22 July).
+- Last Month: the complete previous month versus the complete month before it.
+- Last 3/6 Months: the selected inclusive range versus the immediately preceding range with the same number of days.
+- This Year: year-to-date versus the same calendar dates in the prior year.
 
-- Native transfer movements adjust the displayed native investment value.
-- When the investment currency matches the profile base currency, the same movement also adjusts consolidated net worth.
-- For foreign-currency investments, the manually supplied base value remains unchanged because V1 does not invent an FX rate.
-- Saving a newer manual valuation resets the transfer adjustment boundary, so earlier contributions are not counted twice.
+A zero prior total is shown as no prior spending, never Infinity/NaN. The main category breakdown rolls children such as `Food › Eating Out` into `Food`; direct Food expenses also remain in that total. Expanding the parent reveals children and direct spend. Single-month periods use daily bars; longer periods use monthly bars.
 
-This preserves net worth when money moves between base-currency bank/cash and investment accounts without treating investment transaction entries as market performance.
+## Category management rules
 
-## Multi-currency limitation
-
-There is no automatic FX conversion. Foreign-currency bank/cash balances remain visible in native currency but are excluded from consolidated base-currency net worth, monthly totals, and spending aggregation. Foreign investment transfers update native value only; their base value remains the latest manual `base_value_minor` until the user supplies another valuation.
+Settings separates expense and income categories. Category type and parent are immutable, nesting stops after one child level, and active names are unique case-insensitively within the same parent/type scope. Parents with active children cannot be archived until their children are archived. Archiving never deletes a category: history retains its readable label while new transaction forms offer active categories only.
 
 ## Daily snapshots
 
-At most one `net_worth_snapshots` row exists per user and local calendar date. Financial RPCs refresh today's row, and dashboard loading refreshes it again so missed updates self-heal. The profile timezone determines the local date. There is no cron job and no artificial row for unused days.
-
-## Security and RLS verification
-
-RLS is enabled on every public V1 table. Direct financial mutations are revoked from browser roles; validated `SECURITY DEFINER` RPCs use an empty `search_path`, derive ownership from `auth.uid()`, and reject cross-user, archived, invalid-category, and cross-currency references.
-
-Follow [supabase/RLS_VERIFICATION.md](supabase/RLS_VERIFICATION.md) after migration to test User A/User B isolation and RPC ownership checks.
+At most one snapshot exists per user/local calendar date. Financial RPCs refresh today, and dashboard loading self-heals it. There is no cron job or artificial row for unused days.
 
 ## Development and validation
 
@@ -138,4 +122,4 @@ git diff --check
 
 ## Intentionally deferred
 
-V1 does not include credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, holdings, broker or stock-price APIs, automatic FX, bank integrations, budgets, goals, CSV import, AI, notifications, or scheduled jobs. The budget, goals, and analytics routes remain honest placeholders.
+V1.1 does not include credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, budgets, goals, CSV import, AI, notifications, or scheduled jobs. Budgets and goals remain honest placeholders.

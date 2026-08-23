@@ -137,6 +137,16 @@ export type Database = {
         Args: Record<string, never>
         Returns: AccountSummaryRow[]
       }
+      get_spending_analytics: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_previous_start_date: string
+          p_previous_end_date: string
+          p_trend_granularity?: "day" | "month"
+        }
+        Returns: Json
+      }
       refresh_net_worth_snapshot: {
         Args: Record<string, never>
         Returns: string
@@ -175,6 +185,22 @@ export type Database = {
           p_native_value_minor: number
           p_base_value_minor: number
           p_valued_at: string
+        }
+        Returns: string
+      }
+      upsert_category: {
+        Args: {
+          p_name: string
+          p_category_type: "expense" | "income"
+          p_parent_id?: string | null
+          p_category_id?: string | null
+        }
+        Returns: string
+      }
+      set_category_archived: {
+        Args: {
+          p_category_id: string
+          p_archived: boolean
         }
         Returns: string
       }

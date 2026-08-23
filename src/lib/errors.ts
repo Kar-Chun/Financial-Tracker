@@ -11,6 +11,13 @@ const friendlyErrors: Array<[string, string]> = [
   ["Archived categories", "Archived categories cannot be used."],
   ["Account balance must be zero", "Set the account balance to zero before archiving it."],
   ["Set the account value to zero", "Set the account value to zero before archiving it."],
+  ["active category with this name", "An active category with this name already exists here."],
+  ["Archive its subcategories first", "Archive its subcategories first."],
+  ["Restore the parent category first", "Restore the parent category first."],
+  ["one parent level", "Categories support only one subcategory level."],
+  ["same type as its parent", "A subcategory must have the same type as its parent."],
+  ["Archived parents", "Archived categories cannot receive new subcategories."],
+  ["Category not found", "The category could not be found."],
 ]
 
 export function getErrorMessage(error: unknown, fallback: string) {

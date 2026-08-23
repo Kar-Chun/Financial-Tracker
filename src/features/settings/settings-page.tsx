@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useProfile, useUpdateProfile } from "@/features/auth/profile-service"
+import { CategoryManagement } from "@/features/categories/category-management"
 import { getErrorMessage } from "@/lib/errors"
 
 const profileSchema = z.object({
@@ -64,7 +65,7 @@ export function SettingsPage() {
       <header>
         <p className="text-sm font-medium text-primary">Workspace</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Settings</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Manage the small set of profile preferences supported in V1.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Manage your profile preferences and transaction categories.</p>
       </header>
 
       {profileQuery.isLoading ? <Skeleton className="h-96 max-w-2xl rounded-xl" /> : profileQuery.isError ? (
@@ -116,6 +117,8 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      <CategoryManagement />
     </div>
   )
 }

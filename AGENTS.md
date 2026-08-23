@@ -11,5 +11,7 @@
 
 - Consolidated totals include only bank/cash accounts already denominated in the profile base currency. Never treat foreign minor units as equivalent or add automatic FX without a designed migration.
 - Soft-deleted transactions must remain excluded from normal reads, balances, metrics, and snapshots. Daily snapshots are timezone-aware upserts, not scheduled duplicates.
+- Spending analytics is a ranged authenticated database aggregation of non-deleted expense transactions in the profile base currency. Transfers, income, adjustments, refunds, and unconverted foreign amounts stay excluded.
+- Category mutations use validated RPCs. Categories have one nesting level, immutable type/parent, case-insensitive active sibling uniqueness, and archival rather than deletion so historical labels remain intact.
 - Prefer small, readable components and local state for simple UI concerns. Use TanStack Query for server state; do not introduce a global state library without a demonstrated need.
 - Run `npm run lint` and `npm run build` after relevant changes, and fix failures before handoff.

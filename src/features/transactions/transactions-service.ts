@@ -17,7 +17,6 @@ export async function getCategories() {
   const { data, error } = await getSupabaseClient()
     .from("categories")
     .select("id, user_id, name, parent_id, category_type, created_at, archived_at")
-    .is("archived_at", null)
     .order("category_type")
     .order("name")
 

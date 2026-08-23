@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useSaveTransaction } from "@/features/transactions/transactions-hooks"
+import { getActiveTransactionCategories } from "@/features/categories/category-logic"
 import {
   getCategoryDisplayName,
   getTransactionAmount,
@@ -77,12 +78,20 @@ export function TransactionFormDialog({
     () => type === "transfer" ? accounts : accounts.filter((account) => account.account_type !== "investment"),
     [accounts, type],
   )
-  const availableCategories = categories.filter((category) => category.category_type === type)
+  const activeCategories = type === "expense" || type === "income"
+    ? getActiveTransactionCategories(categories, type)
+    : []
+  const historicalCategory = transaction?.category_id
+    ? categories.find((category) => category.id === transaction.category_id && category.category_type === type)
+    : undefined
+  const availableCategories = historicalCategory?.archived_at
+    ? [...activeCategories, historicalCategory]
+    : activeCategories
   const accountItems = availableAccounts.map((account) => ({ value: account.id, label: account.name }))
   const destinationAccountItems = accounts.map((account) => ({ value: account.id, label: account.name }))
   const categoryItems = availableCategories.map((category) => ({
     value: category.id,
-    label: getCategoryDisplayName(category, categories),
+    label: `${getCategoryDisplayName(category, categories)}${category.archived_at ? " (Archived)" : ""}`,
   }))
 
   useEffect(() => {
@@ -209,7 +218,7 @@ export function TransactionFormDialog({
                     <SelectContent>
                       {availableCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {getCategoryDisplayName(category, categories)}
+                          {getCategoryDisplayName(category, categories)}{category.archived_at ? " (Archived)" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>

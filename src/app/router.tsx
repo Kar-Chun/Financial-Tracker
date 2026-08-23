@@ -76,6 +76,27 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "/investments/:accountId/setup",
+            lazy: async () => {
+              const { DetailedInvestmentSetupPage } = await import("@/features/investments/detailed-investment-setup-page")
+              return { Component: DetailedInvestmentSetupPage }
+            },
+          },
+          {
+            path: "/investments/:accountId",
+            lazy: async () => {
+              const { InvestmentAccountPage } = await import("@/features/investments/investment-account-page")
+              return { Component: InvestmentAccountPage }
+            },
+          },
+          {
+            path: "/investments/:accountId/holdings/:holdingId",
+            lazy: async () => {
+              const { HoldingDetailPage } = await import("@/features/investments/holding-detail-page")
+              return { Component: HoldingDetailPage }
+            },
+          },
+          {
             path: "/budgets",
             lazy: async () => {
               const { BudgetsPage } = await import("@/features/budgets/budgets-page")

@@ -12,6 +12,7 @@ import { useBudgetSummary } from "@/features/budgets/budget-hooks"
 import { getCurrentMonthStart } from "@/features/budgets/budget-dates"
 import { getMonthlySummary, groupExpensesByParent } from "@/features/dashboard/dashboard-logic"
 import { MetricCard } from "@/features/dashboard/metric-card"
+import { InvestmentsCard } from "@/features/dashboard/investments-card"
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
 import { RecentTransactionsCard } from "@/features/dashboard/recent-transactions-card"
 import { SpendingBreakdownCard } from "@/features/dashboard/spending-breakdown-card"
@@ -93,6 +94,8 @@ export function DashboardPage() {
       </section>
 
       {!goalsQuery.isError && <SavingsGoalsCard summary={goalsQuery.data} />}
+
+      <InvestmentsCard accounts={accounts} baseCurrency={currencyCode} />
 
       <SpendingBreakdownCard groups={spendingGroups} currencyCode={currencyCode} />
     </div>

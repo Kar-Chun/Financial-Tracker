@@ -36,6 +36,7 @@ export async function invalidateTransactionFinanceData(queryClient: QueryClient)
     queryClient.invalidateQueries({ queryKey: ["analytics"] }),
     queryClient.invalidateQueries({ queryKey: ["budgets"] }),
     queryClient.invalidateQueries({ queryKey: ["goals"] }),
+    queryClient.invalidateQueries({ queryKey: ["investments"] }),
   ])
 }
 

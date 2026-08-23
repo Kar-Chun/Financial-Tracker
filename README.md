@@ -1,6 +1,6 @@
 # Ledgerly
 
-Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, planning monthly spending, and earmarking existing cash for savings goals. V1.5 adds virtual savings allocation without changing the established accounting model.
+Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, planning monthly spending, earmarking cash for savings goals, and optionally tracking an investment portfolio in detail. V2 preserves every existing accounting model while adding an explicit holdings ledger.
 
 ## Capabilities
 
@@ -8,7 +8,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Profiles with display name, locked base currency, and timezone
 - Bank, cash, and investment accounts with edit/archive flows
 - Transaction-derived bank/cash balances; atomic income, expense, and same-currency transfers
-- Manual total investment valuations in native and base currency
+- Simple manual investment valuations plus optional Detailed holdings, trades, broker cash, prices, dividends, and manual valuation FX
 - Real dashboard metrics and timezone-aware daily net-worth snapshots
 - Spending analytics with period presets, equivalent-period comparisons, parent/subcategory breakdowns, responsive charts, and factual deterministic insights
 - Expense and income category management: create, rename, archive, restore, and one-level subcategories
@@ -80,6 +80,8 @@ Confirm the project reference before pushing. This repository is not linked auto
 6. `202608230002_add_frequent_expense_categories.sql`
 7. `202608240001_add_monthly_budgets.sql`
 8. `202608240002_add_savings_goals.sql`
+9. `202608240003_add_detailed_investment_ledger.sql`
+10. `202608240004_integrate_detailed_investment_values.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -95,7 +97,7 @@ Ordinary currency is stored as `BIGINT` integer minor units: SGD 1.00 is `100`. 
 
 Bank/cash balance = opening balance + non-deleted transaction entries through today. Income creates one positive entry, expense one negative entry, and a transfer two opposite entries in one atomic RPC. Transfers do not affect net worth, income, expenses, or net cash flow.
 
-An investment account uses its latest manual native/base valuation plus transfer movements recorded after that valuation. A newer valuation resets that boundary, avoiding double-counting. Base-currency investment transfer movements can remain represented in net worth; foreign investment movements update native value only because V1.1 does not invent FX.
+Simple investment accounts use their latest manual native/base valuation plus transfer movements recorded after that valuation. A newer valuation resets that boundary, avoiding double-counting. Existing accounts remain Simple until the user explicitly completes Detailed setup.
 
 Foreign-currency bank/cash values remain visible in native currency but are excluded from consolidated base-currency net worth and spending totals.
 
@@ -141,6 +143,20 @@ Available goal cash reuses the application's represented balances for active bas
 For an unreached dated goal, the approximate monthly amount is `ceil(remaining / calendar months from the current profile-timezone month through the target month, inclusive)`. Passed targets show no misleading monthly guidance. Archiving preserves the goal and complete history but excludes its allocation from current totals; restoring includes the existing allocation again.
 
 Migration `202608240002_add_savings_goals.sql` adds goal/allocation tables, RLS, validated mutation RPCs, and aggregated summary/detail RPCs. Follow [V1.5 savings-goal verification](supabase/V1_5_VERIFICATION.md) for accounting-isolation and two-user checks.
+
+## V2 detailed investments
+
+Investment accounts have two deliberately separate tracking modes. **Simple** preserves the existing account-level manual valuation plus qualifying post-valuation transfers. **Detailed** uses only `broker cash + holdings at latest manual prices`; old Simple valuations remain historical and are never added to that total.
+
+Enabling Detailed tracking is explicit and one-way in V2. The user chooses a boundary date, opening broker cash, and opening holdings with quantity, historical average cost, and current price. The preview compares the current Simple represented value with the new opening state without forcing them to match. Opening state represents everything at/before the conversion boundary, so only later transfer entries affect broker cash.
+
+Detailed accounts are single-currency. Quantities, unit prices, and FX rates use PostgreSQL `NUMERIC`; represented money remains rounded integer minor units. Buys reduce broker cash by `quantity × unit price + fee`, increase ledger quantity, and add fees to weighted-average cost. Sells reject overselling, increase cash by proceeds less fees, remove weighted-average basis, and record realised gain/loss. Ledger rows are append-only. Neither operation is an ordinary expense/income transaction.
+
+Current holding value is ledger quantity times the latest historical manual price. Dividends are investment cash events that increase broker cash but do not enter ordinary monthly income, budgets, or spending Analytics. Signed broker-cash adjustments require a reason and are a reconciliation tool, not a replacement for account transfers.
+
+For foreign Detailed accounts, consolidated net worth requires the latest direct, user-owned `account currency → profile base currency` manual FX rate. Manual FX is valuation-only: it never converts transfers and no missing rate is treated as 1:1. Missing FX or any active holding price makes base value unavailable and safely excludes that account from consolidated totals until corrected. Price and FX updates refresh the existing one-per-local-day net-worth snapshot.
+
+Migrations `202608240003_add_detailed_investment_ledger.sql` and `202608240004_integrate_detailed_investment_values.sql` add the ledgers/RLS/RPCs and then connect the mutually exclusive Simple/Detailed formulas to account summaries and snapshots. Apply both in order. Follow [V2 investment verification](supabase/V2_0_VERIFICATION.md) for conversion, trade, transfer, FX, snapshot, and two-user checks.
 
 ## V1.2 mobile and PWA behaviour
 
@@ -195,8 +211,8 @@ After Vercel provides the production URL, open Supabase Dashboard > Authenticati
 
 Signup does not hardcode a host. Supabase uses the configured Site URL for email-confirmation redirects, and the browser client detects the returned session in the URL. Do not deploy until migration status and the production environment variables have been confirmed.
 
-V1.5 does not change `vercel.json` or require additional Vercel environment variables. Apply migration `202608240002_add_savings_goals.sql`, then rebuild/redeploy. Existing users may need to close and reopen the installed app once after an automatic service-worker update.
+V2 does not change `vercel.json` or require additional Vercel environment variables. Apply both V2 migrations in order, then rebuild/redeploy. Existing installed-app users may need to close and reopen once after the service-worker update.
 
 ## Intentionally deferred
 
-V1.5 does not include automatic/recurring goal contributions, account-linked or investment-backed goals, interest projections, shared goals, goal-spending transactions, rollover/payday/weekly budgets, offline financial writes/background sync, push notifications, credit cards, debt, receipts/OCR, merchants, payment status, split/pending/recurring transactions, refund UX, holdings, broker/price APIs, automatic FX, bank integrations, CSV import, or AI.
+V2 does not include automatic prices/FX, mixed-currency brokerage accounts, brokerage sync, contribution-adjusted returns (TWR/XIRR), tax lots/FIFO/LIFO, margin, derivatives, tax reporting, bank imports, or AI investment advice. Existing deferred personal-finance features remain deferred.

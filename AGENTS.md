@@ -7,8 +7,9 @@
 - Financial correctness takes priority over convenience. Do not use JavaScript floating-point values as the authoritative representation of ordinary currency; use integer minor units or an appropriate exact numeric representation.
 - Transactions are the source of truth for bank/cash balances. Do not make major architectural changes without first understanding the complete financial data model.
 - The versioned schema lives in `supabase/migrations`. Financial transaction, account, archive, valuation, and snapshot writes go through the validated RPCs; do not replace them with unrelated browser inserts.
-- Bank/cash balances are opening balance plus non-deleted transaction entries. Investment values use the latest manual valuation plus transfer movements recorded after that valuation; a newer valuation resets the boundary to prevent double-counting.
-
+- Bank/cash balances are opening balance plus non-deleted transaction entries. Simple investment accounts use the latest manual valuation plus transfer movements recorded after that valuation; a newer valuation resets the boundary to prevent double-counting.
+- Detailed investment accounts use broker cash plus ledger-derived holdings at latest manual prices, converted only by a direct user-owned manual FX rate. Never combine Simple valuations with the Detailed formula. Opening state absorbs all pre-boundary activity; only later transfers affect broker cash.
+- Investment opening positions, buys, sells, dividends, and broker-cash adjustments are an investment-only append ledger. They must not create ordinary income/expense transactions or affect budgets, spending Analytics, or Savings Goals. Buy/sell quantity and weighted-average cost calculations are authoritative PostgreSQL `NUMERIC` arithmetic.
 - Consolidated totals include only bank/cash accounts already denominated in the profile base currency. Never treat foreign minor units as equivalent or add automatic FX without a designed migration.
 - Soft-deleted transactions must remain excluded from normal reads, balances, metrics, and snapshots. Daily snapshots are timezone-aware upserts, not scheduled duplicates.
 - Spending analytics is a ranged authenticated database aggregation of non-deleted expense transactions in the profile base currency. Transfers, income, adjustments, refunds, and unconverted foreign amounts stay excluded.

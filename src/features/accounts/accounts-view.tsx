@@ -1,5 +1,6 @@
 import { Archive, Building2, Landmark, Pencil, Plus, WalletCards } from "lucide-react"
 import { useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import { toast } from "sonner"
 
 import {
@@ -166,8 +167,13 @@ function AccountRow({
 }) {
   const Icon = account.account_type === "investment" ? Landmark : account.account_type === "bank" ? Building2 : WalletCards
   const isInvestment = account.account_type === "investment"
+  const isDetailed = isInvestment && account.investment_tracking_mode === "detailed"
   const primaryValue = isInvestment
-    ? formatCurrency(account.base_value_minor ?? 0, baseCurrency)
+    ? account.base_value_available && account.base_value_minor !== null
+      ? formatCurrency(account.base_value_minor, baseCurrency)
+      : isDetailed && account.native_value_minor === null
+        ? "Price needed"
+        : formatCurrency(account.native_value_minor ?? 0, account.currency_code)
     : formatCurrency(account.current_balance_minor ?? account.opening_balance_minor, account.currency_code)
 
   return (
@@ -193,7 +199,9 @@ function AccountRow({
               {account.valued_at ? ` · ${formatShortDate(account.valued_at)}` : " · Not valued yet"}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {account.currency_code === baseCurrency
+              {isDetailed
+                ? "Detailed value is broker cash plus holdings at their latest manual prices."
+                : account.currency_code === baseCurrency
                 ? "Transfers after the latest manual valuation are included until you update the value again."
                 : "Native transfers are reflected; update the manual base value after foreign-currency transfers."}
             </p>
@@ -203,7 +211,8 @@ function AccountRow({
           <p className="text-xs text-amber-300">Excluded from {baseCurrency} net worth until FX conversion is available.</p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
-          {isInvestment && <Button size="sm" onClick={onValue}>Update value</Button>}
+          {isInvestment && !isDetailed && <Button size="sm" onClick={onValue}>Update value</Button>}
+          {isDetailed && <Button size="sm" render={<Link to={`/investments/${account.id}`} />}>View portfolio</Button>}
           <Button size="sm" variant="outline" onClick={onEdit}><Pencil /> Edit</Button>
           <Button size="sm" variant="ghost" onClick={onArchive}><Archive /> Archive</Button>
         </div>

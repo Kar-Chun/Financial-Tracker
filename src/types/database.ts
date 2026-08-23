@@ -26,6 +26,72 @@ type AccountRow = {
   created_at: string
   updated_at: string
   archived_at: string | null
+  investment_tracking_mode: "simple" | "detailed"
+  detailed_started_on: string | null
+  detailed_started_at: string | null
+}
+
+type ManualFxRateRow = {
+  id: string
+  user_id: string
+  from_currency: string
+  to_currency: string
+  rate: number
+  rate_date: string
+  created_at: string
+  updated_at: string
+}
+
+type InvestmentHoldingRow = {
+  id: string
+  account_id: string
+  user_id: string
+  symbol: string
+  name: string
+  asset_type: "stock" | "etf" | "fund" | "other"
+  currency_code: string
+  archived_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+type InvestmentTradeRow = {
+  id: string
+  holding_id: string
+  account_id: string
+  user_id: string
+  trade_type: "opening_position" | "buy" | "sell"
+  quantity: number
+  unit_price: number
+  fee_minor: number
+  cash_effect_minor: number
+  cost_basis_effect_minor: number
+  realized_gain_minor: number
+  trade_date: string
+  note: string | null
+  created_at: string
+}
+
+type InvestmentPriceRow = {
+  id: string
+  holding_id: string
+  user_id: string
+  price: number
+  priced_at: string
+  created_at: string
+  updated_at: string
+}
+
+type InvestmentCashEventRow = {
+  id: string
+  account_id: string
+  holding_id: string | null
+  user_id: string
+  event_type: "opening_cash" | "dividend" | "cash_adjustment"
+  amount_minor: number
+  event_date: string
+  note: string | null
+  created_at: string
 }
 
 type CategoryRow = {
@@ -187,6 +253,11 @@ export type Database = {
         Partial<Omit<GoalAllocationRow, "id" | "created_at">> & Pick<GoalAllocationRow, "goal_id" | "amount_minor" | "allocation_date">,
         Partial<Omit<GoalAllocationRow, "id" | "goal_id" | "created_at">>
       >
+      manual_fx_rates: TableDefinition<ManualFxRateRow, Partial<ManualFxRateRow>, Partial<ManualFxRateRow>>
+      investment_holdings: TableDefinition<InvestmentHoldingRow, Partial<InvestmentHoldingRow>, Partial<InvestmentHoldingRow>>
+      investment_trades: TableDefinition<InvestmentTradeRow, Partial<InvestmentTradeRow>, Partial<InvestmentTradeRow>>
+      investment_prices: TableDefinition<InvestmentPriceRow, Partial<InvestmentPriceRow>, Partial<InvestmentPriceRow>>
+      investment_cash_events: TableDefinition<InvestmentCashEventRow, Partial<InvestmentCashEventRow>, Partial<InvestmentCashEventRow>>
     }
     Views: Record<string, never>
     Functions: {
@@ -267,6 +338,42 @@ export type Database = {
         Args: { p_goal_id: string }
         Returns: Json
       }
+      get_investment_portfolio_summary: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      get_detailed_investment_account: {
+        Args: { p_account_id: string }
+        Returns: Json
+      }
+      preview_detailed_investment_conversion: {
+        Args: { p_account_id: string; p_opening_cash_minor: number; p_holdings: Json }
+        Returns: Json
+      }
+      enable_detailed_investment_tracking: {
+        Args: { p_account_id: string; p_started_on: string; p_opening_cash_minor: number; p_holdings: Json }
+        Returns: string
+      }
+      upsert_investment_holding: {
+        Args: { p_account_id: string; p_symbol: string; p_name: string; p_asset_type: string; p_holding_id?: string | null }
+        Returns: string
+      }
+      record_investment_trade: {
+        Args: { p_account_id: string; p_holding_id: string; p_trade_type: "buy" | "sell"; p_quantity: number; p_unit_price: number; p_fee_minor: number; p_trade_date: string; p_note?: string | null }
+        Returns: string
+      }
+      update_investment_prices: {
+        Args: { p_account_id: string; p_priced_at: string; p_prices: Json }
+        Returns: number
+      }
+      upsert_manual_fx_rate: {
+        Args: { p_from_currency: string; p_rate: number; p_rate_date: string }
+        Returns: string
+      }
+      record_investment_cash_event: {
+        Args: { p_account_id: string; p_holding_id: string | null; p_event_type: "dividend" | "cash_adjustment"; p_amount_minor: number; p_event_date: string; p_note: string }
+        Returns: string
+      }
       refresh_net_worth_snapshot: {
         Args: Record<string, never>
         Returns: string
@@ -344,6 +451,15 @@ export type AccountSummaryRow = {
   included_in_net_worth: boolean
   created_at: string
   updated_at: string
+  investment_tracking_mode?: "simple" | "detailed"
+  base_value_available?: boolean
+  broker_cash_minor?: number | null
+  holdings_value_minor?: number | null
+  cost_basis_minor?: number | null
+  unrealized_gain_minor?: number | null
+  realized_gain_minor?: number | null
+  dividends_minor?: number | null
+  missing_price_count?: number
 }
 
 export type Profile = ProfileRow

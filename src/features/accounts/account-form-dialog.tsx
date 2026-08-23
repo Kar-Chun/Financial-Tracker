@@ -142,7 +142,7 @@ export function AccountFormDialog({
                 name="accountType"
                 control={control}
                 render={({ field }) => (
-                  <Select items={accountTypeItems} value={field.value} onValueChange={field.onChange}>
+                  <Select disabled={account?.investment_tracking_mode === "detailed"} items={accountTypeItems} value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bank">Bank</SelectItem>
@@ -158,7 +158,7 @@ export function AccountFormDialog({
                 name="currencyCode"
                 control={control}
                 render={({ field }) => (
-                  <Select items={currencyItems} value={field.value} onValueChange={field.onChange}>
+                  <Select disabled={account?.investment_tracking_mode === "detailed"} items={currencyItems} value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {supportedCurrencies.map((currency) => (

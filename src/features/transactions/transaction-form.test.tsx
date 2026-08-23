@@ -39,7 +39,13 @@ describe("Add Transaction form", () => {
 
     expect(screen.getByRole("button", { name: "Expense" })).toHaveAttribute("aria-pressed", "true")
     expect(screen.getByRole("textbox", { name: "Note" })).toBeVisible()
+    expect(screen.getByLabelText("Amount")).toHaveAttribute("inputmode", "decimal")
+    expect(screen.getByLabelText("Amount")).toHaveClass("h-12")
+    expect(screen.getByLabelText("Amount")).not.toHaveClass("h-24")
     expect(screen.getByLabelText("Date")).toHaveValue("2026-08-23")
+    expect(screen.getByLabelText("Date")).toHaveAttribute("type", "date")
+    expect(screen.getByLabelText("Date")).toHaveAttribute("data-transaction-date")
+    expect(screen.getByLabelText("Date")).toHaveClass("w-full", "min-w-0", "max-w-full")
     expect(screen.getByRole("button", { name: "Food › Eating Out" })).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Account" })).toHaveTextContent("Daily Spending")
     expect(screen.queryByText("bank-account")).not.toBeInTheDocument()

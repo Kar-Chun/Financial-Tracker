@@ -127,6 +127,20 @@
   .finance-surface {
     @apply rounded-2xl bg-card ring-1 ring-border/35;
   }
+
+  input[data-transaction-date] {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-height: 3rem;
+    color-scheme: dark;
+  }
+
+  input[data-transaction-date]::-webkit-date-and-time-value {
+    min-height: 1.25rem;
+    text-align: left;
+  }
 }
 
 @media (max-width: 767px) {

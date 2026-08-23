@@ -204,7 +204,13 @@ export function TransactionForm({
 
   const dateField = (
     <FormField label="Date" error={errors.transactionDate?.message}>
-      <Input aria-label="Date" className={cn(entryPage && "h-12 rounded-xl text-base md:text-sm")} type="date" {...register("transactionDate")} />
+      <Input
+        data-transaction-date
+        aria-label="Date"
+        className={cn("block w-full min-w-0 max-w-full", entryPage && "h-12 rounded-xl text-base md:text-sm")}
+        type="date"
+        {...register("transactionDate")}
+      />
     </FormField>
   )
 
@@ -238,7 +244,7 @@ export function TransactionForm({
         </FormField>
       )}
 
-      <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message} emphasis={entryPage}>
+      <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message}>
         <Input
           inputMode="decimal"
           aria-label="Amount"
@@ -246,7 +252,7 @@ export function TransactionForm({
           autoComplete="off"
           placeholder="0.00"
           autoFocus
-          className={cn(entryPage && "h-24 rounded-2xl border-border/30 bg-surface px-4 text-center text-[clamp(2rem,10vw,2.75rem)] font-semibold tracking-[-0.04em] tabular-nums")}
+          className={cn(entryPage && "h-12 rounded-xl bg-input/30 px-3 text-base font-medium tabular-nums md:text-sm")}
           {...register("amount")}
         />
       </FormField>

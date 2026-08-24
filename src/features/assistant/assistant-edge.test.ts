@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { runFinancialAssistant } from "../../../supabase/functions/financial-assistant/orchestrator.ts"
+import { AssistantOrchestrationTimeoutError, runFinancialAssistant } from "../../../supabase/functions/financial-assistant/orchestrator.ts"
 import type { FinancialAIProvider, ProviderRequest } from "../../../supabase/functions/financial-assistant/provider/financial-ai-provider.ts"
 import type { ProviderTurn } from "../../../supabase/functions/financial-assistant/types.ts"
 import { createToolRegistry } from "../../../supabase/functions/financial-assistant/tools/tool-registry.ts"
@@ -83,6 +83,17 @@ describe("read-only assistant orchestration", () => {
       context: { ...context, client: { rpc: async (name: string) => { names.push(name); return { data: { pace_status: "on_track" }, error: null } } } },
     })
     expect(names).toEqual(["get_monthly_budget_summary"])
+  })
+
+  it("enforces the whole-orchestration deadline when a finance tool stalls", async () => {
+    const provider = new FakeProvider([functionTurn("get_financial_overview", {})])
+    const stalledContext = {
+      ...context,
+      client: { rpc: () => new Promise<never>(() => undefined) },
+    }
+    await expect(runFinancialAssistant({ provider, question: "Overview", history: [], context: stalledContext }, 5))
+      .rejects.toThrow(AssistantOrchestrationTimeoutError)
+    expect(provider.requests).toHaveLength(1)
   })
 })
 

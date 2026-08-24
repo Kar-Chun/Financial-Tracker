@@ -85,6 +85,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 9. `202608240003_add_detailed_investment_ledger.sql`
 10. `202608240004_integrate_detailed_investment_values.sql`
 11. `202608240005_add_ai_read_models.sql`
+12. `202608240006_add_ai_abuse_protection.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -169,7 +170,11 @@ The function currently exposes compact financial overview, spending/comparison/c
 
 Conversation is held only in page memory and clears on refresh; there is no chat-history table or local-storage copy. When a user invokes the Assistant, only relevant tool results and a small recent conversation window are sent to the configured AI provider. The Monthly Review is an explicit user action, not an automatic Dashboard request. Missing keys, quota, timeouts, or provider outages disable only AI—the rest of Ledgerly remains independent.
 
-The Gemini key belongs in Supabase Edge Function secrets, never `.env.local`, Vercel, or a `VITE_` variable. After applying migration 11 and confirming the intended linked project, configure and deploy with placeholders:
+AI provider attempts are protected before Gemini is called. Migration `202608240006_add_ai_abuse_protection.sql` adds private operational usage/lease metadata and atomic authenticated RPCs. Defaults are 6 attempts per rolling minute, 30 per rolling hour, 100 per rolling 24 hours, 500 project-wide per rolling 24 hours, and one active request per user with a 60-second expiring lease. Administrators can change these server-side values in the singleton `ai_rate_limit_config` row without rebuilding the frontend. The browser cannot read or write either limiter table, and no prompt, response, finance value, Note, or tool payload is persisted.
+
+The Edge boundary accepts at most six recent history messages, 2,000 characters per message/question, and 16 KiB total request bytes. Gemini output is capped at 900 tokens, tool work is capped at three rounds/six calls, each provider call has a 15-second timeout, and the complete orchestration has a 45-second deadline. Rate-limit responses use HTTP 429 and never reveal other-user or exact project usage.
+
+The Gemini key belongs in Supabase Edge Function secrets, never `.env.local`, Vercel, or a `VITE_` variable. After applying migrations 11–12 and confirming the intended linked project, configure and deploy with placeholders:
 
 ```bash
 npx supabase@latest secrets set GEMINI_API_KEY=YOUR_SCHOOL_GEMINI_KEY GEMINI_MODEL=YOUR_SUPPORTED_FLASH_MODEL

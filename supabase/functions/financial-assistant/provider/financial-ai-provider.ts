@@ -4,9 +4,9 @@ export type ProviderRequest = {
   systemPrompt: string
   contents: ProviderContent[]
   tools: ToolDeclaration[]
+  signal?: AbortSignal
 }
 
 export interface FinancialAIProvider {
   generate(request: ProviderRequest): Promise<ProviderTurn>
 }
-

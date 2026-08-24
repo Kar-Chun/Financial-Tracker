@@ -50,13 +50,14 @@ export class GeminiFinancialAIProvider implements FinancialAIProvider {
   async generate(request: ProviderRequest): Promise<ProviderTurn> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs)
+    const signal = request.signal ? AbortSignal.any([controller.signal, request.signal]) : controller.signal
     try {
       const response = await this.fetcher(
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(this.model)}:generateContent`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": this.apiKey },
-          signal: controller.signal,
+          signal,
           body: JSON.stringify(buildGeminiRequestBody(request)),
         },
       )
@@ -83,7 +84,7 @@ export class GeminiFinancialAIProvider implements FinancialAIProvider {
         .filter((call): call is FunctionCall => call !== null)
       return { text: text || undefined, functionCalls, content }
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") throw new ProviderTimeoutError("AI provider timed out.")
+      if (error instanceof Error && error.name === "AbortError") throw new ProviderTimeoutError("AI provider timed out.")
       throw error
     } finally {
       clearTimeout(timeout)

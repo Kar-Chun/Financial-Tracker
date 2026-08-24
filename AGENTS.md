@@ -20,5 +20,6 @@
 - Financial mutation services must refuse writes while offline. Mobile convenience preferences contain only user-scoped internal IDs and must be revalidated against the current RLS-filtered data before use.
 - The AI Financial Assistant is an optional read-only interpretation layer. It must never become authoritative for financial calculations or gain financial write tools; its tools reuse deterministic authenticated finance RPCs.
 - AI provider secrets are server-side Edge Function secrets only. Send the provider only the minimum relevant data, treat all stored financial text as untrusted data, and keep the core tracker independent of AI availability.
+- AI provider attempts require server-side per-user/global rate limits, an expiring one-request-per-user lease, bounded request/tool/output sizes, and a hard timeout. Operational limiter data must never store prompts, answers, financial values, Notes, or tool payloads.
 - Prefer small, readable components and local state for simple UI concerns. Use TanStack Query for server state; do not introduce a global state library without a demonstrated need.
 - Run `npm run lint` and `npm run build` after relevant changes, and fix failures before handoff.

@@ -6,13 +6,39 @@ import { createToolRegistry, toolDeclarations, type ToolContext } from "./tools/
 const MAX_TOOL_ROUNDS = 3
 const MAX_TOOL_CALLS = 6
 const MAX_ANSWER_LENGTH = 6_000
+const MAX_ORCHESTRATION_MILLISECONDS = 45_000
+
+export class AssistantOrchestrationTimeoutError extends Error {}
 
 export async function runFinancialAssistant(input: {
   provider: FinancialAIProvider
   question: string
   history: ConversationMessage[]
   context: ToolContext & { timezone: string; workflow?: string }
-}): Promise<AssistantResponse> {
+}, timeoutMs = MAX_ORCHESTRATION_MILLISECONDS): Promise<AssistantResponse> {
+  const controller = new AbortController()
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      runWithSignal(input, controller.signal),
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(() => {
+          controller.abort()
+          reject(new AssistantOrchestrationTimeoutError("AI orchestration timed out."))
+        }, timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timeout) clearTimeout(timeout)
+  }
+}
+
+async function runWithSignal(input: {
+  provider: FinancialAIProvider
+  question: string
+  history: ConversationMessage[]
+  context: ToolContext & { timezone: string; workflow?: string }
+}, signal: AbortSignal): Promise<AssistantResponse> {
   const registry = createToolRegistry()
   const usedTools: string[] = []
   const contents: ProviderContent[] = sanitizeHistory(input.history)
@@ -21,7 +47,7 @@ export async function runFinancialAssistant(input: {
 
   let toolCalls = 0
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round += 1) {
-    const turn = await input.provider.generate({ systemPrompt, contents, tools: toolDeclarations(registry) })
+    const turn = await input.provider.generate({ systemPrompt, contents, tools: toolDeclarations(registry), signal })
     contents.push(turn.content)
     if (!turn.functionCalls.length) {
       const answer = turn.text?.trim()
@@ -36,6 +62,7 @@ export async function runFinancialAssistant(input: {
       const registered = registry.get(call.name)
       if (!registered) throw new Error("AI requested an unknown tool.")
       const result = await registered.execute(call.args, input.context)
+      if (signal.aborted) throw new AssistantOrchestrationTimeoutError("AI orchestration timed out.")
       usedTools.push(call.name)
       responseParts.push({ functionResponse: { name: call.name, response: { result }, ...(call.id ? { id: call.id } : {}) } })
     }
@@ -60,4 +87,3 @@ function suggestedAction(usedTools: string[]): SuggestedAction | undefined {
   if (usedTools.includes("get_financial_overview")) return { destination: "dashboard", label: "View Dashboard" }
   return undefined
 }
-

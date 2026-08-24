@@ -129,7 +129,8 @@ describe("Gemini provider failure diagnostics", () => {
   })
 
   it("retains sanitized non-2xx diagnostics for Edge Function logs", async () => {
-    const payload = { error: { code: 400, status: "INVALID_ARGUMENT", message: "Unknown field additionalProperties\nkey=AIzaNotARealKey123456789" } }
+    const syntheticKey = ["AI", "zaNotARealKey123456789"].join("")
+    const payload = { error: { code: 400, status: "INVALID_ARGUMENT", message: `Unknown field additionalProperties\nkey=${syntheticKey}` } }
     const provider = new GeminiFinancialAIProvider("server-secret", "gemini-2.5-flash", responseSequence([], payload, 400))
     let caught: unknown
     try { await provider.generate(baseRequest) } catch (error) { caught = error }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Session } from "@supabase/supabase-js"
 
-import { shouldClearUserCache } from "@/features/auth/auth-cache"
+import { clearSensitiveCacheForUserChange } from "@/features/auth/auth-cache"
 import { AuthContext, type AuthContextValue } from "@/features/auth/auth-context"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 
@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let authEventReceived = false
     const applySession = (nextSession: Session | null) => {
       const nextUserId = nextSession?.user.id ?? null
-      if (shouldClearUserCache(currentUserId.current, nextUserId)) queryClient.clear()
+      clearSensitiveCacheForUserChange(queryClient, currentUserId.current, nextUserId)
       currentUserId.current = nextUserId
       setSession(nextSession)
       setIsLoading(false)

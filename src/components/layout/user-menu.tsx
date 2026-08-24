@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -67,12 +68,14 @@ export function UserMenu({ compact = false }: UserMenuProps) {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side={compact ? "bottom" : "top"} className="w-56">
-        <DropdownMenuLabel>Personal workspace</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Personal workspace</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => navigate("/settings")}>
+            <Settings />
+            Settings
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/settings")}>
-          <Settings />
-          Settings
-        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={logoutMutation.isPending}
           onClick={() => logoutMutation.mutate()}

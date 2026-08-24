@@ -5,6 +5,7 @@ import {
   PiggyBank,
   ReceiptText,
   Settings,
+  Sparkles,
   Target,
   WalletCards,
   type LucideIcon,
@@ -24,6 +25,7 @@ export const primaryNavigation: NavigationItem[] = [
   { label: "Budgets", href: "/budgets", icon: PiggyBank },
   { label: "Goals", href: "/goals", icon: Target },
   { label: "Analytics", href: "/analytics", icon: ChartNoAxesCombined },
+  { label: "AI Assistant", href: "/assistant", icon: Sparkles },
 ]
 
 export const settingsNavigation: NavigationItem = {

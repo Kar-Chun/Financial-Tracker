@@ -18,6 +18,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - User-scoped last expense account and deterministic frequent expense category shortcuts
 - Independent monthly overall budgets, optional parent-category limits, spending pace, and safe daily guidance
 - Multiple base-currency savings goals with virtual allocations, progress, target-date guidance, history, and archival
+- An authenticated, read-only AI Financial Assistant grounded by allowlisted deterministic finance tools
 
 ## Stack and architecture
 
@@ -50,11 +51,12 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 src/
 |-- app/                 # Router and top-level providers
 |-- components/          # Layout, shared, and shadcn UI components
-|-- features/            # Auth, accounts, transactions, dashboard, analytics, categories
+|-- features/            # Auth, finance features, analytics, and the Assistant UI
 |-- lib/                 # Supabase, exact currency, date, error, and styling utilities
 |-- test/                # Shared Vitest setup
 `-- types/               # Database and finance contracts
 supabase/
+|-- functions/           # Server-side AI provider orchestration and read-only tools
 |-- migrations/          # Versioned schema, functions, RLS, and grants
 |-- RLS_VERIFICATION.md  # V1 two-user isolation procedure
 `-- V1_1_VERIFICATION.md # Analytics/category verification
@@ -82,6 +84,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 8. `202608240002_add_savings_goals.sql`
 9. `202608240003_add_detailed_investment_ledger.sql`
 10. `202608240004_integrate_detailed_investment_values.sql`
+11. `202608240005_add_ai_read_models.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -158,6 +161,25 @@ For foreign Detailed accounts, consolidated net worth requires the latest direct
 
 Migrations `202608240003_add_detailed_investment_ledger.sql` and `202608240004_integrate_detailed_investment_values.sql` add the ledgers/RLS/RPCs and then connect the mutually exclusive Simple/Detailed formulas to account summaries and snapshots. Apply both in order. Follow [V2 investment verification](supabase/V2_0_VERIFICATION.md) for conversion, trade, transfer, FX, snapshot, and two-user checks.
 
+## V3 AI Financial Assistant
+
+`/assistant` is an optional, read-only interpretation layer. The browser invokes the authenticated `financial-assistant` Supabase Edge Function; the function validates the user JWT, recreates trusted instructions server-side, and lets the configured Gemini model request only explicitly registered read tools. Deterministic Postgres RPCs remain authoritative for balances, spending, budgets, goals, and investments. A server-side exact minor-unit calculator handles supported what-if arithmetic. The assistant has no financial write tool and is never called by normal tracker calculations or background loading.
+
+The function currently exposes compact financial overview, spending/comparison/category summaries, a capped transaction search, budget status, savings goals, investment summaries, a readable-name Detailed account lookup, and deterministic what-if scenarios. Transaction Notes and all other database text are passed only as structured, untrusted tool data. Read results are scoped by the user's JWT/RLS context; IDs and unrelated data are removed before provider calls where practical. Transaction search is capped at 20 rows.
+
+Conversation is held only in page memory and clears on refresh; there is no chat-history table or local-storage copy. When a user invokes the Assistant, only relevant tool results and a small recent conversation window are sent to the configured AI provider. The Monthly Review is an explicit user action, not an automatic Dashboard request. Missing keys, quota, timeouts, or provider outages disable only AI—the rest of Ledgerly remains independent.
+
+The Gemini key belongs in Supabase Edge Function secrets, never `.env.local`, Vercel, or a `VITE_` variable. After applying migration 11 and confirming the intended linked project, configure and deploy with placeholders:
+
+```bash
+npx supabase@latest secrets set GEMINI_API_KEY=YOUR_SCHOOL_GEMINI_KEY GEMINI_MODEL=YOUR_SUPPORTED_FLASH_MODEL
+npx supabase@latest functions deploy financial-assistant
+```
+
+If the repository is not linked, add `--project-ref YOUR_CONFIRMED_PROJECT_REF` to each command or link it first. Changing `GEMINI_MODEL` switches the model without a frontend rebuild. See [V3 manual verification](supabase/V3_0_VERIFICATION.md).
+
+V3 does not include AI writes, automatic categorisation/budgeting/allocation/trading, stock recommendations, live market/news grounding, persistent chat history, background reviews, voice, OCR, or multiple runtime providers.
+
 ## V1.2 mobile and PWA behaviour
 
 Authenticated phone layouts use a four-item bottom bar for Home, Transactions, Analytics, and More, plus a separate safe-area-aware floating Add button. The button and every other create action open the protected `/transactions/new` route. The dedicated page defaults to Expense, puts the amount first, keeps Note visible, defaults the date using the profile timezone, and returns to the originating screen after Supabase confirms the save. Editing remains in the existing focused dialog.
@@ -200,7 +222,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-No Supabase secret or service-role credential belongs in Vercel's frontend environment.
+No Supabase secret, Gemini key, or service-role credential belongs in Vercel's frontend environment. Gemini secrets are configured only for the Supabase Edge Function.
 
 After Vercel provides the production URL, open Supabase Dashboard > Authentication > URL Configuration:
 
@@ -215,4 +237,4 @@ V2 does not change `vercel.json` or require additional Vercel environment variab
 
 ## Intentionally deferred
 
-V2 does not include automatic prices/FX, mixed-currency brokerage accounts, brokerage sync, contribution-adjusted returns (TWR/XIRR), tax lots/FIFO/LIFO, margin, derivatives, tax reporting, bank imports, or AI investment advice. Existing deferred personal-finance features remain deferred.
+The app does not include automatic prices/FX, mixed-currency brokerage accounts, brokerage sync, contribution-adjusted returns (TWR/XIRR), tax lots/FIFO/LIFO, margin, derivatives, tax reporting, bank imports, or AI investment advice. Existing deferred personal-finance features remain deferred.

@@ -132,6 +132,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "/assistant",
+            lazy: async () => {
+              const { AssistantPage } = await import("@/features/assistant/assistant-page")
+              return { Component: AssistantPage }
+            },
+          },
+          {
             path: "/settings",
             lazy: async () => {
               const { SettingsPage } = await import("@/features/settings/settings-page")

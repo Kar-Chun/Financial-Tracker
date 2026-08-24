@@ -1,4 +1,4 @@
-import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, Target, WalletCards } from "lucide-react"
+import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, Sparkles, Target, WalletCards } from "lucide-react"
 import { useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 
@@ -13,6 +13,7 @@ const primaryItems = [
 ]
 
 const moreItems = [
+  { label: "AI Assistant", href: "/assistant", icon: Sparkles },
   { label: "Budgets", href: "/budgets", icon: PiggyBank },
   { label: "Savings Goals", href: "/goals", icon: Target },
   { label: "Accounts", href: "/accounts", icon: WalletCards },
@@ -72,7 +73,7 @@ export function MobileBottomNavigation() {
         <SheetContent side="bottom" className="rounded-t-3xl border-border/40 bg-popover pb-[env(safe-area-inset-bottom)]">
           <SheetHeader className="border-b border-border/35 text-left">
             <SheetTitle>More</SheetTitle>
-            <SheetDescription>Goals, budgets, accounts, investments, settings, and your session.</SheetDescription>
+            <SheetDescription>Assistant, goals, budgets, accounts, investments, settings, and your session.</SheetDescription>
           </SheetHeader>
           <nav className="grid gap-2 px-4" aria-label="More navigation">
             {moreItems.map((item) => (
@@ -95,6 +96,7 @@ export function MobileBottomNavigation() {
 
 export function MobileQuickAddButton() {
   const location = useLocation()
+  if (location.pathname === "/assistant") return null
 
   return (
     <Link

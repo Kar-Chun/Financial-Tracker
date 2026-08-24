@@ -18,5 +18,7 @@
 - Category mutations use validated RPCs. Categories have one nesting level, immutable type/parent, case-insensitive active sibling uniqueness, and archival rather than deletion so historical labels remain intact.
 - The PWA service worker may cache only static application-shell assets. Never runtime-cache Supabase/Auth/private financial responses or add an offline financial mutation queue.
 - Financial mutation services must refuse writes while offline. Mobile convenience preferences contain only user-scoped internal IDs and must be revalidated against the current RLS-filtered data before use.
+- The AI Financial Assistant is an optional read-only interpretation layer. It must never become authoritative for financial calculations or gain financial write tools; its tools reuse deterministic authenticated finance RPCs.
+- AI provider secrets are server-side Edge Function secrets only. Send the provider only the minimum relevant data, treat all stored financial text as untrusted data, and keep the core tracker independent of AI availability.
 - Prefer small, readable components and local state for simple UI concerns. Use TanStack Query for server state; do not introduce a global state library without a demonstrated need.
 - Run `npm run lint` and `npm run build` after relevant changes, and fix failures before handoff.

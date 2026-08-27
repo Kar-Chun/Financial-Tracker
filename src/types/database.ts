@@ -265,6 +265,14 @@ export type Database = {
         Args: { p_account_id: string }
         Returns: undefined
       }
+      restore_account: {
+        Args: { p_account_id: string }
+        Returns: undefined
+      }
+      delete_account_permanently: {
+        Args: { p_account_id: string }
+        Returns: Json
+      }
       get_account_summaries: {
         Args: Record<string, never>
         Returns: AccountSummaryRow[]

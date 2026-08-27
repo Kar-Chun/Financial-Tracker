@@ -57,6 +57,7 @@ export type DetailedInvestmentAccount = {
     currency_code: string
     investment_tracking_mode: "detailed"
     detailed_started_on: string
+    archived_at: string | null
   }
   value: {
     native_value_minor: number | null

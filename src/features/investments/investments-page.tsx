@@ -7,6 +7,7 @@ import { ValuationDialog } from "@/features/accounts/valuation-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AccountLifecycleActions } from "@/features/accounts/account-lifecycle-actions"
 import { useInvestmentPortfolio } from "@/features/investments/investments-hooks"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { cn } from "@/lib/utils"
@@ -52,7 +53,7 @@ function InvestmentAccountRow({ account, baseCurrency, bordered, onValue }: { ac
   const base = account.included_in_net_worth && account.base_value_minor !== null ? formatCurrency(account.base_value_minor, baseCurrency) : null
   return <article className={cn("px-4 py-5 sm:px-6", bordered && "border-t border-border/25")}><div className="flex min-w-0 items-start justify-between gap-4"><div className="min-w-0"><h3 className="truncate font-semibold">{account.name}</h3><p className="mt-1 text-xs text-muted-foreground">{account.institution ?? "Investment"} · {account.currency_code} · {detailed ? "Detailed" : "Simple"}</p></div><div className="shrink-0 text-right"><p className="font-semibold tabular-nums">{native}</p>{base && account.currency_code !== baseCurrency && <p className="mt-1 text-xs text-muted-foreground">{base} base</p>}</div></div>
     {detailed ? <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground"><p>Broker cash<br /><strong className="text-foreground">{formatCurrency(account.broker_cash_minor ?? 0, account.currency_code)}</strong></p><p>Holdings<br /><strong className="text-foreground">{formatCurrency(account.holdings_value_minor ?? 0, account.currency_code)}</strong></p></div> : <p className="mt-3 text-xs leading-5 text-muted-foreground">Manual account-level valuation. Existing transfer-after-valuation accounting remains active.</p>}
-    <div className="mt-4 flex flex-wrap gap-2">{detailed ? <Button size="sm" render={<Link to={`/investments/${account.id}`} />}><SlidersHorizontal /> View portfolio</Button> : <><Button size="sm" onClick={onValue}><RefreshCw /> Update valuation</Button><Button size="sm" variant="outline" render={<Link to={`/investments/${account.id}/setup`} />}>Enable detailed <ArrowRight /></Button></>}</div>
+    <div className="mt-4 flex flex-wrap gap-2">{detailed ? <Button size="sm" render={<Link to={`/investments/${account.id}`} />}><SlidersHorizontal /> View portfolio</Button> : <><Button size="sm" onClick={onValue}><RefreshCw /> Update valuation</Button><Button size="sm" variant="outline" render={<Link to={`/investments/${account.id}/setup`} />}>Enable detailed <ArrowRight /></Button></>}<AccountLifecycleActions account={account} baseCurrency={baseCurrency} /></div>
     {detailed && !account.base_value_available && <p className="mt-3 text-xs text-amber-200">Base-currency value unavailable. Add missing prices or a direct {account.currency_code} → {baseCurrency} rate.</p>}</article>
 }
 

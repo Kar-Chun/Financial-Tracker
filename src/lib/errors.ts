@@ -12,6 +12,9 @@ const friendlyErrors: Array<[string, string]> = [
   ["Archived categories", "Archived categories cannot be used."],
   ["Account balance must be zero", "Set the account balance to zero before archiving it."],
   ["Set the account value to zero", "Set the account value to zero before archiving it."],
+  ["Account represented value must be zero", "Bring the account's represented value to zero before archiving it."],
+  ["Account represented value must be available", "Add any missing investment prices so the account value can be verified before archiving."],
+  ["future transactions cannot be archived", "Remove or correct future-dated transactions before archiving this account."],
   ["active category with this name", "An active category with this name already exists here."],
   ["Archive its subcategories first", "Archive its subcategories first."],
   ["Restore the parent category first", "Restore the parent category first."],
@@ -33,6 +36,12 @@ export function getErrorMessage(error: unknown, fallback: string) {
 
   if (!message) {
     return fallback
+  }
+
+  const activeTransactions = message.match(/Account is used by (\d+) active transaction/)
+  if (activeTransactions) {
+    const count = Number(activeTransactions[1])
+    return `This account is used by ${count} active ${count === 1 ? "transaction" : "transactions"}. Delete or correct those transactions first.`
   }
 
   const friendly = friendlyErrors.find(([needle]) => message.includes(needle))

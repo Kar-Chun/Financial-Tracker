@@ -1,28 +1,17 @@
-import { Archive, Building2, Landmark, Pencil, Plus, WalletCards } from "lucide-react"
+import { Building2, Landmark, Pencil, Plus, WalletCards } from "lucide-react"
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { toast } from "sonner"
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AccountLifecycleActions } from "@/features/accounts/account-lifecycle-actions"
 import { AccountFormDialog } from "@/features/accounts/account-form-dialog"
-import { useAccounts, useArchiveAccount } from "@/features/accounts/accounts-hooks"
+import { useAccounts, useArchivedAccounts } from "@/features/accounts/accounts-hooks"
+import type { ArchivedAccount } from "@/features/accounts/accounts-service"
 import { ValuationDialog } from "@/features/accounts/valuation-dialog"
 import { useProfile } from "@/features/auth/profile-service"
 import { formatCurrency } from "@/lib/currency"
 import { formatShortDate } from "@/lib/dates"
-import { getErrorMessage } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import type { AccountSummaryRow } from "@/types/database"
 import type { AccountType } from "@/types/finance"
@@ -39,17 +28,20 @@ export function AccountsView({
   description = "Your active bank, cash, and investment accounts.",
 }: AccountsViewProps) {
   const accountsQuery = useAccounts()
+  const archivedQuery = useArchivedAccounts()
   const profileQuery = useProfile()
-  const archiveMutation = useArchiveAccount()
   const [formOpen, setFormOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<AccountSummaryRow | null>(null)
   const [valuationAccount, setValuationAccount] = useState<AccountSummaryRow | null>(null)
-  const [archiveTarget, setArchiveTarget] = useState<AccountSummaryRow | null>(null)
   const accounts = useMemo(
     () => (accountsQuery.data ?? []).filter((account) => !filterType || account.account_type === filterType),
     [accountsQuery.data, filterType],
   )
   const baseCurrency = profileQuery.data?.base_currency ?? "SGD"
+  const archivedAccounts = useMemo(
+    () => (archivedQuery.data ?? []).filter((account) => !filterType || account.account_type === filterType),
+    [archivedQuery.data, filterType],
+  )
   const accountGroups = filterType === "investment"
     ? [{ label: "Investments", accounts }]
     : [
@@ -65,17 +57,6 @@ export function AccountsView({
   const openEdit = (account: AccountSummaryRow) => {
     setEditingAccount(account)
     setFormOpen(true)
-  }
-
-  const confirmArchive = () => {
-    if (!archiveTarget) return
-    archiveMutation.mutate(archiveTarget.id, {
-      onSuccess: () => {
-        toast.success("Account archived.")
-        setArchiveTarget(null)
-      },
-      onError: (error) => toast.error(getErrorMessage(error, "The account could not be archived.")),
-    })
   }
 
   return (
@@ -119,7 +100,6 @@ export function AccountsView({
                       baseCurrency={baseCurrency}
                       bordered={index > 0}
                       onEdit={() => openEdit(account)}
-                      onArchive={() => setArchiveTarget(account)}
                       onValue={() => setValuationAccount(account)}
                     />
                   ))}
@@ -130,22 +110,28 @@ export function AccountsView({
         </div>
       )}
 
+      {!archivedQuery.isLoading && !archivedQuery.isError && archivedAccounts.length > 0 && (
+        <section aria-labelledby="archived-accounts-heading">
+          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+            <h2 id="archived-accounts-heading" className="section-heading">Archived accounts</h2>
+            <span className="text-xs text-muted-foreground">{archivedAccounts.length} {archivedAccounts.length === 1 ? "account" : "accounts"}</span>
+          </div>
+          <div className="overflow-hidden rounded-2xl bg-card/45 ring-1 ring-white/4">
+            {archivedAccounts.map((account, index) => (
+              <ArchivedAccountRow key={account.id} account={account} bordered={index > 0} baseCurrency={baseCurrency} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {archivedQuery.isError && (
+        <div className="rounded-2xl bg-destructive/8 px-4 py-3 text-sm text-destructive ring-1 ring-destructive/20">
+          Archived accounts could not be loaded. Try refreshing this page.
+        </div>
+      )}
+
       <AccountFormDialog open={formOpen} onOpenChange={setFormOpen} account={editingAccount} initialType={filterType ?? "bank"} />
       <ValuationDialog account={valuationAccount} open={Boolean(valuationAccount)} onOpenChange={(open) => !open && setValuationAccount(null)} />
-      <AlertDialog open={Boolean(archiveTarget)} onOpenChange={(open) => !open && setArchiveTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive {archiveTarget?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Archived accounts are hidden but financial history is preserved. The account must have a zero current value.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmArchive} disabled={archiveMutation.isPending}>Archive account</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
@@ -155,14 +141,12 @@ function AccountRow({
   baseCurrency,
   bordered,
   onEdit,
-  onArchive,
   onValue,
 }: {
   account: AccountSummaryRow
   baseCurrency: string
   bordered: boolean
   onEdit: () => void
-  onArchive: () => void
   onValue: () => void
 }) {
   const Icon = account.account_type === "investment" ? Landmark : account.account_type === "bank" ? Building2 : WalletCards
@@ -214,10 +198,43 @@ function AccountRow({
           {isInvestment && !isDetailed && <Button size="sm" onClick={onValue}>Update value</Button>}
           {isDetailed && <Button size="sm" render={<Link to={`/investments/${account.id}`} />}>View portfolio</Button>}
           <Button size="sm" variant="outline" onClick={onEdit}><Pencil /> Edit</Button>
-          <Button size="sm" variant="ghost" onClick={onArchive}><Archive /> Archive</Button>
+          <AccountLifecycleActions account={account} baseCurrency={baseCurrency} />
         </div>
       </div>
     </div>
+  )
+}
+
+function ArchivedAccountRow({
+  account,
+  baseCurrency,
+  bordered,
+}: {
+  account: ArchivedAccount
+  baseCurrency: string
+  bordered: boolean
+}) {
+  const Icon = account.account_type === "investment" ? Landmark : account.account_type === "bank" ? Building2 : WalletCards
+  const detailed = account.account_type === "investment" && account.investment_tracking_mode === "detailed"
+
+  return (
+    <article className={cn("grid grid-cols-[auto_minmax(0,1fr)] gap-3 px-4 py-4 sm:px-5", bordered && "border-t border-border/25")}>
+      <span className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <h3 className="line-clamp-2 text-sm font-semibold sm:text-base">{account.name}</h3>
+        <p className="mt-0.5 truncate text-xs capitalize text-muted-foreground">
+          {[account.institution, account.account_type, account.currency_code, "Archived"].filter(Boolean).join(" · ")}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {detailed && (
+            <Button size="sm" variant="ghost" render={<Link to={`/investments/${account.id}`} />}>View history</Button>
+          )}
+          <AccountLifecycleActions account={account} archived baseCurrency={baseCurrency} />
+        </div>
+      </div>
+    </article>
   )
 }
 

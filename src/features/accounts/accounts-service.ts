@@ -19,10 +19,42 @@ export type SaveValuationInput = {
   valuedAt: string
 }
 
+export type ArchivedAccount = {
+  id: string
+  name: string
+  account_type: AccountType
+  institution: string | null
+  currency_code: string
+  opening_balance_minor: number
+  archived_at: string
+  investment_tracking_mode: "simple" | "detailed"
+  detailed_started_on: string | null
+}
+
+export type AccountDeletionResult = {
+  account_id: string
+  soft_deleted_transactions_purged: number
+  investment_valuations_deleted: number
+  investment_holdings_deleted: number
+  investment_trades_deleted: number
+  investment_prices_deleted: number
+  investment_cash_events_deleted: number
+}
+
 export async function getAccountSummaries() {
   const { data, error } = await getSupabaseClient().rpc("get_account_summaries")
   if (error) throw error
   return (data ?? []) as AccountSummaryRow[]
+}
+
+export async function getArchivedAccounts() {
+  const { data, error } = await getSupabaseClient()
+    .from("accounts")
+    .select("id,name,account_type,institution,currency_code,opening_balance_minor,archived_at,investment_tracking_mode,detailed_started_on")
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false })
+  if (error) throw error
+  return (data ?? []) as ArchivedAccount[]
 }
 
 export async function saveAccount(input: SaveAccountInput) {
@@ -46,6 +78,25 @@ export async function archiveAccount(accountId: string) {
       p_account_id: accountId,
     })
     if (error) throw error
+  })
+}
+
+export async function restoreAccount(accountId: string) {
+  return performFinancialMutation(async () => {
+    const { error } = await getSupabaseClient().rpc("restore_account", {
+      p_account_id: accountId,
+    })
+    if (error) throw error
+  })
+}
+
+export async function deleteAccountPermanently(accountId: string) {
+  return performFinancialMutation(async () => {
+    const { data, error } = await getSupabaseClient().rpc("delete_account_permanently", {
+      p_account_id: accountId,
+    })
+    if (error) throw error
+    return data as AccountDeletionResult
   })
 }
 

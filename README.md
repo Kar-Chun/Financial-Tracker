@@ -6,7 +6,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 
 - Email/password Supabase Auth with persistent sessions, confirmation handling, protected routes, and logout
 - Profiles with display name, locked base currency, and timezone
-- Bank, cash, and investment accounts with edit/archive flows
+- Bank, cash, and investment accounts with safe archive, restore, and deliberate test-account cleanup
 - Transaction-derived bank/cash balances; atomic income, expense, and same-currency transfers
 - Simple manual investment valuations plus optional Detailed holdings, trades, broker cash, prices, dividends, and manual valuation FX
 - Real dashboard metrics and timezone-aware daily net-worth snapshots
@@ -86,6 +86,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 10. `202608240004_integrate_detailed_investment_values.sql`
 11. `202608240005_add_ai_read_models.sql`
 12. `202608240006_add_ai_abuse_protection.sql`
+13. `202608270001_add_safe_account_lifecycle.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -123,6 +124,14 @@ Settings separates expense and income categories. Category type and parent are i
 ## Daily snapshots
 
 At most one snapshot exists per user/local calendar date. Financial RPCs refresh today, and dashboard loading self-heals it. There is no cron job or artificial row for unused days.
+
+## Account lifecycle
+
+Archive preserves an account and all history but removes it from active summaries, investment totals, and new transaction selectors. The server permits archive only when the existing authoritative represented value is exactly zero: transaction-derived balance for Bank/Cash, latest valuation plus later transfers for Simple investments, or broker cash plus priced holdings for Detailed investments. Archived accounts remain visible under **Archived accounts** and can be restored without creating financial activity.
+
+Permanent deletion is a separate, typed-confirmation action intended for mistaken or test accounts. The authenticated atomic RPC rejects any account referenced by an active transaction. If every reference is already soft-deleted, it purges each complete deleted transaction structure before removing only that account's valuations or Detailed holdings, trades, prices, and cash events. Shared manual FX rates and every unrelated account record remain untouched. Today's net-worth snapshot is refreshed after deletion; historical daily snapshots are intentionally not reconstructed.
+
+Migration `202608270001_add_safe_account_lifecycle.sql` replaces the archive check, adds restore/permanent-delete RPCs, and preserves direct-table write restrictions. Follow [account lifecycle verification](supabase/ACCOUNT_LIFECYCLE_VERIFICATION.md) after applying it.
 
 ## Monthly budgeting
 

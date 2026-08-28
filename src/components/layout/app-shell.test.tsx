@@ -7,22 +7,32 @@ import { describe, expect, it, vi } from "vitest"
 import { AppShell } from "@/components/layout/app-shell"
 
 vi.mock("@/components/layout/app-sidebar", () => ({ AppSidebar: () => null }))
-vi.mock("@/components/layout/mobile-header", () => ({ MobileHeader: () => <div>Mobile profile header</div> }))
 vi.mock("@/components/layout/user-menu", () => ({ UserMenu: () => null }))
 describe("AppShell transaction entry route", () => {
-  it("starts the Dashboard at financial content without the mobile profile header", () => {
+  it.each([
+    ["/dashboard", "Total net worth"],
+    ["/transactions", "Transactions"],
+    ["/analytics", "Spending insights"],
+    ["/accounts", "Accounts"],
+    ["/budgets", "Budgets"],
+    ["/goals", "Savings goals"],
+    ["/investments", "Investments"],
+    ["/assistant", "Financial assistant"],
+    ["/settings", "Settings"],
+  ])("starts %s at page content without a shared greeting/profile header", (path, content) => {
     render(
-      <MemoryRouter initialEntries={["/dashboard"]}>
+      <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route element={<AppShell />}>
-            <Route path="/dashboard" element={<div>Total net worth</div>} />
+            <Route path={path} element={<div>{content}</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
     )
 
-    expect(screen.getByText("Total net worth")).toBeInTheDocument()
-    expect(screen.queryByText("Mobile profile header")).not.toBeInTheDocument()
+    expect(screen.getByRole("main")).toHaveTextContent(content)
+    expect(screen.queryByText(/good (morning|afternoon|evening)/i)).not.toBeInTheDocument()
+    expect(document.querySelector("header")).not.toBeInTheDocument()
   })
 
   it("uses the dedicated page without rendering navigation or another floating action over it", () => {

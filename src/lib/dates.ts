@@ -49,17 +49,6 @@ export function getCurrentMonthInput(date = new Date()) {
   return getTodayDateInput(date).slice(0, 7)
 }
 
-export function getGreetingInTimeZone(timezone: string, date = new Date()) {
-  const hour = Number(new Intl.DateTimeFormat("en-SG", {
-    timeZone: timezone,
-    hour: "2-digit",
-    hourCycle: "h23",
-  }).format(date))
-  if (hour < 12) return "Good morning"
-  if (hour < 18) return "Good afternoon"
-  return "Good evening"
-}
-
 function parseIsoCalendarDate(value: unknown) {
   if (typeof value !== "string") return null
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)

@@ -52,4 +52,13 @@ describe("mobile bottom navigation", () => {
     expect(quickAdd.className).toContain("var(--mobile-navigation-height)")
     expect(quickAdd.className).toContain("env(safe-area-inset-bottom)")
   })
+
+  it("uses the same compact full-width bar on Analytics and marks Analytics active", () => {
+    render(<MemoryRouter initialEntries={["/analytics"]}><MobileBottomNavigation /></MemoryRouter>)
+
+    const navigation = screen.getByRole("navigation", { name: "Mobile navigation" })
+    expect(navigation).toHaveClass("w-full", "right-0", "bottom-0", "left-0")
+    expect(screen.getByRole("link", { name: "Analytics" })).toHaveAttribute("aria-current", "page")
+    expect(navigation.querySelector(":scope > div")).toHaveClass("h-(--mobile-navigation-height)")
+  })
 })

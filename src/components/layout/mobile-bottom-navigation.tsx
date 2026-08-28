@@ -33,7 +33,7 @@ export function MobileBottomNavigation() {
         to={item.href}
         aria-label={item.label}
         className={cn(
-          "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-muted-foreground",
+          "flex h-(--mobile-navigation-height) min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.66rem] leading-none font-medium text-muted-foreground",
           active && "text-primary",
         )}
       >
@@ -48,9 +48,9 @@ export function MobileBottomNavigation() {
       <nav
         aria-label="Mobile navigation"
         data-layout="edge-bar"
-        className="fixed right-0 bottom-0 left-0 z-40 border-t border-border/45 bg-surface-elevated/95 pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] backdrop-blur-xl lg:hidden"
+        className="fixed right-0 bottom-0 left-0 z-40 w-full border-t border-border/45 bg-surface-elevated/95 pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid min-h-(--mobile-navigation-height) max-w-lg grid-cols-4 items-center">
+        <div className="mx-auto grid h-(--mobile-navigation-height) max-w-lg grid-cols-4 items-center">
           {routeItem(primaryItems[0])}
           {routeItem(primaryItems[1])}
           {routeItem(primaryItems[2])}
@@ -60,7 +60,7 @@ export function MobileBottomNavigation() {
             aria-label="More navigation options"
             aria-current={moreActive ? "page" : undefined}
             className={cn(
-              "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-muted-foreground",
+              "flex h-(--mobile-navigation-height) min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.66rem] leading-none font-medium text-muted-foreground",
               moreActive && "text-primary",
             )}
           >

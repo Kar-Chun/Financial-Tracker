@@ -87,6 +87,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 11. `202608240005_add_ai_read_models.sql`
 12. `202608240006_add_ai_abuse_protection.sql`
 13. `202608270001_add_safe_account_lifecycle.sql`
+14. `202608280001_add_net_worth_history_reset.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -124,6 +125,10 @@ Settings separates expense and income categories. Category type and parent are i
 ## Daily snapshots
 
 At most one snapshot exists per user/local calendar date. Financial RPCs refresh today, and dashboard loading self-heals it. There is no cron job or artificial row for unused days.
+
+Settings includes a deliberate **Reset Net Worth history** action for discarding misleading chart history after test-data cleanup. The authenticated RPC first verifies that every active Detailed investment has a complete represented base-currency value, deletes only the caller's snapshot rows, and then reuses the normal snapshot function to create exactly today's point. It does not modify accounts, transactions, investments, budgets, goals, or any current balance. With fewer than two points, Dashboard reports that there is not enough history instead of inventing a zero change.
+
+Migration `202608280001_add_net_worth_history_reset.sql` adds this controlled RPC without granting browser delete access to the snapshots table. Follow [Net Worth history reset verification](supabase/NET_WORTH_HISTORY_RESET_VERIFICATION.md) after applying it.
 
 ## Account lifecycle
 

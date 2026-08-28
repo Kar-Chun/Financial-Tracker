@@ -14,6 +14,7 @@ const friendlyErrors: Array<[string, string]> = [
   ["Set the account value to zero", "Set the account value to zero before archiving it."],
   ["Account represented value must be zero", "Bring the account's represented value to zero before archiving it."],
   ["Account represented value must be available", "Add any missing investment prices so the account value can be verified before archiving."],
+  ["Current net worth is incomplete", "We couldn't reset Net Worth history because some current investment values are incomplete. Update the missing price or FX data first."],
   ["future transactions cannot be archived", "Remove or correct future-dated transactions before archiving this account."],
   ["active category with this name", "An active category with this name already exists here."],
   ["Archive its subcategories first", "Archive its subcategories first."],

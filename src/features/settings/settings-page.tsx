@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PwaInstallCard } from "@/components/shared/pwa-install-card"
 import { useProfile, useUpdateProfile } from "@/features/auth/profile-service"
 import { CategoryManagement } from "@/features/categories/category-management"
+import { NetWorthHistoryReset } from "@/features/settings/net-worth-history-reset"
 import { getErrorMessage } from "@/lib/errors"
 
 const profileSchema = z.object({
@@ -121,6 +122,7 @@ export function SettingsPage() {
 
       <CategoryManagement />
       <PwaInstallCard />
+      <NetWorthHistoryReset />
     </div>
   )
 }

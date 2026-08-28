@@ -61,6 +61,9 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
             </span>
           </div>
         )}
+        {changeMinor === null && (
+          <p className="mt-4 text-xs text-muted-foreground">Not enough history yet</p>
+        )}
       </div>
 
       <div className="mt-5 h-30 w-full sm:h-36" role="img" aria-label={`Net worth trend over ${period === 30 ? "one month" : "three months"}`}>

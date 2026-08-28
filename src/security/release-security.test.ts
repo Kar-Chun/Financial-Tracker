@@ -7,11 +7,12 @@ const migrationNames = readdirSync(migrationDirectory).filter((name) => name.end
 const migrations = migrationNames.map((name) => readFileSync(resolve(migrationDirectory, name), "utf8")).join("\n")
 
 describe("release database security posture", () => {
-  it("keeps migrations ordered and adds account lifecycle after the AI security migrations", () => {
+  it("keeps migrations ordered and adds lifecycle/history controls after the AI security migrations", () => {
     expect(migrationNames).toEqual([...migrationNames].sort())
-    expect(migrationNames.at(-3)).toBe("202608240005_add_ai_read_models.sql")
-    expect(migrationNames.at(-2)).toBe("202608240006_add_ai_abuse_protection.sql")
-    expect(migrationNames.at(-1)).toBe("202608270001_add_safe_account_lifecycle.sql")
+    expect(migrationNames.at(-4)).toBe("202608240005_add_ai_read_models.sql")
+    expect(migrationNames.at(-3)).toBe("202608240006_add_ai_abuse_protection.sql")
+    expect(migrationNames.at(-2)).toBe("202608270001_add_safe_account_lifecycle.sql")
+    expect(migrationNames.at(-1)).toBe("202608280001_add_net_worth_history_reset.sql")
   })
 
   it("enables RLS on every user, financial, investment, and AI operational table", () => {

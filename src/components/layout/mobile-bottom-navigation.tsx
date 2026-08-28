@@ -47,7 +47,8 @@ export function MobileBottomNavigation() {
     <>
       <nav
         aria-label="Mobile navigation"
-        className="fixed right-[max(0.75rem,calc(env(safe-area-inset-right)+0.5rem))] bottom-[calc(var(--mobile-navigation-edge-gap)+env(safe-area-inset-bottom))] left-[max(0.75rem,calc(env(safe-area-inset-left)+0.5rem))] z-40 min-h-(--mobile-navigation-height) rounded-2xl bg-surface-elevated/95 px-1 shadow-lg shadow-black/20 ring-1 ring-white/5 backdrop-blur-xl lg:hidden"
+        data-layout="edge-bar"
+        className="fixed right-0 bottom-0 left-0 z-40 border-t border-border/45 bg-surface-elevated/95 pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] backdrop-blur-xl lg:hidden"
       >
         <div className="mx-auto grid min-h-(--mobile-navigation-height) max-w-lg grid-cols-4 items-center">
           {routeItem(primaryItems[0])}
@@ -103,7 +104,7 @@ export function MobileQuickAddButton() {
       to="/transactions/new"
       state={{ returnTo: `${location.pathname}${location.search}` }}
       aria-label="Quick add transaction"
-      className="fixed right-[max(1.25rem,calc(env(safe-area-inset-right)+1rem))] bottom-[calc(var(--mobile-navigation-height)+var(--mobile-navigation-edge-gap)+var(--mobile-floating-action-gap)+env(safe-area-inset-bottom))] z-45 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring lg:hidden"
+      className="fixed right-[max(1.25rem,calc(env(safe-area-inset-right)+1rem))] bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap)+env(safe-area-inset-bottom))] z-45 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring lg:hidden"
     >
       <Plus className="size-6" aria-hidden="true" />
     </Link>

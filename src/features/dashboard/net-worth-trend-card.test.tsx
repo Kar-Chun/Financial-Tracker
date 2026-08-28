@@ -38,6 +38,17 @@ describe("NetWorthTrendCard", () => {
     expect(screen.getByText("$1,100.00")).toBeInTheDocument()
     expect(screen.getByText("More daily snapshots will build your trend.")).toBeInTheDocument()
   })
+
+  it("does not invent a zero change when only one snapshot exists", () => {
+    render(<NetWorthTrendCard snapshots={[
+      snapshot("today", "2026-08-28", 75_942),
+    ]} currencyCode="SGD" />)
+
+    expect(screen.getByText("$759.42")).toBeInTheDocument()
+    expect(screen.getByText("Not enough history yet")).toBeInTheDocument()
+    expect(screen.queryByText("$0.00")).not.toBeInTheDocument()
+    expect(screen.queryByText(/0\.0%/)).not.toBeInTheDocument()
+  })
 })
 
 function snapshot(id: string, snapshotDate: string, total: number): NetWorthSnapshot {

@@ -261,6 +261,10 @@ export type Database = {
     }
     Views: Record<string, never>
     Functions: {
+      reset_net_worth_history: {
+        Args: Record<string, never>
+        Returns: string
+      }
       archive_account: {
         Args: { p_account_id: string }
         Returns: undefined

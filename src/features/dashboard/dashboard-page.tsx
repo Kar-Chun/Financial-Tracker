@@ -18,7 +18,7 @@ import { RecentTransactionsCard } from "@/features/dashboard/recent-transactions
 import { SpendingBreakdownCard } from "@/features/dashboard/spending-breakdown-card"
 import { SavingsGoalsCard } from "@/features/dashboard/savings-goals-card"
 import { useSavingsGoals } from "@/features/goals/goals-hooks"
-import { formatLongDate, getDateInputInTimeZone, getGreetingInTimeZone } from "@/lib/dates"
+import { getDateInputInTimeZone } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 
 export function DashboardPage() {
@@ -46,13 +46,11 @@ export function DashboardPage() {
   const monthly = getMonthlySummary(transactions, currencyCode)
   const spendingGroups = groupExpensesByParent(transactions, categories, currencyCode)
   const foreignAccounts = accounts.filter((account) => account.account_type !== "investment" && !account.included_in_net_worth)
-  const displayName = profile?.display_name?.trim() || "there"
   const todayDate = getDateInputInTimeZone(timezone)
 
   if (accounts.length === 0) {
     return (
       <div className="space-y-7">
-        <DashboardHeader displayName={displayName} timezone={timezone} todayDate={todayDate} />
         <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
           <CardContent className="flex min-h-80 flex-col items-center justify-center text-center">
             <WalletCards className="size-10 text-primary" />
@@ -71,14 +69,13 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-7 sm:space-y-8">
-      <DashboardHeader displayName={displayName} timezone={timezone} todayDate={todayDate} />
+      <NetWorthTrendCard snapshots={snapshots} currencyCode={currencyCode} />
+
       {foreignAccounts.length > 0 && (
         <div className="rounded-2xl bg-amber-400/8 px-4 py-3 text-sm leading-6 text-amber-100 ring-1 ring-amber-400/20">
           {foreignAccounts.length} foreign-currency bank/cash {foreignAccounts.length === 1 ? "account is" : "accounts are"} shown in native currency but excluded from consolidated {currencyCode} net worth. No FX conversion is performed.
         </div>
       )}
-
-      <NetWorthTrendCard snapshots={snapshots} currencyCode={currencyCode} />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Monthly financial summary">
         <MetricCard label="Monthly income" amountMinor={monthly.incomeMinor} currencyCode={currencyCode} helper="Transfers excluded" icon={BanknoteArrowDown} tone="positive" />
@@ -99,18 +96,6 @@ export function DashboardPage() {
 
       <SpendingBreakdownCard groups={spendingGroups} currencyCode={currencyCode} />
     </div>
-  )
-}
-
-function DashboardHeader({ displayName, timezone, todayDate }: { displayName: string; timezone: string; todayDate: string }) {
-  return (
-    <header className="hidden items-end justify-between lg:flex">
-      <div>
-        <p className="eyebrow">{getGreetingInTimeZone(timezone)}</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">{displayName}</h1>
-      </div>
-      <p className="text-sm text-muted-foreground">As of {formatLongDate(todayDate)}</p>
-    </header>
   )
 }
 

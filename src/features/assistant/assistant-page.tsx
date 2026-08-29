@@ -110,7 +110,7 @@ export function AssistantPage() {
 
       {error && <div role="alert" className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground ring-1 ring-destructive/25">{error}</div>}
 
-      <form onSubmit={(event) => { event.preventDefault(); void send(input) }} className="sticky bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap)+env(safe-area-inset-bottom))] z-10 rounded-2xl bg-popover/95 p-2 shadow-xl shadow-black/15 ring-1 ring-white/8 backdrop-blur-xl lg:bottom-4">
+      <form onSubmit={(event) => { event.preventDefault(); void send(input) }} className="sticky bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap))] z-10 rounded-2xl bg-popover/95 p-2 shadow-xl shadow-black/15 ring-1 ring-white/8 backdrop-blur-xl lg:bottom-4">
         <label htmlFor="assistant-question" className="sr-only">Ask about your finances</label>
         <div className="flex items-center gap-2">
           <Input id="assistant-question" value={input} onChange={(event) => setInput(event.target.value)} maxLength={2_000} disabled={isSending} placeholder="Ask about your finances" className="min-h-12 border-0 bg-transparent shadow-none focus-visible:ring-0" />

@@ -93,7 +93,9 @@
     --sidebar-accent-foreground: oklch(0.97 0.014 248);
     --sidebar-border: oklch(0.27 0.045 257);
     --sidebar-ring: oklch(0.68 0.17 250);
-    --mobile-navigation-height: 3.25rem;
+    --mobile-navigation-row-height: 3rem;
+    --mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --mobile-navigation-height: calc(var(--mobile-navigation-row-height) + var(--mobile-safe-area-bottom));
     --mobile-floating-action-gap: 0.75rem;
 }
 

@@ -16,7 +16,7 @@ export function AppShell() {
           "mx-auto w-full max-w-[92rem]",
           isFocusedEntry
             ? "lg:px-10 lg:py-9"
-            : "pr-[max(1.25rem,env(safe-area-inset-right))] pb-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap)+5rem+env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-7 sm:pt-6 lg:px-10 lg:py-9",
+            : "pr-[max(1.25rem,env(safe-area-inset-right))] pb-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap)+5rem)] pl-[max(1.25rem,env(safe-area-inset-left))] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-7 sm:pt-6 lg:px-10 lg:py-9",
         )}>
           <Outlet />
         </div>

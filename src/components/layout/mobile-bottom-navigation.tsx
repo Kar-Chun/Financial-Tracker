@@ -33,7 +33,7 @@ export function MobileBottomNavigation() {
         to={item.href}
         aria-label={item.label}
         className={cn(
-          "flex h-(--mobile-navigation-height) min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.66rem] leading-none font-medium text-muted-foreground",
+          "flex h-(--mobile-navigation-row-height) min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.66rem] leading-none font-medium text-muted-foreground",
           active && "text-primary",
         )}
       >
@@ -48,9 +48,9 @@ export function MobileBottomNavigation() {
       <nav
         aria-label="Mobile navigation"
         data-layout="edge-bar"
-        className="fixed right-0 bottom-0 left-0 z-40 w-full border-t border-border/45 bg-surface-elevated/95 pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] backdrop-blur-xl lg:hidden"
+        className="fixed right-0 bottom-0 left-0 z-40 h-(--mobile-navigation-height) w-full border-t border-border/45 bg-surface-elevated/95 pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid h-(--mobile-navigation-height) max-w-lg grid-cols-4 items-center">
+        <div className="mx-auto grid h-full max-w-lg grid-cols-4 items-start pb-(--mobile-safe-area-bottom)">
           {routeItem(primaryItems[0])}
           {routeItem(primaryItems[1])}
           {routeItem(primaryItems[2])}
@@ -60,7 +60,7 @@ export function MobileBottomNavigation() {
             aria-label="More navigation options"
             aria-current={moreActive ? "page" : undefined}
             className={cn(
-              "flex h-(--mobile-navigation-height) min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.66rem] leading-none font-medium text-muted-foreground",
+              "flex h-(--mobile-navigation-row-height) min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.66rem] leading-none font-medium text-muted-foreground",
               moreActive && "text-primary",
             )}
           >
@@ -104,7 +104,7 @@ export function MobileQuickAddButton() {
       to="/transactions/new"
       state={{ returnTo: `${location.pathname}${location.search}` }}
       aria-label="Quick add transaction"
-      className="fixed right-[max(1.25rem,calc(env(safe-area-inset-right)+1rem))] bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap)+env(safe-area-inset-bottom))] z-45 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring lg:hidden"
+      className="fixed right-[max(1.25rem,calc(env(safe-area-inset-right)+1rem))] bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap))] z-45 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/25 outline-none transition-transform hover:bg-primary/90 active:scale-95 focus-visible:ring-3 focus-visible:ring-ring lg:hidden"
     >
       <Plus className="size-6" aria-hidden="true" />
     </Link>

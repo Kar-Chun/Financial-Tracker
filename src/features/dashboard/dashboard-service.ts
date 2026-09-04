@@ -1,6 +1,7 @@
 import { getSupabaseClient } from "@/lib/supabase"
-import type { AccountSummaryRow, NetWorthSnapshot } from "@/types/database"
-import type { TransactionRecord } from "@/types/finance"
+import { parseRpcResponse } from "@/lib/rpc-validation"
+import type { AccountSummaryRow, NetWorthSnapshot, TransactionRecord } from "@/types/finance"
+import { dashboardRpcSchema } from "@/types/rpc-schemas"
 
 export type DashboardData = {
   accounts: AccountSummaryRow[]
@@ -14,22 +15,10 @@ export type DashboardData = {
   snapshots: NetWorthSnapshot[]
 }
 
-type DashboardRpcResult = {
-  accounts: AccountSummaryRow[]
-  monthly: {
-    income_minor: number
-    expenses_minor: number
-    net_cash_flow_minor: number
-  }
-  spending_groups: Array<{ label: string; amount_minor: number }>
-  recent_transactions: TransactionRecord[]
-  snapshots: NetWorthSnapshot[]
-}
-
 export async function getDashboardData() {
   const { data, error } = await getSupabaseClient().rpc("get_dashboard_data")
   if (error) throw error
-  const result = data as unknown as DashboardRpcResult
+  const result = parseRpcResponse(dashboardRpcSchema, data)
 
   return {
     accounts: result.accounts ?? [],

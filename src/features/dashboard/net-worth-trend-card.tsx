@@ -5,7 +5,7 @@ import { formatSnapshotTooltipLabel, netWorthChartKeys, type NetWorthChartDatum 
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { isValidIsoCalendarDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
-import type { NetWorthSnapshot } from "@/types/database"
+import type { NetWorthSnapshot } from "@/types/finance"
 
 type TrendPeriod = 30 | 90
 

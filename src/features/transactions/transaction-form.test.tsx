@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { TransactionForm } from "@/features/transactions/transaction-form"
 import type { SaveTransactionInput } from "@/features/transactions/transactions-service"
-import type { AccountSummaryRow, Category } from "@/types/database"
+import type { AccountSummaryRow, Category } from "@/types/finance"
 import type { TransactionRecord } from "@/types/finance"
 
 const mutationState = vi.hoisted(() => ({

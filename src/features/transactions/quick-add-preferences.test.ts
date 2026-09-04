@@ -7,7 +7,7 @@ import {
   getRememberedExpenseAccountId,
   rememberExpenseAccount,
 } from "@/features/transactions/quick-add-preferences"
-import type { AccountSummaryRow, Category, FrequentExpenseCategoryRow } from "@/types/database"
+import type { AccountSummaryRow, Category, FrequentExpenseCategoryRow } from "@/types/finance"
 
 const account = (id: string, type: AccountSummaryRow["account_type"] = "bank"): AccountSummaryRow => ({
   id,

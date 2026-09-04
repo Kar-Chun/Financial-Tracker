@@ -1,4 +1,5 @@
 import { performFinancialMutation } from "@/lib/network"
+import { parseRpcResponse } from "@/lib/rpc-validation"
 import { getSupabaseClient } from "@/lib/supabase"
 import type { Json } from "@/types/database"
 import type {
@@ -7,26 +8,31 @@ import type {
   OpeningHoldingInput,
 } from "@/features/investments/investment-types"
 import { normalizeInvestmentDecimal } from "@/features/investments/investment-logic"
+import {
+  detailedConversionPreviewSchema,
+  detailedInvestmentAccountSchema,
+  investmentPortfolioSummarySchema,
+} from "@/types/rpc-schemas"
 
 export async function getInvestmentPortfolio() {
   const { data, error } = await getSupabaseClient().rpc("get_investment_portfolio_summary")
   if (error) throw error
-  return data as InvestmentPortfolioSummary
+  return parseRpcResponse(investmentPortfolioSummarySchema, data) satisfies InvestmentPortfolioSummary
 }
 
 export async function getDetailedInvestmentAccount(accountId: string) {
   const { data, error } = await getSupabaseClient().rpc("get_detailed_investment_account", { p_account_id: accountId })
   if (error) throw error
-  return data as DetailedInvestmentAccount
+  return parseRpcResponse(detailedInvestmentAccountSchema, data) satisfies DetailedInvestmentAccount
 }
 
-function serializeOpeningHoldings(holdings: OpeningHoldingInput[]) {
+function serializeOpeningHoldings(holdings: OpeningHoldingInput[]): Json {
   return holdings.map((holding) => ({
     ...holding,
     quantity: requireInvestmentDecimal(holding.quantity, "quantity"),
     average_cost: requireInvestmentDecimal(holding.average_cost, "average cost", { allowZero: true }),
     current_price: requireInvestmentDecimal(holding.current_price, "current price"),
-  })) as Json
+  }))
 }
 
 function requireInvestmentDecimal(
@@ -46,7 +52,7 @@ export async function previewDetailedConversion(input: { accountId: string; open
     p_holdings: serializeOpeningHoldings(input.holdings),
   })
   if (error) throw error
-  return data as { simple_native_value_minor: number; detailed_native_value_minor: number; difference_minor: number; currency_code: string }
+  return parseRpcResponse(detailedConversionPreviewSchema, data)
 }
 
 export function enableDetailedTracking(input: { accountId: string; startedOn: string; openingCashMinor: number; holdings: OpeningHoldingInput[] }) {
@@ -94,7 +100,7 @@ export function updatePrices(input: { accountId: string; pricedAt: string; price
       p_prices: input.prices.map((item) => ({
         holding_id: item.holding_id,
         price: requireInvestmentDecimal(item.price, "price"),
-      })) as Json,
+      })),
     })
     if (error) throw error
     return data

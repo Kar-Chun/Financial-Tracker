@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { getDashboardData } from "@/features/dashboard/dashboard-service"
+import { UnexpectedRpcResponseError } from "@/lib/rpc-validation"
 
 const supabaseMock = vi.hoisted(() => ({ rpc: vi.fn() }))
 
@@ -16,7 +17,7 @@ describe("bounded Dashboard reads", () => {
   it("loads the Dashboard through one bounded aggregate RPC", async () => {
     supabaseMock.rpc.mockResolvedValue({
       data: {
-        accounts: [{ id: "bank", name: "DBS", account_type: "bank" }],
+        accounts: [accountSummary()],
         monthly: {
           income_minor: 100_000,
           expenses_minor: 12_345,
@@ -24,7 +25,7 @@ describe("bounded Dashboard reads", () => {
         },
         spending_groups: [{ label: "Food", amount_minor: 12_345 }],
         recent_transactions: [transaction("recent-1")],
-        snapshots: [{ id: "snapshot", snapshot_date: "2026-09-04", total_value_base_minor: 500_000 }],
+        snapshots: [snapshot()],
       },
       error: null,
     })
@@ -59,6 +60,21 @@ describe("bounded Dashboard reads", () => {
 
     expect(supabaseMock.rpc).toHaveBeenCalledWith("get_dashboard_data")
   })
+
+  it("rejects malformed financial totals instead of silently coercing them", async () => {
+    supabaseMock.rpc.mockResolvedValue({
+      data: {
+        accounts: [],
+        monthly: { income_minor: 0, expenses_minor: "12345", net_cash_flow_minor: 0 },
+        spending_groups: [],
+        recent_transactions: [],
+        snapshots: [],
+      },
+      error: null,
+    })
+
+    await expect(getDashboardData()).rejects.toBeInstanceOf(UnexpectedRpcResponseError)
+  })
 })
 
 function transaction(id: string) {
@@ -71,5 +87,46 @@ function transaction(id: string) {
     created_at: "2026-09-04T02:00:00Z",
     category: null,
     entries: [],
+  }
+}
+
+function accountSummary() {
+  return {
+    id: "bank",
+    name: "DBS",
+    account_type: "bank",
+    institution: "DBS",
+    currency_code: "SGD",
+    opening_balance_minor: 500_000,
+    current_balance_minor: 500_000,
+    native_value_minor: null,
+    base_value_minor: null,
+    valued_at: null,
+    included_in_net_worth: true,
+    created_at: "2026-09-01T00:00:00Z",
+    updated_at: "2026-09-04T00:00:00Z",
+    investment_tracking_mode: "simple",
+    base_value_available: true,
+    broker_cash_minor: null,
+    holdings_value_minor: null,
+    cost_basis_minor: null,
+    unrealized_gain_minor: null,
+    realized_gain_minor: null,
+    dividends_minor: null,
+    missing_price_count: 0,
+  }
+}
+
+function snapshot() {
+  return {
+    id: "snapshot",
+    user_id: "user-id",
+    snapshot_date: "2026-09-04",
+    bank_value_base_minor: 500_000,
+    cash_value_base_minor: 0,
+    investment_value_base_minor: 0,
+    total_value_base_minor: 500_000,
+    created_at: "2026-09-04T00:00:00Z",
+    updated_at: "2026-09-04T00:00:00Z",
   }
 }

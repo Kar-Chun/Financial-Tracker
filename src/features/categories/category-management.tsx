@@ -33,7 +33,7 @@ import { useCategories } from "@/features/transactions/transactions-hooks"
 import { getCategoryDisplayName } from "@/features/transactions/transaction-logic"
 import { getErrorMessage } from "@/lib/errors"
 import { cn } from "@/lib/utils"
-import type { Category } from "@/types/database"
+import type { Category } from "@/types/finance"
 
 type CategoryDialogState = {
   categoryType: CategoryType

@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { rememberExpenseAccount } from "@/features/transactions/quick-add-preferences"
 import { AddTransactionPage } from "@/features/transactions/add-transaction-page"
 import type { SaveTransactionInput } from "@/features/transactions/transactions-service"
-import type { AccountSummaryRow, Category } from "@/types/database"
+import type { AccountSummaryRow, Category } from "@/types/finance"
 
 const testData = vi.hoisted(() => ({
   bank: {

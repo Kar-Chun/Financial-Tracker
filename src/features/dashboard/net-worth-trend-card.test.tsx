@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
 import { formatSnapshotTooltipLabel, netWorthChartKeys } from "@/features/dashboard/net-worth-trend"
 import { unavailableDateLabel } from "@/lib/dates"
-import type { NetWorthSnapshot } from "@/types/database"
+import type { NetWorthSnapshot } from "@/types/finance"
 
 describe("NetWorthTrendCard", () => {
   it("shows real snapshot totals and supports only available dashboard periods", () => {

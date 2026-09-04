@@ -1,7 +1,8 @@
 import { getSupabaseClient } from "@/lib/supabase"
 import { performFinancialMutation } from "@/lib/network"
-import type { Category, FrequentExpenseCategoryRow } from "@/types/database"
+import { parseRpcResponse } from "@/lib/rpc-validation"
 import type { TransactionRecord } from "@/types/finance"
+import { categorySchema, frequentExpenseCategorySchema, transactionPageSchema } from "@/types/rpc-schemas"
 
 export type SaveTransactionInput = {
   id?: string
@@ -57,7 +58,7 @@ export async function getCategories() {
     .order("name")
 
   if (error) throw error
-  return data as Category[]
+  return parseRpcResponse(categorySchema.array(), data)
 }
 
 export async function getTransactionsPage(input: {
@@ -78,12 +79,7 @@ export async function getTransactionsPage(input: {
     p_cursor_id: cursor?.id ?? null,
   })
   if (error) throw error
-  const page = data as unknown as TransactionPage
-  return {
-    items: page.items ?? [],
-    has_more: page.has_more,
-    next_cursor: page.next_cursor,
-  } satisfies TransactionPage
+  return parseRpcResponse(transactionPageSchema, data)
 }
 
 export function flattenTransactionPages(pages: TransactionPage[]) {
@@ -100,7 +96,7 @@ export async function getFrequentExpenseCategories() {
     p_days: 90,
   })
   if (error) throw error
-  return (data ?? []) as FrequentExpenseCategoryRow[]
+  return parseRpcResponse(frequentExpenseCategorySchema.array(), data ?? [])
 }
 
 export async function saveTransaction(input: SaveTransactionInput) {

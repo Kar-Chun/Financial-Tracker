@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { parseCurrencyToMinor } from "@/lib/currency"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 export const goalFormSchema = z.object({
   name: z.string().trim().min(1, "Goal name is required.").max(100, "Use 100 characters or fewer."),

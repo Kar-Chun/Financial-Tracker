@@ -11,7 +11,7 @@ import { AccountLifecycleActions } from "@/features/accounts/account-lifecycle-a
 import { useInvestmentPortfolio } from "@/features/investments/investments-hooks"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { cn } from "@/lib/utils"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 export function InvestmentsPage() {
   const portfolio = useInvestmentPortfolio()

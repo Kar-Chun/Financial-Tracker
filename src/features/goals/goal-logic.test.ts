@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { applyAllocation, getAllocationSummary, getAvailableCash, getGoalProgress, getRequiredMonthly, goalFormSchema, parsePositiveGoalTarget, sumAllocations } from "@/features/goals/goal-logic"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 const account = (overrides: Partial<AccountSummaryRow>): AccountSummaryRow => ({
   id: "account", name: "Account", account_type: "bank", institution: null, currency_code: "SGD",

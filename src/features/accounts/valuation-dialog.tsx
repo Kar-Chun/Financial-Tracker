@@ -20,7 +20,7 @@ import { useSaveInvestmentValuation } from "@/features/accounts/accounts-hooks"
 import { useProfile } from "@/features/auth/profile-service"
 import { minorUnitsToInput, parseCurrencyToMinor } from "@/lib/currency"
 import { getErrorMessage } from "@/lib/errors"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 const valuationSchema = z.object({
   nativeValue: z.string().min(1, "Native value is required."),

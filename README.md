@@ -34,6 +34,20 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 
 Frontend code is feature-based under `src/features`. Supabase access lives in small feature services/hooks instead of page components. The versioned database contract lives under `supabase/migrations`.
 
+The Supabase schema declaration in `src/types/database.generated.ts` is generated from the linked live schema and must not be edited manually. After applying schema migrations to the confirmed project, regenerate it with:
+
+```bash
+npx supabase@latest gen types typescript --linked --schema public > src/types/database.generated.ts
+```
+
+From Windows PowerShell, preserve UTF-8 explicitly:
+
+```powershell
+npx.cmd supabase gen types typescript --linked --schema public | Out-File src/types/database.generated.ts -Encoding utf8
+```
+
+`src/types/database.ts` is a small client-contract adapter for PostgreSQL function nullability and exact decimal-string `NUMERIC` inputs. Application read models remain feature/domain types, and complex JSON RPC responses are validated at runtime before financial data reaches the UI.
+
 ## Environment
 
 Create `.env.local` with browser-safe values from Supabase Project Settings > API:

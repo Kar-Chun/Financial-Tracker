@@ -12,7 +12,7 @@ import { formatBudgetMonth } from "@/features/budgets/budget-dates"
 import { isEligibleParentExpenseCategory } from "@/features/budgets/budget-logic"
 import { getErrorMessage } from "@/lib/errors"
 import { minorUnitsToInput, parseCurrencyToMinor } from "@/lib/currency"
-import type { Category } from "@/types/database"
+import type { Category } from "@/types/finance"
 
 type CommonProps = {
   open: boolean

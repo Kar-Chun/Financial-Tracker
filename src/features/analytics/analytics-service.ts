@@ -1,6 +1,8 @@
 import { getSupabaseClient } from "@/lib/supabase"
 import type { AnalyticsPeriod } from "@/features/analytics/analytics-periods"
 import type { SpendingAnalytics } from "@/features/analytics/analytics-types"
+import { parseRpcResponse } from "@/lib/rpc-validation"
+import { spendingAnalyticsSchema } from "@/types/rpc-schemas"
 
 export async function getSpendingAnalytics(range: AnalyticsPeriod) {
   const { data, error } = await getSupabaseClient().rpc("get_spending_analytics", {
@@ -12,5 +14,5 @@ export async function getSpendingAnalytics(range: AnalyticsPeriod) {
   })
 
   if (error) throw error
-  return data as SpendingAnalytics
+  return parseRpcResponse(spendingAnalyticsSchema, data) satisfies SpendingAnalytics
 }

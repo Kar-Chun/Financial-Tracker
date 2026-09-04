@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "@/features/auth/auth-context"
 import { getSupabaseClient } from "@/lib/supabase"
-import type { Profile } from "@/types/database"
+import type { Profile } from "@/types/finance"
 
 export const profileQueryKey = (userId: string) => ["profile", userId] as const
 
@@ -14,7 +14,7 @@ async function getProfile(userId: string) {
     .single()
 
   if (error) throw error
-  return data as Profile
+  return data satisfies Profile
 }
 
 export function useProfile() {
@@ -46,7 +46,7 @@ export function useUpdateProfile() {
         .single()
 
       if (error) throw error
-      return data as Profile
+      return data satisfies Profile
     },
     onSuccess: (profile) => {
       queryClient.setQueryData(profileQueryKey(profile.id), profile)

@@ -4,11 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   enableDetailedTracking,
+  getDetailedInvestmentAccount,
+  getInvestmentPortfolio,
   previewDetailedConversion,
   recordTrade,
   saveManualFx,
   updatePrices,
 } from "@/features/investments/investments-service"
+import { UnexpectedRpcResponseError } from "@/lib/rpc-validation"
 
 const supabaseMock = vi.hoisted(() => ({ rpc: vi.fn() }))
 
@@ -41,6 +44,17 @@ describe("detailed investment decimal RPC boundaries", () => {
   ]
 
   it("keeps opening-position decimals as exact strings for preview and persistence", async () => {
+    supabaseMock.rpc
+      .mockResolvedValueOnce({
+        data: {
+          simple_native_value_minor: 10_000,
+          detailed_native_value_minor: 10_000,
+          difference_minor: 0,
+          currency_code: "SGD",
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: "result-id", error: null })
     await previewDetailedConversion({
       accountId: "account-id",
       openingCashMinor: 10_000,
@@ -102,5 +116,75 @@ describe("detailed investment decimal RPC boundaries", () => {
       p_rate: "1.284736",
       p_rate_date: "2026-09-04",
     })
+  })
+
+  it("rejects malformed conversion previews without affecting decimal persistence", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: { detailed_native_value_minor: "10000" }, error: null })
+
+    await expect(previewDetailedConversion({
+      accountId: "account-id",
+      openingCashMinor: 10_000,
+      holdings: openingHoldings,
+    })).rejects.toBeInstanceOf(UnexpectedRpcResponseError)
+  })
+
+  it("validates portfolio and Detailed account read models with nullable values", async () => {
+    supabaseMock.rpc
+      .mockResolvedValueOnce({
+        data: {
+          currency_code: "SGD",
+          portfolio_value_base_minor: 0,
+          unrealized_gain_base_minor: 0,
+          excluded_account_count: 0,
+          accounts: [],
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          account: {
+            id: "account-id",
+            name: "IBKR",
+            institution: null,
+            currency_code: "USD",
+            investment_tracking_mode: "detailed",
+            detailed_started_on: "2026-09-01",
+            archived_at: null,
+          },
+          value: {
+            native_value_minor: null,
+            base_value_minor: null,
+            base_value_available: false,
+            broker_cash_minor: 0,
+            holdings_value_minor: 0,
+            cost_basis_minor: 0,
+            unrealized_gain_minor: null,
+            realized_gain_minor: 0,
+            dividends_minor: 0,
+            missing_price_count: 1,
+            fx_rate: null,
+            fx_rate_date: null,
+            latest_price_date: null,
+          },
+          holdings: [],
+          trades: [],
+          cash_events: [],
+          prices: [],
+        },
+        error: null,
+      })
+
+    const portfolio = await getInvestmentPortfolio()
+    const account = await getDetailedInvestmentAccount("account-id")
+
+    expect(portfolio.accounts).toEqual([])
+    expect(account.value.base_value_minor).toBeNull()
+    expect(account.value.fx_rate).toBeNull()
+  })
+
+  it("rejects malformed Detailed account responses", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: { account: { id: "account-id" } }, error: null })
+
+    await expect(getDetailedInvestmentAccount("account-id")).rejects.toBeInstanceOf(UnexpectedRpcResponseError)
   })
 })

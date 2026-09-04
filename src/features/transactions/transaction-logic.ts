@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { parseCurrencyToMinor } from "@/lib/currency"
-import type { AccountSummaryRow, Category } from "@/types/database"
+import type { AccountSummaryRow, Category } from "@/types/finance"
 import type { PrimaryTransactionType, TransactionRecord } from "@/types/finance"
 
 export const transactionFormSchema = z.object({

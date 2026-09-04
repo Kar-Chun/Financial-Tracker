@@ -10,6 +10,8 @@ import {
   transactionPageSize,
   type TransactionPageFilters,
 } from "@/features/transactions/transactions-service"
+import { UnexpectedRpcResponseError } from "@/lib/rpc-validation"
+import type { TransactionRecord } from "@/types/finance"
 
 const supabaseMock = vi.hoisted(() => ({ rpc: vi.fn() }))
 
@@ -103,9 +105,32 @@ describe("bounded transaction retrieval", () => {
     expect(getTransactionMonthRange("2024-02")).toEqual({ startDate: "2024-02-01", endDate: "2024-02-29" })
     expect(getTransactionMonthRange("")).toEqual({ startDate: null, endDate: null })
   })
+
+  it("accepts nullable historical labels and rejects malformed page metadata", async () => {
+    const withoutLabels = { ...transaction("unlabelled"), category_id: null, category: null }
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: page([{ ...withoutLabels, entries: [{
+        id: "entry-id",
+        account_id: "archived-account",
+        amount_minor: -500,
+        account: null,
+      }] }]),
+      error: null,
+    })
+
+    const result = await getTransactionsPage({ filters })
+    expect(result.items[0]?.category).toBeNull()
+    expect(result.items[0]?.entries[0]?.account).toBeNull()
+
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: { items: [], has_more: "yes", next_cursor: null },
+      error: null,
+    })
+    await expect(getTransactionsPage({ filters })).rejects.toBeInstanceOf(UnexpectedRpcResponseError)
+  })
 })
 
-function page(items: ReturnType<typeof transaction>[]) {
+function page(items: TransactionRecord[]) {
   return { items, has_more: false, next_cursor: null }
 }
 

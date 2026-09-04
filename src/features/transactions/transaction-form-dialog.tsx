@@ -8,7 +8,7 @@ import {
 import { TransactionForm } from "@/features/transactions/transaction-form"
 import { rememberExpenseAccount } from "@/features/transactions/quick-add-preferences"
 import { useAuth } from "@/features/auth/auth-context"
-import type { AccountSummaryRow, Category } from "@/types/database"
+import type { AccountSummaryRow, Category } from "@/types/finance"
 import type { TransactionRecord } from "@/types/finance"
 
 type TransactionFormDialogProps = {

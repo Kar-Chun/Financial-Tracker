@@ -1,7 +1,12 @@
 import { getSupabaseClient } from "@/lib/supabase"
 import { performFinancialMutation } from "@/lib/network"
-import type { AccountSummaryRow } from "@/types/database"
+import { parseRpcResponse } from "@/lib/rpc-validation"
 import type { AccountType } from "@/types/finance"
+import {
+  accountDeletionResultSchema,
+  accountSummarySchema,
+  archivedAccountSchema,
+} from "@/types/rpc-schemas"
 
 export type SaveAccountInput = {
   id?: string
@@ -44,7 +49,7 @@ export type AccountDeletionResult = {
 export async function getAccountSummaries() {
   const { data, error } = await getSupabaseClient().rpc("get_account_summaries")
   if (error) throw error
-  return (data ?? []) as AccountSummaryRow[]
+  return parseRpcResponse(accountSummarySchema.array(), data ?? [])
 }
 
 export async function getArchivedAccounts() {
@@ -54,7 +59,7 @@ export async function getArchivedAccounts() {
     .not("archived_at", "is", null)
     .order("archived_at", { ascending: false })
   if (error) throw error
-  return (data ?? []) as ArchivedAccount[]
+  return parseRpcResponse(archivedAccountSchema.array(), data ?? [])
 }
 
 export async function saveAccount(input: SaveAccountInput) {
@@ -96,7 +101,7 @@ export async function deleteAccountPermanently(accountId: string) {
       p_account_id: accountId,
     })
     if (error) throw error
-    return data as AccountDeletionResult
+    return parseRpcResponse(accountDeletionResultSchema, data)
   })
 }
 

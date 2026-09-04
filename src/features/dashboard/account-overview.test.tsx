@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 
 import { AccountOverview } from "@/features/dashboard/account-overview"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 function account(overrides: Partial<AccountSummaryRow>): AccountSummaryRow {
   return {

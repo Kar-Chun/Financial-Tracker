@@ -1,6 +1,8 @@
 import type { SavingsGoalDetail, SavingsGoalsSummary } from "@/features/goals/goal-types"
 import { performFinancialMutation } from "@/lib/network"
+import { parseRpcResponse } from "@/lib/rpc-validation"
 import { getSupabaseClient } from "@/lib/supabase"
+import { savingsGoalDetailSchema, savingsGoalsSummarySchema } from "@/types/rpc-schemas"
 
 export type SaveGoalInput = {
   id?: string
@@ -13,13 +15,13 @@ export type SaveGoalInput = {
 export async function getSavingsGoalsSummary(includeArchived = false) {
   const { data, error } = await getSupabaseClient().rpc("get_savings_goals_summary", { p_include_archived: includeArchived })
   if (error) throw error
-  return data as unknown as SavingsGoalsSummary
+  return parseRpcResponse(savingsGoalsSummarySchema, data) satisfies SavingsGoalsSummary
 }
 
 export async function getSavingsGoalDetail(goalId: string) {
   const { data, error } = await getSupabaseClient().rpc("get_savings_goal_detail", { p_goal_id: goalId })
   if (error) throw error
-  return data as unknown as SavingsGoalDetail
+  return parseRpcResponse(savingsGoalDetailSchema, data) satisfies SavingsGoalDetail
 }
 
 export function saveSavingsGoal(input: SaveGoalInput) {
@@ -66,4 +68,3 @@ export function recordGoalAllocation(input: {
     return data
   })
 }
-

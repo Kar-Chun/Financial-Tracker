@@ -1,4 +1,4 @@
-import type { AccountSummaryRow, Category, FrequentExpenseCategoryRow } from "@/types/database"
+import type { AccountSummaryRow, Category, FrequentExpenseCategoryRow } from "@/types/finance"
 
 type PreferenceStorage = Pick<Storage, "getItem" | "setItem">
 

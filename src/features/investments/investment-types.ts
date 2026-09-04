@@ -1,4 +1,4 @@
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 export type InvestmentPortfolioSummary = {
   currency_code: string

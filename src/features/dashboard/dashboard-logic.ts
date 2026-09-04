@@ -1,7 +1,6 @@
 import { calculateNetCashFlow, getTransactionAmount } from "@/features/transactions/transaction-logic"
 import { getCurrentMonthInput } from "@/lib/dates"
-import type { Category } from "@/types/database"
-import type { TransactionRecord } from "@/types/finance"
+import type { Category, TransactionRecord } from "@/types/finance"
 
 export function getMonthlySummary(
   transactions: TransactionRecord[],

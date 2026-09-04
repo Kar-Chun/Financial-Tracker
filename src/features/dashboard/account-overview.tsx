@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 import { formatCurrency } from "@/lib/currency"
 import { cn } from "@/lib/utils"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 export function AccountOverview({ accounts, baseCurrency }: { accounts: AccountSummaryRow[]; baseCurrency: string }) {
   return (

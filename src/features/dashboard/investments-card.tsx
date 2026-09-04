@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/currency"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 
 export function InvestmentsCard({ accounts, baseCurrency }: { accounts: AccountSummaryRow[]; baseCurrency: string }) {
   const investments = accounts.filter((account) => account.account_type === "investment")

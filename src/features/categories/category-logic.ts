@@ -1,4 +1,4 @@
-import type { Category } from "@/types/database"
+import type { Category } from "@/types/finance"
 
 export type CategoryType = Category["category_type"]
 

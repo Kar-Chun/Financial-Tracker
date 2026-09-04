@@ -30,7 +30,7 @@ import {
   parseCurrencyToMinor,
   supportedCurrencies,
 } from "@/lib/currency"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 import type { AccountType } from "@/types/finance"
 
 const accountSchema = z.object({

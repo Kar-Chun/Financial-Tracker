@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { getMonthlySummary, groupExpensesByParent } from "@/features/dashboard/dashboard-logic"
-import type { Category } from "@/types/database"
+import type { Category } from "@/types/finance"
 import type { TransactionRecord } from "@/types/finance"
 
 describe("dashboard financial calculations", () => {

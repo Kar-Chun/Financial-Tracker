@@ -1,11 +1,13 @@
 import type { MonthlyBudgetSummary } from "@/features/budgets/budget-types"
 import { performFinancialMutation } from "@/lib/network"
+import { parseRpcResponse } from "@/lib/rpc-validation"
 import { getSupabaseClient } from "@/lib/supabase"
+import { copyBudgetResultSchema, monthlyBudgetSummarySchema } from "@/types/rpc-schemas"
 
 export async function getMonthlyBudgetSummary(monthStart: string) {
   const { data, error } = await getSupabaseClient().rpc("get_monthly_budget_summary", { p_month_start: monthStart })
   if (error) throw error
-  return data as unknown as MonthlyBudgetSummary
+  return parseRpcResponse(monthlyBudgetSummarySchema, data) satisfies MonthlyBudgetSummary
 }
 
 export function saveMonthlyBudget(input: { monthStart: string; amountMinor: number }) {
@@ -48,7 +50,6 @@ export function copyPreviousBudget(input: { sourceMonthStart: string; destinatio
       p_destination_month_start: input.destinationMonthStart,
     })
     if (error) throw error
-    return data
+    return parseRpcResponse(copyBudgetResultSchema, data)
   })
 }
-

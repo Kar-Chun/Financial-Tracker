@@ -7,7 +7,7 @@ import {
   validateCategoryRestore,
 } from "@/features/categories/category-logic"
 import { getCategoryDisplayName } from "@/features/transactions/transaction-logic"
-import type { Category } from "@/types/database"
+import type { Category } from "@/types/finance"
 
 const userId = "user-a"
 const category = (overrides: Partial<Category> = {}): Category => ({

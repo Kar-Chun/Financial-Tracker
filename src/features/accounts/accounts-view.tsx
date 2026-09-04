@@ -13,7 +13,7 @@ import { useProfile } from "@/features/auth/profile-service"
 import { formatCurrency } from "@/lib/currency"
 import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 import type { AccountType } from "@/types/finance"
 
 type AccountsViewProps = {

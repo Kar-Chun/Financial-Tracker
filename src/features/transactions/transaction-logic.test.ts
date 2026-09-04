@@ -10,7 +10,7 @@ import {
   transferPreservesNetWorth,
   validateTransactionDraft,
 } from "@/features/transactions/transaction-logic"
-import type { AccountSummaryRow } from "@/types/database"
+import type { AccountSummaryRow } from "@/types/finance"
 import type { TransactionRecord } from "@/types/finance"
 
 const sgdAccount = account("sgd", "SGD")

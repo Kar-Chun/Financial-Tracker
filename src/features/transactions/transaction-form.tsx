@@ -24,7 +24,7 @@ import { minorUnitsToInput } from "@/lib/currency"
 import { getTodayDateInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
 import { cn } from "@/lib/utils"
-import type { AccountSummaryRow, Category } from "@/types/database"
+import type { AccountSummaryRow, Category } from "@/types/finance"
 import type { PrimaryTransactionType, TransactionRecord } from "@/types/finance"
 
 type TransactionFormProps = {

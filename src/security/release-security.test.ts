@@ -9,12 +9,13 @@ const migrations = migrationNames.map((name) => readFileSync(resolve(migrationDi
 describe("release database security posture", () => {
   it("keeps migrations ordered and appends bounded reads after the lifecycle/history controls", () => {
     expect(migrationNames).toEqual([...migrationNames].sort())
-    expect(migrationNames.slice(-5)).toEqual([
+    expect(migrationNames.slice(-6)).toEqual([
       "202608240005_add_ai_read_models.sql",
       "202608240006_add_ai_abuse_protection.sql",
       "202608270001_add_safe_account_lifecycle.sql",
       "202608280001_add_net_worth_history_reset.sql",
       "202609040001_add_bounded_dashboard_and_transaction_reads.sql",
+      "202609040002_centralize_eligible_spending.sql",
     ])
   })
 

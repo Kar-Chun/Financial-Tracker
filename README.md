@@ -103,6 +103,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 13. `202608270001_add_safe_account_lifecycle.sql`
 14. `202608280001_add_net_worth_history_reset.sql`
 15. `202609040001_add_bounded_dashboard_and_transaction_reads.sql`
+16. `202609040002_centralize_eligible_spending.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -125,6 +126,8 @@ Foreign-currency bank/cash values remain visible in native currency but are excl
 ## Spending analytics definitions
 
 Analytics includes only non-deleted `expense` transactions against accounts in the profile base currency. Income, transfers, adjustments, and refunds are excluded. Foreign-currency expenses produce an exclusion warning but are not converted. Refund-specific analytics remains deferred until refund UX/semantics are designed.
+
+Migration `202609040002_centralize_eligible_spending.sql` makes `public.get_eligible_expense_facts` the internal fact source shared by Analytics, Budgets, Dashboard, and AI spending reads. It remains unavailable to browser roles and leaves each consumer's established date range, comparison, pace, and warning presentation unchanged.
 
 - This Month: month-to-date versus the same elapsed dates in the previous month (for example 1–22 August versus 1–22 July).
 - Last Month: the complete previous month versus the complete month before it.

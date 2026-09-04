@@ -371,7 +371,7 @@ export type Database = {
         Returns: string
       }
       record_investment_trade: {
-        Args: { p_account_id: string; p_holding_id: string; p_trade_type: "buy" | "sell"; p_quantity: number; p_unit_price: number; p_fee_minor: number; p_trade_date: string; p_note?: string | null }
+        Args: { p_account_id: string; p_holding_id: string; p_trade_type: "buy" | "sell"; p_quantity: string; p_unit_price: string; p_fee_minor: number; p_trade_date: string; p_note?: string | null }
         Returns: string
       }
       update_investment_prices: {
@@ -379,7 +379,7 @@ export type Database = {
         Returns: number
       }
       upsert_manual_fx_rate: {
-        Args: { p_from_currency: string; p_rate: number; p_rate_date: string }
+        Args: { p_from_currency: string; p_rate: string; p_rate_date: string }
         Returns: string
       }
       record_investment_cash_event: {

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAccounts } from "@/features/accounts/accounts-hooks"
 import { useProfile } from "@/features/auth/profile-service"
-import { parseExactDecimal } from "@/features/investments/investment-logic"
+import { normalizeInvestmentDecimal } from "@/features/investments/investment-logic"
 import { useEnableDetailedTracking, usePreviewDetailedConversion } from "@/features/investments/investments-hooks"
 import type { OpeningHoldingInput } from "@/features/investments/investment-types"
 import { formatCurrency, parseCurrencyToMinor } from "@/lib/currency"
@@ -44,13 +44,20 @@ export function DetailedInvestmentSetupPage() {
     if (openingCashMinor < 0) throw new Error("Opening broker cash cannot be negative.")
     const selectedStart = startedOn || today
     if (selectedStart > today) throw new Error("Choose a valid start date no later than today.")
-    for (const holding of validHoldings) {
+    const normalizedHoldings = validHoldings.map((holding) => {
       if (!holding.symbol.trim() || !holding.name.trim()) throw new Error("Every holding needs a symbol and name.")
-      if (!parseExactDecimal(holding.quantity) || !parseExactDecimal(holding.average_cost) || !parseExactDecimal(holding.current_price)) throw new Error("Enter valid holding quantity, cost, and price values.")
-      const values = [Number(holding.quantity), Number(holding.average_cost), Number(holding.current_price)]
-      if (values.some((value) => !Number.isFinite(value)) || values[0] <= 0 || values[1] < 0 || values[2] <= 0) throw new Error("Holding quantity and current price must be positive and within a supported range.")
-    }
-    return { accountId: account.id, openingCashMinor, holdings: validHoldings, startedOn: selectedStart }
+      const quantity = normalizeInvestmentDecimal(holding.quantity)
+      const averageCost = normalizeInvestmentDecimal(holding.average_cost, { allowZero: true })
+      const currentPrice = normalizeInvestmentDecimal(holding.current_price)
+      if (!quantity || averageCost === null || !currentPrice) throw new Error("Holding quantity and current price must be positive and within the database-supported precision.")
+      return {
+        ...holding,
+        quantity,
+        average_cost: averageCost,
+        current_price: currentPrice,
+      }
+    })
+    return { accountId: account.id, openingCashMinor, holdings: normalizedHoldings, startedOn: selectedStart }
   }
 
   const runPreview = async () => {

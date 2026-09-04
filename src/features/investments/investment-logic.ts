@@ -15,14 +15,33 @@ export type LedgerPosition = {
 
 const DECIMAL_PATTERN = /^(?:0|[1-9]\d*)(?:\.(\d+))?$/
 
-export function parseExactDecimal(value: string, maximumDecimals = 10) {
+export function parseExactDecimal(
+  value: string,
+  maximumDecimals = 10,
+  maximumIntegerDigits = 30 - maximumDecimals,
+) {
   const normalized = value.trim()
   const match = DECIMAL_PATTERN.exec(normalized)
-  if (!match || (match[1]?.length ?? 0) > maximumDecimals) return null
+  const integerPart = normalized.split(".", 1)[0]
+  if (
+    !match
+    || integerPart.length > maximumIntegerDigits
+    || (match[1]?.length ?? 0) > maximumDecimals
+  ) return null
   const decimals = match[1]?.length ?? 0
   const scale = 10n ** BigInt(decimals)
   const units = BigInt(normalized.replace(".", ""))
   return { units, scale, normalized }
+}
+
+export function normalizeInvestmentDecimal(
+  value: string,
+  options: { maximumDecimals?: number; allowZero?: boolean } = {},
+) {
+  const maximumDecimals = options.maximumDecimals ?? 10
+  const parsed = parseExactDecimal(value, maximumDecimals)
+  if (!parsed || (!options.allowZero && parsed.units === 0n)) return null
+  return parsed.normalized
 }
 
 export function multiplyDecimalToMinorUnits(quantity: string, unitPrice: string, minorScale: number) {

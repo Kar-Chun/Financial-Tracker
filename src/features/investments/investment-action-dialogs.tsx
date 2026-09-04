@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { calculateTradeCashMinor, parseExactDecimal } from "@/features/investments/investment-logic"
+import { calculateTradeCashMinor, normalizeInvestmentDecimal } from "@/features/investments/investment-logic"
 import { useRecordCashEvent, useRecordTrade, useSaveHolding, useSaveManualFx, useUpdatePrices } from "@/features/investments/investments-hooks"
 import type { DetailedHolding } from "@/features/investments/investment-types"
 import { formatCurrency, getMinorUnitDigits, parseCurrencyToMinor } from "@/lib/currency"
@@ -18,7 +18,7 @@ type CommonProps = { accountId: string; currencyCode: string; today: string; ope
 
 export function TradeDialog({ accountId, currencyCode, today, holdings, type, open, onOpenChange }: CommonProps & { holdings: DetailedHolding[]; type: "buy" | "sell" }) {
   const mutation = useRecordTrade()
-  const available = holdings.filter((holding) => !holding.archived_at && (type === "buy" || Number(holding.quantity) > 0))
+  const available = holdings.filter((holding) => !holding.archived_at && (type === "buy" || holding.quantity > 0))
   const [holdingId, setHoldingId] = useState<string | null>(available[0]?.id ?? null)
   const [quantity, setQuantity] = useState("")
   const [price, setPrice] = useState("")
@@ -35,11 +35,12 @@ export function TradeDialog({ accountId, currencyCode, today, holdings, type, op
   const submit = () => {
     try {
       if (!holdingId) throw new Error("Choose a holding.")
-      if (!parseExactDecimal(quantity) || !parseExactDecimal(price) || !Number.isFinite(Number(quantity)) || !Number.isFinite(Number(price)) || Number(quantity) <= 0 || Number(price) <= 0) throw new Error("Enter a positive quantity and price within a supported range.")
-      if (type === "sell" && selected && Number(quantity) > Number(selected.quantity)) throw new Error("Quantity exceeds the available holding.")
+      const normalizedQuantity = normalizeInvestmentDecimal(quantity)
+      const normalizedPrice = normalizeInvestmentDecimal(price)
+      if (!normalizedQuantity || !normalizedPrice) throw new Error("Enter a positive quantity and price within the database-supported precision.")
       const feeMinor = parseCurrencyToMinor(fee || "0", currencyCode)
       if (total === null || total > BigInt(Number.MAX_SAFE_INTEGER) || total < BigInt(Number.MIN_SAFE_INTEGER)) throw new Error("Trade total is invalid or too large.")
-      mutation.mutate({ accountId, holdingId, tradeType: type, quantity, unitPrice: price, feeMinor, tradeDate: date, note }, { onSuccess: () => { toast.success(`${type === "buy" ? "Buy" : "Sell"} recorded.`); onOpenChange(false) }, onError: (cause) => setError(getErrorMessage(cause, "The trade could not be recorded.")) })
+      mutation.mutate({ accountId, holdingId, tradeType: type, quantity: normalizedQuantity, unitPrice: normalizedPrice, feeMinor, tradeDate: date, note }, { onSuccess: () => { toast.success(`${type === "buy" ? "Buy" : "Sell"} recorded.`); onOpenChange(false) }, onError: (cause) => setError(getErrorMessage(cause, "The trade could not be recorded.")) })
     } catch (cause) { setError(getErrorMessage(cause, "Check the trade details.")) }
   }
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>{type === "buy" ? "Buy investment" : "Sell investment"}</DialogTitle><DialogDescription>Trades update broker cash and weighted-average cost. They are not ordinary expenses or income.</DialogDescription></DialogHeader><div className="max-h-[65svh] space-y-4 overflow-y-auto pr-1">
@@ -51,13 +52,13 @@ export function TradeDialog({ accountId, currencyCode, today, holdings, type, op
 
 export function PricesDialog({ accountId, currencyCode, today, holdings, open, onOpenChange }: CommonProps & { holdings: DetailedHolding[] }) {
   const mutation = useUpdatePrices(); const [date,setDate]=useState(today); const [prices,setPrices]=useState<Record<string,string>>(() => Object.fromEntries(holdings.filter((item)=>!item.archived_at).map((item)=>[item.id,item.latest_price?.toString()??""]))); const [error,setError]=useState<string|null>(null)
-  const submit=()=>{const updates=holdings.filter((item)=>!item.archived_at).map((item)=>({holding_id:item.id,price:prices[item.id]?.trim()??""}));if(updates.some((item)=>!parseExactDecimal(item.price)||Number(item.price)<=0)){setError("Enter a positive current price for every active holding.");return}mutation.mutate({accountId,pricedAt:date,prices:updates},{onSuccess:()=>{toast.success("Holding prices updated.");onOpenChange(false)},onError:(cause)=>setError(getErrorMessage(cause,"Prices could not be updated."))})}
+  const submit=()=>{const updates=holdings.filter((item)=>!item.archived_at).map((item)=>({holding_id:item.id,price:normalizeInvestmentDecimal(prices[item.id]??"")}));if(updates.some((item)=>item.price===null)){setError("Enter a positive current price for every active holding within the database-supported precision.");return}mutation.mutate({accountId,pricedAt:date,prices:updates as Array<{holding_id:string;price:string}>},{onSuccess:()=>{toast.success("Holding prices updated.");onOpenChange(false)},onError:(cause)=>setError(getErrorMessage(cause,"Prices could not be updated."))})}
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>Update prices</DialogTitle><DialogDescription>Manual prices are stored historically. No market-data API is used.</DialogDescription></DialogHeader><div className="max-h-[65svh] space-y-4 overflow-y-auto pr-1"><Field label="Price date"><Input data-mobile-date className="w-full min-w-0" type="date" max={today} value={date} onChange={(event)=>setDate(event.target.value)} /></Field>{holdings.filter((item)=>!item.archived_at).map((holding)=><Field key={holding.id} label={`${holding.symbol} · ${holding.name} (${currencyCode})`}><Input inputMode="decimal" value={prices[holding.id]??""} onChange={(event)=>setPrices((items)=>({...items,[holding.id]:event.target.value}))} /></Field>)}{error&&<p className="text-sm text-destructive">{error}</p>}</div><DialogFooter><Button variant="outline" onClick={()=>onOpenChange(false)}>Cancel</Button><Button onClick={submit} disabled={mutation.isPending}>{mutation.isPending&&<LoaderCircle className="animate-spin"/>}Save prices</Button></DialogFooter></DialogContent></Dialog>
 }
 
 export function FxDialog({ fromCurrency, baseCurrency, today, open, onOpenChange }: { fromCurrency:string;baseCurrency:string;today:string;open:boolean;onOpenChange:(open:boolean)=>void }) {
   const mutation=useSaveManualFx();const[rate,setRate]=useState("");const[date,setDate]=useState(today);const[error,setError]=useState<string|null>(null)
-  const submit=()=>{if(!parseExactDecimal(rate,12)||Number(rate)<=0){setError("Enter a positive direct FX rate.");return}mutation.mutate({fromCurrency,rate,rateDate:date},{onSuccess:()=>{toast.success("Manual FX rate updated.");onOpenChange(false)},onError:(cause)=>setError(getErrorMessage(cause,"The FX rate could not be saved."))})}
+  const submit=()=>{const normalizedRate=normalizeInvestmentDecimal(rate,{maximumDecimals:12});if(!normalizedRate){setError("Enter a positive direct FX rate within the database-supported precision.");return}mutation.mutate({fromCurrency,rate:normalizedRate,rateDate:date},{onSuccess:()=>{toast.success("Manual FX rate updated.");onOpenChange(false)},onError:(cause)=>setError(getErrorMessage(cause,"The FX rate could not be saved."))})}
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>Update {fromCurrency} → {baseCurrency}</DialogTitle><DialogDescription>Enter how many {baseCurrency} one {fromCurrency} is worth. This rate is only for valuation, never transfer conversion.</DialogDescription></DialogHeader><div className="space-y-4"><Field label={`1 ${fromCurrency} = ${baseCurrency}`}><Input inputMode="decimal" value={rate} onChange={(event)=>setRate(event.target.value)} /></Field><Field label="Rate date"><Input data-mobile-date className="w-full min-w-0" type="date" max={today} value={date} onChange={(event)=>setDate(event.target.value)} /></Field>{error&&<p className="text-sm text-destructive">{error}</p>}</div><DialogFooter><Button variant="outline" onClick={()=>onOpenChange(false)}>Cancel</Button><Button onClick={submit} disabled={mutation.isPending}>{mutation.isPending&&<LoaderCircle className="animate-spin"/>}Save rate</Button></DialogFooter></DialogContent></Dialog>
 }
 

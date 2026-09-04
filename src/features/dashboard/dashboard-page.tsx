@@ -10,7 +10,6 @@ import { useDashboard } from "@/features/dashboard/dashboard-hooks"
 import { MonthlyBudgetCard } from "@/features/dashboard/monthly-budget-card"
 import { useBudgetSummary } from "@/features/budgets/budget-hooks"
 import { getCurrentMonthStart } from "@/features/budgets/budget-dates"
-import { getMonthlySummary, groupExpensesByParent } from "@/features/dashboard/dashboard-logic"
 import { MetricCard } from "@/features/dashboard/metric-card"
 import { InvestmentsCard } from "@/features/dashboard/investments-card"
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
@@ -42,9 +41,7 @@ export function DashboardPage() {
     )
   }
 
-  const { accounts, transactions, categories, snapshots } = dashboardQuery.data
-  const monthly = getMonthlySummary(transactions, currencyCode)
-  const spendingGroups = groupExpensesByParent(transactions, categories, currencyCode)
+  const { accounts, monthly, spendingGroups, transactions, snapshots } = dashboardQuery.data
   const foreignAccounts = accounts.filter((account) => account.account_type !== "investment" && !account.included_in_net_worth)
   const todayDate = getDateInputInTimeZone(timezone)
 

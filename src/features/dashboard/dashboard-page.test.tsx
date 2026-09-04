@@ -19,8 +19,9 @@ vi.mock("@/features/dashboard/dashboard-hooks", () => ({
     isError: false,
     data: {
       accounts: [{ id: "bank", account_type: "bank", included_in_net_worth: true }],
+      monthly: { incomeMinor: 0, expensesMinor: 0, netCashFlowMinor: 0 },
+      spendingGroups: [],
       transactions: [],
-      categories: [],
       snapshots: [],
     },
   }),

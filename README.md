@@ -88,6 +88,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 12. `202608240006_add_ai_abuse_protection.sql`
 13. `202608270001_add_safe_account_lifecycle.sql`
 14. `202608280001_add_net_worth_history_reset.sql`
+15. `202609040001_add_bounded_dashboard_and_transaction_reads.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -129,6 +130,12 @@ At most one snapshot exists per user/local calendar date. Financial RPCs refresh
 Settings includes a deliberate **Reset Net Worth history** action for discarding misleading chart history after test-data cleanup. The authenticated RPC first verifies that every active Detailed investment has a complete represented base-currency value, deletes only the caller's snapshot rows, and then reuses the normal snapshot function to create exactly today's point. It does not modify accounts, transactions, investments, budgets, goals, or any current balance. With fewer than two points, Dashboard reports that there is not enough history instead of inventing a zero change.
 
 Migration `202608280001_add_net_worth_history_reset.sql` adds this controlled RPC without granting browser delete access to the snapshots table. Follow [Net Worth history reset verification](supabase/NET_WORTH_HISTORY_RESET_VERIFICATION.md) after applying it.
+
+## Bounded Dashboard and transaction reads
+
+Dashboard loading uses one authenticated aggregate RPC. It refreshes today's snapshot through the existing authoritative helper, returns current-month income and the existing Analytics-defined expense/category totals, limits recent transactions to six, and limits Net Worth history to the most recent 90 local-calendar days. It does not download lifetime transaction history.
+
+Transactions use authenticated server-side filters and 40-row keyset pages ordered by transaction date, creation time, and ID (all descending). Date, type, account, and category filters are applied before pagination; loading more requests only the next cursor. Archived account/category names remain readable on historical rows. Migration `202609040001_add_bounded_dashboard_and_transaction_reads.sql` adds these read-only RPCs without changing transaction writes, RLS, or accounting definitions.
 
 ## Account lifecycle
 

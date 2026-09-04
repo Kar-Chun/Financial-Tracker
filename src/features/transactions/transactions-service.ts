@@ -14,6 +14,41 @@ export type SaveTransactionInput = {
   description: string
 }
 
+export type TransactionPageFilters = {
+  startDate: string | null
+  endDate: string | null
+  transactionType: TransactionRecord["transaction_type"] | null
+  accountId: string | null
+  categoryId: string | null
+}
+
+export type TransactionCursor = {
+  transaction_date: string
+  created_at: string
+  id: string
+}
+
+export type TransactionPage = {
+  items: TransactionRecord[]
+  has_more: boolean
+  next_cursor: TransactionCursor | null
+}
+
+export const transactionPageSize = 40
+
+export function getTransactionMonthRange(month: string) {
+  const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(month)
+  if (!match) return { startDate: null, endDate: null }
+
+  const year = Number(match[1])
+  const monthIndex = Number(match[2]) - 1
+  const finalDay = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate()
+  return {
+    startDate: `${month}-01`,
+    endDate: `${month}-${String(finalDay).padStart(2, "0")}`,
+  }
+}
+
 export async function getCategories() {
   const { data, error } = await getSupabaseClient()
     .from("categories")
@@ -25,42 +60,38 @@ export async function getCategories() {
   return data as Category[]
 }
 
-export async function getTransactions() {
-  const client = getSupabaseClient()
-  const pageSize = 500
-  const transactions: TransactionRecord[] = []
+export async function getTransactionsPage(input: {
+  filters: TransactionPageFilters
+  cursor?: TransactionCursor | null
+  pageSize?: number
+}) {
+  const { filters, cursor = null, pageSize = transactionPageSize } = input
+  const { data, error } = await getSupabaseClient().rpc("get_transactions_page", {
+    p_start_date: filters.startDate,
+    p_end_date: filters.endDate,
+    p_transaction_type: filters.transactionType,
+    p_account_id: filters.accountId,
+    p_category_id: filters.categoryId,
+    p_limit: pageSize,
+    p_cursor_transaction_date: cursor?.transaction_date ?? null,
+    p_cursor_created_at: cursor?.created_at ?? null,
+    p_cursor_id: cursor?.id ?? null,
+  })
+  if (error) throw error
+  const page = data as unknown as TransactionPage
+  return {
+    items: page.items ?? [],
+    has_more: page.has_more,
+    next_cursor: page.next_cursor,
+  } satisfies TransactionPage
+}
 
-  for (let start = 0; ; start += pageSize) {
-    const { data, error } = await client
-      .from("transactions")
-      .select(`
-        id,
-        transaction_type,
-        category_id,
-        description,
-        transaction_date,
-        created_at,
-        category:categories (id, name, parent_id, category_type),
-        entries:transaction_entries (
-          id,
-          account_id,
-          amount_minor,
-          account:accounts (id, name, currency_code, account_type)
-        )
-      `)
-      .order("transaction_date", { ascending: false })
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(start, start + pageSize - 1)
-
-    if (error) throw error
-
-    const page = data as unknown as TransactionRecord[]
-    transactions.push(...page)
-    if (page.length < pageSize) break
+export function flattenTransactionPages(pages: TransactionPage[]) {
+  const unique = new Map<string, TransactionRecord>()
+  for (const page of pages) {
+    for (const transaction of page.items) unique.set(transaction.id, transaction)
   }
-
-  return transactions
+  return [...unique.values()]
 }
 
 export async function getFrequentExpenseCategories() {

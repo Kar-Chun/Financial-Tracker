@@ -19,9 +19,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAccounts } from "@/features/accounts/accounts-hooks"
+import { useAuth } from "@/features/auth/auth-context"
 import { TransactionFormDialog } from "@/features/transactions/transaction-form-dialog"
 import { useCategories, useSoftDeleteTransaction, useTransactions } from "@/features/transactions/transactions-hooks"
 import { getCategoryDisplayName, getTransactionAmount, getTransactionDisplayDetails } from "@/features/transactions/transaction-logic"
+import { flattenTransactionPages, getTransactionMonthRange, type TransactionPageFilters } from "@/features/transactions/transactions-service"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
@@ -29,7 +31,7 @@ import { cn } from "@/lib/utils"
 import type { TransactionRecord } from "@/types/finance"
 
 export function TransactionsPage() {
-  const transactionsQuery = useTransactions()
+  const { user } = useAuth()
   const accountsQuery = useAccounts()
   const categoriesQuery = useCategories()
   const deleteMutation = useSoftDeleteTransaction()
@@ -40,13 +42,20 @@ export function TransactionsPage() {
   const [accountFilter, setAccountFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
 
-  const filteredTransactions = useMemo(() => (transactionsQuery.data ?? []).filter((transaction) => {
-    if (month && !transaction.transaction_date.startsWith(month)) return false
-    if (typeFilter !== "all" && transaction.transaction_type !== typeFilter) return false
-    if (accountFilter !== "all" && !transaction.entries.some((entry) => entry.account_id === accountFilter)) return false
-    if (categoryFilter !== "all" && transaction.category_id !== categoryFilter) return false
-    return true
-  }), [accountFilter, categoryFilter, month, transactionsQuery.data, typeFilter])
+  const filters = useMemo<TransactionPageFilters>(() => {
+    const range = getTransactionMonthRange(month)
+    return {
+      ...range,
+      transactionType: typeFilter === "all" ? null : typeFilter as TransactionPageFilters["transactionType"],
+      accountId: accountFilter === "all" ? null : accountFilter,
+      categoryId: categoryFilter === "all" ? null : categoryFilter,
+    }
+  }, [accountFilter, categoryFilter, month, typeFilter])
+  const transactionsQuery = useTransactions(filters, user?.id)
+  const transactions = useMemo(
+    () => flattenTransactionPages(transactionsQuery.data?.pages ?? []),
+    [transactionsQuery.data?.pages],
+  )
 
   const openEdit = (transaction: TransactionRecord) => {
     setEditingTransaction(transaction)
@@ -113,20 +122,33 @@ export function TransactionsPage() {
         <Card className="border-destructive/30"><CardContent className="py-10 text-center">Transactions could not be loaded.</CardContent></Card>
       ) : (accountsQuery.data?.length ?? 0) === 0 ? (
         <EmptyState title="Add an account first" description="Transactions need an active bank or cash account." actionLabel="Go to accounts" actionHref="/accounts" />
-      ) : filteredTransactions.length === 0 ? (
+      ) : transactions.length === 0 ? (
         <EmptyState title="No transactions found" description="Add your first transaction or adjust the filters above." actionHref="/transactions/new" actionLabel="Add transaction" />
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-card/70 ring-1 ring-white/4">
-          {filteredTransactions.map((transaction, index) => (
-            <TransactionRow
-              key={transaction.id}
-              transaction={transaction}
-              bordered={index > 0}
-              onEdit={() => openEdit(transaction)}
-              onDelete={() => setDeleteTarget(transaction)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="overflow-hidden rounded-2xl bg-card/70 ring-1 ring-white/4">
+            {transactions.map((transaction, index) => (
+              <TransactionRow
+                key={transaction.id}
+                transaction={transaction}
+                bordered={index > 0}
+                onEdit={() => openEdit(transaction)}
+                onDelete={() => setDeleteTarget(transaction)}
+              />
+            ))}
+          </div>
+          {transactionsQuery.hasNextPage && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                disabled={transactionsQuery.isFetchingNextPage}
+                onClick={() => void transactionsQuery.fetchNextPage()}
+              >
+                {transactionsQuery.isFetchingNextPage ? "Loading…" : "Load more"}
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       <TransactionFormDialog

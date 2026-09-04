@@ -261,6 +261,24 @@ export type Database = {
     }
     Views: Record<string, never>
     Functions: {
+      get_dashboard_data: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      get_transactions_page: {
+        Args: {
+          p_start_date?: string | null
+          p_end_date?: string | null
+          p_transaction_type?: string | null
+          p_account_id?: string | null
+          p_category_id?: string | null
+          p_limit?: number
+          p_cursor_transaction_date?: string | null
+          p_cursor_created_at?: string | null
+          p_cursor_id?: string | null
+        }
+        Returns: Json
+      }
       reset_net_worth_history: {
         Args: Record<string, never>
         Returns: string

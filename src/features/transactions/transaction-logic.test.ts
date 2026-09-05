@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  applyTransferToBalances,
-  buildEntryAmounts,
   calculateNetCashFlow,
   getCategoryDisplayName,
-  getEffectiveInvestmentValues,
   transactionFormSchema,
-  transferPreservesNetWorth,
   validateTransactionDraft,
 } from "@/features/transactions/transaction-logic"
+import {
+  applyTransferToBalances,
+  buildEntryAmounts,
+  getEffectiveInvestmentValues,
+  transferPreservesNetWorth,
+} from "@/test/reference-models/transaction-reference-model"
 import type { AccountSummaryRow } from "@/types/finance"
 import type { TransactionRecord } from "@/types/finance"
 

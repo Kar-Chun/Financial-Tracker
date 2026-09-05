@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { aggregateExpenseFacts, getSpendingComparison } from "@/features/analytics/analytics-logic"
+import { getSpendingComparison } from "@/features/analytics/analytics-logic"
 import { getAnalyticsPeriod } from "@/features/analytics/analytics-periods"
-import type { ExpenseFact } from "@/features/analytics/analytics-logic"
+import { aggregateExpenseFacts, type ExpenseFact } from "@/test/reference-models/analytics-reference-model"
 
 const expense = (overrides: Partial<ExpenseFact> = {}): ExpenseFact => ({
   transactionType: "expense",

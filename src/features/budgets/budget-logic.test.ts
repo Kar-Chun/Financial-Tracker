@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { getBudgetProgress, getPaceStatus, getRemainingBudget, getSafeDailySpend, isEligibleParentExpenseCategory, sumEligibleBudgetSpending, sumParentCategorySpending, type BudgetExpenseFact } from "@/features/budgets/budget-logic"
+import { getBudgetProgress, isEligibleParentExpenseCategory } from "@/features/budgets/budget-logic"
+import { getPaceStatus, getRemainingBudget, getSafeDailySpend, sumEligibleBudgetSpending, sumParentCategorySpending, type BudgetExpenseFact } from "@/test/reference-models/budget-reference-model"
 
 const baseFact: BudgetExpenseFact = { amountMinor: 500, transactionType: "expense", deleted: false, accountCurrency: "SGD", baseCurrency: "SGD", parentCategoryId: "food" }
 

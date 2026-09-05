@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { applyAllocation, getAllocationSummary, getAvailableCash, getGoalProgress, getRequiredMonthly, goalFormSchema, parsePositiveGoalTarget, sumAllocations } from "@/features/goals/goal-logic"
+import { getGoalProgress, getRequiredMonthly, goalFormSchema, parsePositiveGoalTarget } from "@/features/goals/goal-logic"
+import { applyAllocation, getAllocationSummary, getAvailableCash, sumAllocations } from "@/test/reference-models/goal-reference-model"
 import type { AccountSummaryRow } from "@/types/finance"
 
 const account = (overrides: Partial<AccountSummaryRow>): AccountSummaryRow => ({

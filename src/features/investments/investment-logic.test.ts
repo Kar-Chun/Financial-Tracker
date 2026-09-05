@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  applyWeightedAverageTrade,
-  calculateDetailedNativeValue,
-  calculateSimpleInvestmentValue,
   calculateTradeCashMinor,
-  convertNativeMinorToBaseMinor,
   multiplyDecimalToMinorUnits,
   normalizeInvestmentDecimal,
   parseExactDecimal,
-  selectLatestManualPrice,
 } from "@/features/investments/investment-logic"
+import {
+  applyWeightedAverageTrade,
+  calculateDetailedNativeValue,
+  calculateSimpleInvestmentValue,
+  convertNativeMinorToBaseMinor,
+  selectLatestManualPrice,
+} from "@/test/reference-models/investment-reference-model"
 
 describe("investment accounting reference logic", () => {
   it("preserves the Simple valuation plus later-transfer rule", () => {

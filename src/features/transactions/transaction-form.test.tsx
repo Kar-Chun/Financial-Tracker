@@ -93,6 +93,39 @@ describe("Add Transaction form", () => {
     await expectSaved({ transactionType: "income", amountMinor: 100_000, categoryId: "salary", description: "Internship salary" })
   })
 
+  it("uses the shared controller for transfer fields and mutation input", async () => {
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: "Transfer" }))
+    fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "25.50" } })
+    await chooseOption("To account", "Cash Wallet")
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "To account" })).toHaveTextContent("Cash Wallet"))
+    fireEvent.change(screen.getByRole("textbox", { name: "Note" }), { target: { value: "Cash withdrawal" } })
+    fireEvent.click(screen.getByRole("button", { name: "Save transfer" }))
+
+    await expectSaved({
+      transactionType: "transfer",
+      amountMinor: 2_550,
+      accountId: "bank-account",
+      destinationAccountId: "cash-account",
+      categoryId: undefined,
+      description: "Cash withdrawal",
+    })
+  })
+
+  it("keeps editing on the same mutation path", async () => {
+    renderForm({ transaction: existingExpense("Caifan"), entryPage: false })
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }))
+
+    await expectSaved({
+      id: "expense-id",
+      transactionType: "expense",
+      amountMinor: 500,
+      accountId: "bank-account",
+      categoryId: "eating-out",
+      description: "Caifan",
+    })
+  })
+
   it("disables the Save action while a write is pending", () => {
     mutationState.isPending = true
     renderForm()
@@ -120,7 +153,12 @@ function renderForm({ transaction, entryPage = true }: { transaction?: Transacti
 
 async function chooseOption(selectName: string, optionName: string) {
   fireEvent.click(screen.getByRole("combobox", { name: selectName }))
-  fireEvent.click(await screen.findByRole("option", { name: new RegExp(optionName, "i") }))
+  const option = await screen.findByRole("option", { name: new RegExp(optionName, "i") })
+  fireEvent.mouseDown(option)
+  fireEvent.mouseUp(option)
+  fireEvent.click(option)
+  option.focus()
+  fireEvent.keyDown(option, { key: "Enter" })
 }
 
 async function expectSaved(expected: Partial<SaveTransactionInput>) {

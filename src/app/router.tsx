@@ -7,11 +7,16 @@ import { ProtectedRoute, PublicOnlyRoute } from "@/features/auth/route-guards"
 export const router = createBrowserRouter([
   {
     path: "/",
+    element: <PublicOnlyRoute />,
     errorElement: <RouteErrorPage />,
-    lazy: async () => {
-      const { WelcomePage } = await import("@/features/auth/welcome-page")
-      return { Component: WelcomePage }
-    },
+    children: [
+      {
+        lazy: async () => {
+          const { WelcomePage } = await import("@/features/auth/welcome-page")
+          return { Component: WelcomePage }
+        },
+      },  
+    ],
   },
   {
     element: <PublicOnlyRoute />,

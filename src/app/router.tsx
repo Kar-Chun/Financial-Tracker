@@ -11,6 +11,7 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
     children: [
       {
+        index: true,
         lazy: async () => {
           const { WelcomePage } = await import("@/features/auth/welcome-page")
           return { Component: WelcomePage }

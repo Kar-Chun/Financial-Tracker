@@ -129,20 +129,27 @@
     @apply rounded-2xl bg-card ring-1 ring-border/35;
   }
 
-  input[data-transaction-date],
-  input[data-mobile-date] {
+  input[data-slot="input"]:is([type="date"], [type="month"]) {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
     display: block;
     inline-size: 100%;
     min-inline-size: 0;
     max-inline-size: 100%;
-    min-height: 3rem;
     color-scheme: dark;
   }
 
-  input[data-transaction-date]::-webkit-date-and-time-value,
-  input[data-mobile-date]::-webkit-date-and-time-value {
+  input[data-slot="input"]:is([type="date"], [type="month"])::-webkit-date-and-time-value {
+    inline-size: 100%;
+    min-inline-size: 0;
     min-height: 1.25rem;
     text-align: left;
+  }
+
+  input[data-slot="input"]:is([type="date"], [type="month"])::-webkit-datetime-edit {
+    min-inline-size: 0;
+    padding: 0;
   }
 }
 

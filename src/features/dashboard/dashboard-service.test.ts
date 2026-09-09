@@ -23,6 +23,12 @@ describe("bounded Dashboard reads", () => {
           expenses_minor: 12_345,
           net_cash_flow_minor: 87_655,
         },
+        daily_spending: {
+          local_date: "2026-09-04",
+          today_minor: 1_840,
+          seven_day_total_minor: 14_910,
+          seven_day_average_minor: 2_130,
+        },
         spending_groups: [{ label: "Food", amount_minor: 12_345 }],
         recent_transactions: [transaction("recent-1")],
         snapshots: [snapshot()],
@@ -39,6 +45,12 @@ describe("bounded Dashboard reads", () => {
       expensesMinor: 12_345,
       netCashFlowMinor: 87_655,
     })
+    expect(result.dailySpending).toEqual({
+      localDate: "2026-09-04",
+      todayMinor: 1_840,
+      sevenDayTotalMinor: 14_910,
+      sevenDayAverageMinor: 2_130,
+    })
     expect(result.spendingGroups).toEqual([{ label: "Food", amountMinor: 12_345 }])
     expect(result.transactions.map(({ id }) => id)).toEqual(["recent-1"])
     expect(result.snapshots).toHaveLength(1)
@@ -49,6 +61,7 @@ describe("bounded Dashboard reads", () => {
       data: {
         accounts: [],
         monthly: { income_minor: 0, expenses_minor: 0, net_cash_flow_minor: 0 },
+        daily_spending: { local_date: "2026-09-04", today_minor: 0, seven_day_total_minor: 0, seven_day_average_minor: 0 },
         spending_groups: [],
         recent_transactions: [],
         snapshots: [],
@@ -66,6 +79,7 @@ describe("bounded Dashboard reads", () => {
       data: {
         accounts: [],
         monthly: { income_minor: 0, expenses_minor: "12345", net_cash_flow_minor: 0 },
+        daily_spending: { local_date: "2026-09-04", today_minor: 0, seven_day_total_minor: 0, seven_day_average_minor: 0 },
         spending_groups: [],
         recent_transactions: [],
         snapshots: [],

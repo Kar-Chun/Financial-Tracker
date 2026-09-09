@@ -1,4 +1,4 @@
-import { BanknoteArrowDown, BanknoteArrowUp, TrendingUp, WalletCards } from "lucide-react"
+import { BanknoteArrowDown, BanknoteArrowUp, WalletCards } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { buttonVariants } from "@/components/ui/button-variants"
@@ -16,8 +16,8 @@ import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
 import { RecentTransactionsCard } from "@/features/dashboard/recent-transactions-card"
 import { SpendingBreakdownCard } from "@/features/dashboard/spending-breakdown-card"
 import { SavingsGoalsCard } from "@/features/dashboard/savings-goals-card"
+import { TodaysSpendingCard } from "@/features/dashboard/todays-spending-card"
 import { useSavingsGoals } from "@/features/goals/goals-hooks"
-import { getDateInputInTimeZone } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 
 export function DashboardPage() {
@@ -41,9 +41,8 @@ export function DashboardPage() {
     )
   }
 
-  const { accounts, monthly, spendingGroups, transactions, snapshots } = dashboardQuery.data
+  const { accounts, dailySpending, monthly, spendingGroups, transactions, snapshots } = dashboardQuery.data
   const foreignAccounts = accounts.filter((account) => account.account_type !== "investment" && !account.included_in_net_worth)
-  const todayDate = getDateInputInTimeZone(timezone)
 
   if (accounts.length === 0) {
     return (
@@ -77,14 +76,19 @@ export function DashboardPage() {
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Monthly financial summary">
         <MetricCard label="Monthly income" amountMinor={monthly.incomeMinor} currencyCode={currencyCode} helper="Transfers excluded" icon={BanknoteArrowDown} tone="positive" />
         <MetricCard label="Monthly spent" amountMinor={monthly.expensesMinor} currencyCode={currencyCode} helper="Recorded expenses" icon={BanknoteArrowUp} tone="negative" />
-        <MetricCard className="col-span-2 lg:col-span-1" label="Net cash flow" amountMinor={monthly.netCashFlowMinor} currencyCode={currencyCode} helper="Income minus expenses" icon={TrendingUp} showSign />
+        <TodaysSpendingCard
+          averageMinor={dailySpending.sevenDayAverageMinor}
+          currencyCode={currencyCode}
+          localDate={dailySpending.localDate}
+          todayMinor={dailySpending.todayMinor}
+        />
       </section>
 
       {!budgetQuery.isError && <MonthlyBudgetCard summary={budgetQuery.data} />}
 
       <section className="grid gap-7 xl:grid-cols-[minmax(20rem,0.9fr)_minmax(0,1.1fr)]">
         <AccountOverview accounts={accounts} baseCurrency={currencyCode} />
-        <RecentTransactionsCard transactions={transactions} todayDate={todayDate} />
+        <RecentTransactionsCard transactions={transactions} todayDate={dailySpending.localDate} />
       </section>
 
       {!goalsQuery.isError && <SavingsGoalsCard summary={goalsQuery.data} />}

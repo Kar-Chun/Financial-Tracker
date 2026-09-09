@@ -104,6 +104,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 14. `202608280001_add_net_worth_history_reset.sql`
 15. `202609040001_add_bounded_dashboard_and_transaction_reads.sql`
 16. `202609040002_centralize_eligible_spending.sql`
+17. `202609090001_add_dashboard_today_spending.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -151,6 +152,8 @@ Migration `202608280001_add_net_worth_history_reset.sql` adds this controlled RP
 ## Bounded Dashboard and transaction reads
 
 Dashboard loading uses one authenticated aggregate RPC. It refreshes today's snapshot through the existing authoritative helper, returns current-month income and the existing Analytics-defined expense/category totals, limits recent transactions to six, and limits Net Worth history to the most recent 90 local-calendar days. It does not download lifetime transaction history.
+
+The Dashboard also returns eligible spending for the profile-local current day and the preceding six calendar days through the same internal expense-fact function. Today's Spending uses the current-day total; its seven-day average always divides the complete seven-day total by seven, including zero-spending days. Tapping the card opens the existing bounded Transactions list with the exact day and eligible-spending filter.
 
 Transactions use authenticated server-side filters and 40-row keyset pages ordered by transaction date, creation time, and ID (all descending). Date, type, account, and category filters are applied before pagination; loading more requests only the next cursor. Archived account/category names remain readable on historical rows. Migration `202609040001_add_bounded_dashboard_and_transaction_reads.sql` adds these read-only RPCs without changing transaction writes, RLS, or accounting definitions.
 

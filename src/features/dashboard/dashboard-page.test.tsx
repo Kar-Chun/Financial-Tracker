@@ -20,6 +20,7 @@ vi.mock("@/features/dashboard/dashboard-hooks", () => ({
     data: {
       accounts: [{ id: "bank", account_type: "bank", included_in_net_worth: true }],
       monthly: { incomeMinor: 0, expensesMinor: 0, netCashFlowMinor: 0 },
+      dailySpending: { localDate: "2026-09-09", todayMinor: 0, sevenDayTotalMinor: 0, sevenDayAverageMinor: 0 },
       spendingGroups: [],
       transactions: [],
       snapshots: [],
@@ -35,7 +36,9 @@ vi.mock("@/features/dashboard/account-overview", () => ({ AccountOverview: () =>
 vi.mock("@/features/dashboard/recent-transactions-card", () => ({ RecentTransactionsCard: () => null }))
 vi.mock("@/features/dashboard/investments-card", () => ({ InvestmentsCard: () => null }))
 vi.mock("@/features/dashboard/spending-breakdown-card", () => ({ SpendingBreakdownCard: () => null }))
-vi.mock("@/features/dashboard/metric-card", () => ({ MetricCard: () => null }))
+vi.mock("@/features/dashboard/metric-card", () => ({
+  MetricCard: ({ label }: { label: string }) => <section>{label}</section>,
+}))
 
 describe("DashboardPage header", () => {
   it("starts with Net Worth and omits the decorative greeting and profile name", () => {
@@ -44,5 +47,7 @@ describe("DashboardPage header", () => {
     expect(screen.getByText("Total net worth")).toBeInTheDocument()
     expect(screen.queryByText(/good morning/i)).not.toBeInTheDocument()
     expect(screen.queryByText("Kar Chun")).not.toBeInTheDocument()
+    expect(screen.getByText("Today's spending")).toBeInTheDocument()
+    expect(screen.queryByText("Net cash flow")).not.toBeInTheDocument()
   })
 })

@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
 import {
@@ -23,7 +23,8 @@ import { useAuth } from "@/features/auth/auth-context"
 import { TransactionFormDialog } from "@/features/transactions/transaction-form-dialog"
 import { useCategories, useSoftDeleteTransaction, useTransactions } from "@/features/transactions/transactions-hooks"
 import { getCategoryDisplayName, getTransactionAmount, getTransactionDisplayDetails } from "@/features/transactions/transaction-logic"
-import { flattenTransactionPages, getTransactionMonthRange, type TransactionPageFilters } from "@/features/transactions/transactions-service"
+import { buildTransactionPageFilters, getInitialTransactionFilterState } from "@/features/transactions/transaction-filter-state"
+import { flattenTransactionPages } from "@/features/transactions/transactions-service"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
@@ -35,22 +36,25 @@ export function TransactionsPage() {
   const accountsQuery = useAccounts()
   const categoriesQuery = useCategories()
   const deleteMutation = useSoftDeleteTransaction()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialFilters = getInitialTransactionFilterState(searchParams, getCurrentMonthInput())
   const [editingTransaction, setEditingTransaction] = useState<TransactionRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<TransactionRecord | null>(null)
-  const [month, setMonth] = useState(getCurrentMonthInput())
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [accountFilter, setAccountFilter] = useState("all")
-  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [month, setMonth] = useState(initialFilters.month)
+  const [typeFilter, setTypeFilter] = useState(initialFilters.typeFilter)
+  const [accountFilter, setAccountFilter] = useState(initialFilters.accountFilter)
+  const [categoryFilter, setCategoryFilter] = useState(initialFilters.categoryFilter)
+  const [exactDate, setExactDate] = useState(initialFilters.exactDate)
+  const [eligibleSpending, setEligibleSpending] = useState(initialFilters.eligibleSpending)
 
-  const filters = useMemo<TransactionPageFilters>(() => {
-    const range = getTransactionMonthRange(month)
-    return {
-      ...range,
-      transactionType: typeFilter === "all" ? null : typeFilter as TransactionPageFilters["transactionType"],
-      accountId: accountFilter === "all" ? null : accountFilter,
-      categoryId: categoryFilter === "all" ? null : categoryFilter,
-    }
-  }, [accountFilter, categoryFilter, month, typeFilter])
+  const filters = useMemo(() => buildTransactionPageFilters({
+    accountFilter,
+    categoryFilter,
+    eligibleSpending,
+    exactDate,
+    month,
+    typeFilter,
+  }), [accountFilter, categoryFilter, eligibleSpending, exactDate, month, typeFilter])
   const transactionsQuery = useTransactions(filters, user?.id)
   const transactions = useMemo(
     () => flattenTransactionPages(transactionsQuery.data?.pages ?? []),
@@ -69,6 +73,19 @@ export function TransactionsPage() {
       },
       onError: (error) => toast.error(getErrorMessage(error, "The transaction could not be deleted.")),
     })
+  }
+  const clearDailySpendingFilter = () => {
+    setExactDate(null)
+    setEligibleSpending(false)
+    setSearchParams({}, { replace: true })
+  }
+  const changeMonth = (value: string) => {
+    setMonth(value)
+    clearDailySpendingFilter()
+  }
+  const changeType = (value: string) => {
+    setTypeFilter(value)
+    clearDailySpendingFilter()
   }
 
   const isLoading = transactionsQuery.isLoading || accountsQuery.isLoading || categoriesQuery.isLoading
@@ -104,8 +121,8 @@ export function TransactionsPage() {
 
       <Card className="border-0 bg-card/55 py-0 shadow-none ring-1 ring-white/4">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Input type="month" value={month} onChange={(event) => setMonth(event.target.value)} aria-label="Filter month" />
-          <FilterSelect value={typeFilter} onValueChange={setTypeFilter} placeholder="All types" items={[
+          <Input type="month" value={month} onChange={(event) => changeMonth(event.target.value)} aria-label="Filter month" />
+          <FilterSelect value={typeFilter} onValueChange={changeType} placeholder="All types" items={[
             { value: "all", label: "All types" },
             { value: "expense", label: "Expense" },
             { value: "income", label: "Income" },
@@ -113,6 +130,12 @@ export function TransactionsPage() {
           ]} />
           <FilterSelect value={accountFilter} onValueChange={setAccountFilter} placeholder="All accounts" items={accountFilterItems} />
           <FilterSelect value={categoryFilter} onValueChange={setCategoryFilter} placeholder="All categories" items={categoryFilterItems} />
+          {exactDate && eligibleSpending && (
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/8 px-3 py-2 text-xs text-muted-foreground sm:col-span-2 xl:col-span-4">
+              <span>Eligible expenses for {formatLongDate(exactDate)}</span>
+              <Button type="button" size="sm" variant="ghost" onClick={clearDailySpendingFilter}>Show full month</Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

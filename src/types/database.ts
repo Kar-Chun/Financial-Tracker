@@ -41,7 +41,9 @@ type ApplicationFunctions = Omit<
       | "p_end_date"
       | "p_start_date"
       | "p_transaction_type"
-    >
+    > & {
+      p_eligible_spending?: boolean | null
+    }
     Returns: GeneratedFunctions["get_transactions_page"]["Returns"]
   }
   record_goal_allocation: {

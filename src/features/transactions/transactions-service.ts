@@ -21,6 +21,7 @@ export type TransactionPageFilters = {
   transactionType: TransactionRecord["transaction_type"] | null
   accountId: string | null
   categoryId: string | null
+  eligibleSpending: boolean
 }
 
 export type TransactionCursor = {
@@ -77,6 +78,7 @@ export async function getTransactionsPage(input: {
     p_cursor_transaction_date: cursor?.transaction_date ?? null,
     p_cursor_created_at: cursor?.created_at ?? null,
     p_cursor_id: cursor?.id ?? null,
+    p_eligible_spending: filters.eligibleSpending,
   })
   if (error) throw error
   return parseRpcResponse(transactionPageSchema, data)

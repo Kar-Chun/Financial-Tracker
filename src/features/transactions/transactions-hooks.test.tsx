@@ -27,6 +27,7 @@ const september: TransactionPageFilters = {
   transactionType: null,
   accountId: null,
   categoryId: null,
+  eligibleSpending: false,
 }
 
 beforeEach(() => {
@@ -79,6 +80,10 @@ describe("paginated transaction query", () => {
     expect(transactionListQueryKey("user-a", september)).not.toEqual(transactionListQueryKey("user-a", {
       ...september,
       accountId: "account-id",
+    }))
+    expect(transactionListQueryKey("user-a", september)).not.toEqual(transactionListQueryKey("user-a", {
+      ...september,
+      eligibleSpending: true,
     }))
   })
 })

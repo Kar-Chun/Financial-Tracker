@@ -104,6 +104,12 @@ export const dashboardRpcSchema = z.object({
     expenses_minor: z.number().int(),
     net_cash_flow_minor: z.number().int(),
   }),
+  daily_spending: z.object({
+    local_date: z.string(),
+    today_minor: z.number().int(),
+    seven_day_total_minor: z.number().int(),
+    seven_day_average_minor: z.number().int(),
+  }),
   spending_groups: z.array(z.object({
     label: z.string(),
     amount_minor: z.number().int(),

@@ -10,6 +10,12 @@ export type DashboardData = {
     expensesMinor: number
     netCashFlowMinor: number
   }
+  dailySpending: {
+    localDate: string
+    todayMinor: number
+    sevenDayTotalMinor: number
+    sevenDayAverageMinor: number
+  }
   spendingGroups: Array<{ label: string; amountMinor: number }>
   transactions: TransactionRecord[]
   snapshots: NetWorthSnapshot[]
@@ -26,6 +32,12 @@ export async function getDashboardData() {
       incomeMinor: result.monthly.income_minor,
       expensesMinor: result.monthly.expenses_minor,
       netCashFlowMinor: result.monthly.net_cash_flow_minor,
+    },
+    dailySpending: {
+      localDate: result.daily_spending.local_date,
+      todayMinor: result.daily_spending.today_minor,
+      sevenDayTotalMinor: result.daily_spending.seven_day_total_minor,
+      sevenDayAverageMinor: result.daily_spending.seven_day_average_minor,
     },
     spendingGroups: (result.spending_groups ?? []).map((group) => ({
       label: group.label,

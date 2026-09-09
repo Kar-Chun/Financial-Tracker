@@ -50,6 +50,7 @@ describe("bounded transaction retrieval", () => {
     transactionType: "expense",
     accountId: "account-id",
     categoryId: "category-id",
+    eligibleSpending: false,
   }
 
   it("requests only the fixed first page and sends every active filter to the server", async () => {
@@ -69,6 +70,7 @@ describe("bounded transaction retrieval", () => {
       p_cursor_transaction_date: null,
       p_cursor_created_at: null,
       p_cursor_id: null,
+      p_eligible_spending: false,
     })
   })
 
@@ -87,6 +89,29 @@ describe("bounded transaction retrieval", () => {
       p_cursor_transaction_date: cursor.transaction_date,
       p_cursor_created_at: cursor.created_at,
       p_cursor_id: cursor.id,
+    }))
+  })
+
+  it("opts into the authoritative eligible-spending filter for a bounded day", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: page([transaction("today")]), error: null })
+
+    await getTransactionsPage({
+      filters: {
+        ...filters,
+        startDate: "2026-09-09",
+        endDate: "2026-09-09",
+        accountId: null,
+        categoryId: null,
+        eligibleSpending: true,
+      },
+    })
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("get_transactions_page", expect.objectContaining({
+      p_start_date: "2026-09-09",
+      p_end_date: "2026-09-09",
+      p_transaction_type: "expense",
+      p_eligible_spending: true,
+      p_limit: transactionPageSize,
     }))
   })
 

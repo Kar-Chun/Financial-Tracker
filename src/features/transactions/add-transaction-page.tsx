@@ -85,6 +85,7 @@ export function AddTransactionPage() {
           initialDate={getDateInputInTimeZone(timezone)}
           frequentCategories={frequentCategories}
           sessionKey="new-transaction"
+          userId={user?.id}
           onCancel={leavePage}
           onSaved={(input) => {
             if (user && input.transactionType === "expense") rememberExpenseAccount(user.id, input.accountId)

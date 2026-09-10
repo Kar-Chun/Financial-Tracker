@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import { getActiveTransactionCategories } from "@/features/categories/category-logic"
 import { TransactionFormFields } from "@/features/transactions/transaction-form-fields"
-import type { SaveTransactionInput } from "@/features/transactions/transactions-service"
+import type { SaveTransactionInput, TransactionNoteSuggestion } from "@/features/transactions/transactions-service"
 import { useSaveTransaction } from "@/features/transactions/transactions-hooks"
 import {
   getCategoryDisplayName,
@@ -36,6 +36,7 @@ type TransactionFormProps = {
   sessionKey: string | number | boolean
   onCancel: () => void
   onSaved?: (input: SaveTransactionInput) => void
+  userId?: string
 }
 
 export function TransactionForm({
@@ -50,6 +51,7 @@ export function TransactionForm({
   sessionKey,
   onCancel,
   onSaved,
+  userId,
 }: TransactionFormProps) {
   const mutation = useSaveTransaction()
   const {
@@ -67,6 +69,7 @@ export function TransactionForm({
   const type = useWatch({ control, name: "transactionType" })
   const accountId = useWatch({ control, name: "accountId" })
   const categoryId = useWatch({ control, name: "categoryId" })
+  const description = useWatch({ control, name: "description" })
   const selectedAccount = accounts.find((account) => account.id === accountId)
   const availableAccounts = useMemo(
     () => type === "transfer" ? accounts : accounts.filter((account) => account.account_type !== "investment"),
@@ -87,6 +90,13 @@ export function TransactionForm({
     value: category.id,
     label: `${getCategoryDisplayName(category, categories)}${category.archived_at ? " (Archived)" : ""}`,
   }))
+
+  const selectNoteSuggestion = (suggestion: TransactionNoteSuggestion) => {
+    setValue("description", suggestion.note, { shouldDirty: true, shouldValidate: true })
+    if (suggestion.category_id && activeCategories.some((category) => category.id === suggestion.category_id)) {
+      setValue("categoryId", suggestion.category_id, { shouldDirty: true, shouldValidate: true })
+    }
+  }
 
   useEffect(() => {
     reset(getDefaults(transaction, initialType, initialAccountId, initialDate))
@@ -142,13 +152,17 @@ export function TransactionForm({
         categoryItems={categoryItems}
         control={control}
         destinationAccountItems={destinationAccountItems}
+        description={description}
         entryPage={entryPage}
         errors={errors}
         frequentCategories={frequentCategories}
+        noteAutocompleteEnabled={!transaction}
+        onNoteSuggestionSelect={selectNoteSuggestion}
         register={register}
         selectedAccount={selectedAccount}
         setValue={setValue}
         type={type}
+        userId={userId}
       />
       {entryPage ? (
         <div className="sticky bottom-0 z-10 border-t border-border/25 bg-background/95 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-8 lg:bg-card/95">

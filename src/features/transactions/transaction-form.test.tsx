@@ -13,9 +13,23 @@ const mutationState = vi.hoisted(() => ({
   isPending: false,
   mutate: vi.fn(),
 }))
+const suggestionState = vi.hoisted(() => ({
+  data: [] as Array<{
+    note: string
+    category_id: string | null
+    category_name: string | null
+    category_label: string | null
+    usage_count: number
+    last_used_on: string
+    last_used_at: string
+  }>,
+  isDebouncing: false,
+  isFetching: false,
+}))
 
 vi.mock("@/features/transactions/transactions-hooks", () => ({
   useSaveTransaction: () => mutationState,
+  useTransactionNoteSuggestions: () => suggestionState,
 }))
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
@@ -25,12 +39,16 @@ const categories: Category[] = [
   category("food", "Food", "expense"),
   category("eating-out", "Eating Out", "expense", "food"),
   category("salary", "Salary", "income"),
+  { ...category("archived", "Archived", "expense"), archived_at: "2026-08-01T00:00:00Z" },
 ]
 
 beforeEach(() => {
   mutationState.isPending = false
   mutationState.mutate.mockReset()
   mutationState.mutate.mockImplementation((_input: SaveTransactionInput, options: { onSuccess: () => void }) => options.onSuccess())
+  suggestionState.data = []
+  suggestionState.isDebouncing = false
+  suggestionState.isFetching = false
 })
 
 describe("Add Transaction form", () => {
@@ -93,6 +111,43 @@ describe("Add Transaction form", () => {
     await expectSaved({ transactionType: "income", amountMinor: 100_000, categoryId: "salary", description: "Internship salary" })
   })
 
+  it("selects a past Note and active category without changing amount, account, or date", () => {
+    suggestionState.data = [noteSuggestion("Watermelon Juice", "eating-out", "Food › Eating Out")]
+    renderForm()
+    const amount = screen.getByLabelText("Amount")
+    const date = screen.getByLabelText("Date")
+    fireEvent.change(amount, { target: { value: "6.25" } })
+    fireEvent.change(date, { target: { value: "2026-08-22" } })
+    fireEvent.change(screen.getByRole("textbox", { name: "Note" }), { target: { value: "wa" } })
+
+    fireEvent.click(screen.getByRole("option", { name: /Watermelon Juice/i }))
+
+    expect(screen.getByRole("textbox", { name: "Note" })).toHaveValue("Watermelon Juice")
+    expect(screen.getByRole("button", { name: "Food › Eating Out" })).toHaveAttribute("aria-pressed", "true")
+    expect(amount).toHaveValue("6.25")
+    expect(screen.getByRole("combobox", { name: "Account" })).toHaveTextContent("Daily Spending")
+    expect(date).toHaveValue("2026-08-22")
+  })
+
+  it("fills the Note but preserves the current category when the suggested category is archived", () => {
+    suggestionState.data = [noteSuggestion("Old lunch", "archived", "Archived")]
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: "Food › Eating Out" }))
+    fireEvent.change(screen.getByRole("textbox", { name: "Note" }), { target: { value: "ol" } })
+
+    fireEvent.click(screen.getByRole("option", { name: /Old lunch/i }))
+
+    expect(screen.getByRole("textbox", { name: "Note" })).toHaveValue("Old lunch")
+    expect(screen.getByRole("button", { name: "Food › Eating Out" })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  it("keeps transaction entry usable when autocomplete returns no data", () => {
+    renderForm()
+    fireEvent.change(screen.getByRole("textbox", { name: "Note" }), { target: { value: "Caifan" } })
+    expect(screen.getByRole("textbox", { name: "Note" })).toHaveValue("Caifan")
+    expect(screen.queryByRole("listbox", { name: "Past transaction Notes" })).not.toBeInTheDocument()
+  })
+
   it("uses the shared controller for transfer fields and mutation input", async () => {
     renderForm()
     fireEvent.click(screen.getByRole("button", { name: "Transfer" }))
@@ -145,6 +200,7 @@ function renderForm({ transaction, entryPage = true }: { transaction?: Transacti
         initialDate="2026-08-23"
         frequentCategories={[categories[1]]}
         sessionKey="test"
+        userId="user-a"
         onCancel={vi.fn()}
       />
     </QueryClientProvider>,
@@ -211,5 +267,17 @@ function existingExpense(description: string): TransactionRecord {
       amount_minor: -500,
       account: { id: bank.id, name: bank.name, currency_code: "SGD", account_type: "bank" },
     }],
+  }
+}
+
+function noteSuggestion(note: string, categoryId: string | null, categoryLabel: string | null) {
+  return {
+    note,
+    category_id: categoryId,
+    category_name: categoryLabel,
+    category_label: categoryLabel,
+    usage_count: 1,
+    last_used_on: "2026-08-23",
+    last_used_at: "2026-08-23T08:00:00Z",
   }
 }

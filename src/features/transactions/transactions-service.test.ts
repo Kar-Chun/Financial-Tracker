@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   flattenTransactionPages,
+  getTransactionNoteSuggestions,
   getTransactionMonthRange,
   getTransactionsPage,
   saveTransaction,
@@ -40,6 +41,39 @@ describe("transaction description persistence", () => {
       p_transaction_type: "transfer",
       p_description: "Withdraw cash",
     }))
+  })
+})
+
+describe("transaction Note suggestions", () => {
+  const suggestions = [
+    noteSuggestion("Watermelon Juice", "drinks"),
+    noteSuggestion("Wanton Mee", "food"),
+    noteSuggestion("Watsons", "personal"),
+  ]
+
+  it("trims the query and requests exactly three lightweight suggestions", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: suggestions, error: null })
+
+    await expect(getTransactionNoteSuggestions("  wa  ", "expense")).resolves.toEqual(suggestions)
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("get_transaction_note_suggestions", {
+      p_query: "wa",
+      p_transaction_type: "expense",
+      p_limit: 3,
+    })
+  })
+
+  it("does not call Supabase before two non-whitespace characters", async () => {
+    await expect(getTransactionNoteSuggestions(" w ", "expense")).resolves.toEqual([])
+    expect(supabaseMock.rpc).not.toHaveBeenCalled()
+  })
+
+  it("rejects a malformed response containing more than three suggestions", async () => {
+    supabaseMock.rpc.mockResolvedValue({
+      data: [...suggestions, noteSuggestion("Weak fourth match", "other")],
+      error: null,
+    })
+
+    await expect(getTransactionNoteSuggestions("wa", "expense")).rejects.toBeInstanceOf(UnexpectedRpcResponseError)
   })
 })
 
@@ -174,5 +208,17 @@ function transaction(id: string) {
       category_type: "expense" as const,
     },
     entries: [],
+  }
+}
+
+function noteSuggestion(note: string, categoryId: string) {
+  return {
+    note,
+    category_id: categoryId,
+    category_name: categoryId,
+    category_label: categoryId,
+    usage_count: 1,
+    last_used_on: "2026-09-09",
+    last_used_at: "2026-09-09T08:00:00Z",
   }
 }

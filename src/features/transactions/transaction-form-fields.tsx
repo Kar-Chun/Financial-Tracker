@@ -5,8 +5,9 @@ import { Controller } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { getCategoryDisplayName, type TransactionFormValues } from "@/features/transactions/transaction-logic"
+import { TransactionNoteAutocomplete } from "@/features/transactions/transaction-note-autocomplete"
+import type { TransactionNoteSuggestion } from "@/features/transactions/transactions-service"
 import { cn } from "@/lib/utils"
 import type { AccountSummaryRow, Category, PrimaryTransactionType } from "@/types/finance"
 
@@ -22,13 +23,17 @@ type TransactionFormFieldsProps = {
   categoryItems: SelectItemModel[]
   control: Control<TransactionFormValues>
   destinationAccountItems: SelectItemModel[]
+  description: string
   entryPage: boolean
   errors: FieldErrors<TransactionFormValues>
   frequentCategories: Category[]
+  noteAutocompleteEnabled: boolean
+  onNoteSuggestionSelect: (suggestion: TransactionNoteSuggestion) => void
   register: UseFormRegister<TransactionFormValues>
   selectedAccount?: AccountSummaryRow
   setValue: UseFormSetValue<TransactionFormValues>
   type: PrimaryTransactionType
+  userId?: string
 }
 
 const transactionTypeItems = [
@@ -47,13 +52,17 @@ export function TransactionFormFields({
   categoryItems,
   control,
   destinationAccountItems,
+  description,
   entryPage,
   errors,
   frequentCategories,
+  noteAutocompleteEnabled,
+  onNoteSuggestionSelect,
   register,
   selectedAccount,
   setValue,
   type,
+  userId,
 }: TransactionFormFieldsProps) {
   const accountField = (
     <FormField label={type === "transfer" ? "From account" : "Account"} error={errors.accountId?.message}>
@@ -134,12 +143,14 @@ export function TransactionFormFields({
 
   const noteField = (
     <FormField label="Note (optional)" error={errors.description?.message}>
-      <Textarea
-        className={cn("resize-none", entryPage && "min-h-20 rounded-xl bg-input/30 text-base md:text-sm")}
-        rows={entryPage ? 2 : 3}
-        aria-label="Note"
-        placeholder="Caifan, Grab home, lunch with friends…"
-        {...register("description")}
+      <TransactionNoteAutocomplete
+        enabled={noteAutocompleteEnabled}
+        entryPage={entryPage}
+        inputValue={description}
+        onSelect={onNoteSuggestionSelect}
+        registration={register("description")}
+        transactionType={type}
+        userId={userId}
       />
     </FormField>
   )

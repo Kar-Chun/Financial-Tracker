@@ -20,6 +20,16 @@ export const frequentExpenseCategorySchema = z.object({
   last_used_on: z.string(),
 })
 
+export const transactionNoteSuggestionSchema = z.object({
+  note: z.string().min(1),
+  category_id: z.string().nullable(),
+  category_name: z.string().nullable(),
+  category_label: z.string().nullable(),
+  usage_count: z.number().int().positive(),
+  last_used_on: z.string(),
+  last_used_at: z.string(),
+})
+
 export const accountSummarySchema = z.object({
   id: z.string(),
   name: z.string(),

@@ -2,7 +2,7 @@ import { getSupabaseClient } from "@/lib/supabase"
 import { performFinancialMutation } from "@/lib/network"
 import { parseRpcResponse } from "@/lib/rpc-validation"
 import type { TransactionRecord } from "@/types/finance"
-import { categorySchema, frequentExpenseCategorySchema, transactionPageSchema } from "@/types/rpc-schemas"
+import { categorySchema, frequentExpenseCategorySchema, transactionNoteSuggestionSchema, transactionPageSchema } from "@/types/rpc-schemas"
 
 export type SaveTransactionInput = {
   id?: string
@@ -37,6 +37,26 @@ export type TransactionPage = {
 }
 
 export const transactionPageSize = 40
+export const transactionNoteSuggestionLimit = 3
+
+export type NoteSuggestionTransactionType = "expense" | "income"
+export type TransactionNoteSuggestion = {
+  note: string
+  category_id: string | null
+  category_name: string | null
+  category_label: string | null
+  usage_count: number
+  last_used_on: string
+  last_used_at: string
+}
+
+export function normalizeNoteSuggestionQuery(query: string) {
+  return query.trim().replace(/\s+/gu, " ")
+}
+
+export function isNoteSuggestionQueryEligible(query: string) {
+  return normalizeNoteSuggestionQuery(query).replace(/\s/gu, "").length >= 2
+}
 
 export function getTransactionMonthRange(month: string) {
   const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(month)
@@ -99,6 +119,22 @@ export async function getFrequentExpenseCategories() {
   })
   if (error) throw error
   return parseRpcResponse(frequentExpenseCategorySchema.array(), data ?? [])
+}
+
+export async function getTransactionNoteSuggestions(
+  query: string,
+  transactionType: NoteSuggestionTransactionType,
+): Promise<TransactionNoteSuggestion[]> {
+  const normalizedQuery = normalizeNoteSuggestionQuery(query)
+  if (!isNoteSuggestionQueryEligible(normalizedQuery)) return []
+
+  const { data, error } = await getSupabaseClient().rpc("get_transaction_note_suggestions", {
+    p_query: normalizedQuery,
+    p_transaction_type: transactionType,
+    p_limit: transactionNoteSuggestionLimit,
+  })
+  if (error) throw error
+  return parseRpcResponse(transactionNoteSuggestionSchema.array().max(transactionNoteSuggestionLimit), data ?? [])
 }
 
 export async function saveTransaction(input: SaveTransactionInput) {

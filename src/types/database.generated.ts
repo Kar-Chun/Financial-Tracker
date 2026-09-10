@@ -1,4 +1,7 @@
-﻿export type Json =
+﻿Need to install the following packages:
+supabase@2.117.0
+Ok to proceed? (y) 
+export type Json =
   | string
   | number
   | boolean
@@ -810,6 +813,19 @@ export type Database = {
           unrealized_gain_minor: number
         }[]
       }
+      get_eligible_expense_facts: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          amount_minor: number
+          category_id: string
+          category_name: string
+          category_parent_id: string
+          root_category_id: string
+          root_category_name: string
+          transaction_date: string
+          transaction_id: string
+        }[]
+      }
       get_frequent_expense_categories: {
         Args: { p_days?: number; p_limit?: number }
         Returns: {
@@ -838,6 +854,18 @@ export type Database = {
         }
         Returns: Json
       }
+      get_transaction_note_suggestions: {
+        Args: { p_limit?: number; p_query: string; p_transaction_type: string }
+        Returns: {
+          category_id: string
+          category_label: string
+          category_name: string
+          last_used_at: string
+          last_used_on: string
+          note: string
+          usage_count: number
+        }[]
+      }
       get_transactions_page: {
         Args: {
           p_account_id?: string
@@ -845,6 +873,7 @@ export type Database = {
           p_cursor_created_at?: string
           p_cursor_id?: string
           p_cursor_transaction_date?: string
+          p_eligible_spending?: boolean
           p_end_date?: string
           p_limit?: number
           p_start_date?: string

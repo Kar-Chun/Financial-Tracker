@@ -19,6 +19,7 @@ type InvestmentTradeArgs = NullableOptional<
 
 type ApplicationFunctions = Omit<
   GeneratedFunctions,
+  | "get_transaction_note_suggestions"
   | "get_transactions_page"
   | "record_goal_allocation"
   | "record_investment_trade"
@@ -30,6 +31,22 @@ type ApplicationFunctions = Omit<
   | "upsert_manual_fx_rate"
   | "upsert_savings_goal"
 > & {
+  get_transaction_note_suggestions: {
+    Args: {
+      p_query: string
+      p_transaction_type: string
+      p_limit?: number | null
+    }
+    Returns: Array<{
+      note: string
+      category_id: string | null
+      category_name: string | null
+      category_label: string | null
+      usage_count: number
+      last_used_on: string
+      last_used_at: string
+    }>
+  }
   get_transactions_page: {
     Args: NullableOptional<
       GeneratedFunctions["get_transactions_page"]["Args"],

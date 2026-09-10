@@ -42,6 +42,7 @@ export function TransactionFormDialog({
           categories={categories}
           transaction={transaction}
           sessionKey={open}
+          userId={user?.id}
           onCancel={() => onOpenChange(false)}
           onSaved={(input) => {
             if (user && input.transactionType === "expense") rememberExpenseAccount(user.id, input.accountId)

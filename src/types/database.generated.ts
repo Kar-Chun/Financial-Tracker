@@ -1,6 +1,6 @@
-﻿Need to install the following packages:
-supabase@2.117.0
-Ok to proceed? (y) 
+﻿// Need to install the following packages:
+// supabase@2.117.0
+// Ok to proceed? (y) 
 export type Json =
   | string
   | number

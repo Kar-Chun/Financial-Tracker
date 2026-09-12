@@ -1,3 +1,5 @@
+import { FilterPill } from "@/components/shared/finance-ui"
+
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight } from "lucide-react"
 import type { Control, FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form"
 import { Controller } from "react-hook-form"
@@ -68,7 +70,7 @@ export function TransactionFormFields({
     <FormField label={type === "transfer" ? "From account" : "Account"} error={errors.accountId?.message}>
       <Controller name="accountId" control={control} render={({ field }) => (
         <Select items={accountItems} value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger aria-label={type === "transfer" ? "From account" : "Account"} className={cn("w-full", entryPage && "h-12 rounded-xl text-base")}>
+          <SelectTrigger aria-label={type === "transfer" ? "From account" : "Account"} className={cn("w-full min-w-0 [&_[data-slot=select-value]]:truncate", entryPage && "h-12 rounded-xl text-base")}>
             <SelectValue placeholder="Select account" />
           </SelectTrigger>
           <SelectContent>
@@ -88,26 +90,15 @@ export function TransactionFormFields({
       {entryPage && type === "expense" && frequentCategories.length > 0 && (
         <div className="mb-2 flex gap-2 overflow-x-auto pb-1" aria-label="Frequently used expense categories">
           {frequentCategories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              aria-pressed={categoryId === category.id}
-              onClick={() => setValue("categoryId", category.id, { shouldValidate: true })}
-              className={cn(
-                "min-h-10 shrink-0 rounded-full px-3 text-sm font-medium ring-1 transition-colors",
-                categoryId === category.id
-                  ? "bg-primary text-primary-foreground ring-primary"
-                  : "bg-surface text-muted-foreground ring-border/30 hover:text-foreground",
-              )}
-            >
+            <FilterPill key={category.id} active={categoryId === category.id} onClick={() => setValue("categoryId", category.id, { shouldValidate: true })}>
               {getCategoryDisplayName(category, categories)}
-            </button>
+            </FilterPill>
           ))}
         </div>
       )}
       <Controller name="categoryId" control={control} render={({ field }) => (
         <Select items={categoryItems} value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger aria-label="Category" className={cn("w-full", entryPage && "h-12 rounded-xl text-base")}>
+          <SelectTrigger aria-label="Category" className={cn("w-full min-w-0 [&_[data-slot=select-value]]:truncate", entryPage && "h-12 rounded-xl text-base")}>
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
@@ -126,7 +117,7 @@ export function TransactionFormFields({
     <FormField label="To account" error={errors.destinationAccountId?.message}>
       <Controller name="destinationAccountId" control={control} render={({ field }) => (
         <Select items={destinationAccountItems} value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger aria-label="To account" className={cn("w-full", entryPage && "h-12 rounded-xl text-base")}>
+          <SelectTrigger aria-label="To account" className={cn("w-full min-w-0 [&_[data-slot=select-value]]:truncate", entryPage && "h-12 rounded-xl text-base")}>
             <SelectValue placeholder="Select destination" />
           </SelectTrigger>
           <SelectContent>
@@ -168,7 +159,7 @@ export function TransactionFormFields({
   )
 
   return (
-    <div className={cn("space-y-4", entryPage && "flex-1 space-y-5 px-5 py-6 sm:px-8")}>
+    <div className={cn("form-fields", entryPage && "flex-1 px-5 py-5 sm:px-8")}>
       <TransactionTypeField control={control} entryPage={entryPage} errors={errors} setValue={setValue} type={type} />
       <FormField label={`Amount${selectedAccount ? ` (${selectedAccount.currency_code})` : ""}`} error={errors.amount?.message}>
         <Input
@@ -183,9 +174,8 @@ export function TransactionFormFields({
         />
       </FormField>
       {entryPage
-        ? type === "transfer" ? <>{accountField}{destinationField}</> : <>{categoryField}{accountField}</>
-        : <>{accountField}{destinationField}{categoryField}</>}
-      {entryPage ? <>{noteField}{dateField}</> : <>{dateField}{noteField}</>}
+        ? <>{noteField}{type === "transfer" ? <>{accountField}{destinationField}</> : <>{categoryField}{accountField}</>}{dateField}</>
+        : <>{accountField}{destinationField}{categoryField}{dateField}{noteField}</>}
     </div>
   )
 }
@@ -207,7 +197,7 @@ function TransactionTypeField({
             aria-pressed={type === item.value}
             onClick={() => setValue("transactionType", item.value, { shouldValidate: true })}
             className={cn(
-              "flex min-h-12 items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-medium transition-colors ring-1",
+              "flex min-h-11 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors ring-1",
               type === item.value
                 ? "bg-primary text-primary-foreground ring-primary"
                 : "bg-surface text-muted-foreground ring-border/30 hover:text-foreground",
@@ -236,7 +226,7 @@ function TransactionTypeField({
 
 function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+    <div className="form-field">
       <Label>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}

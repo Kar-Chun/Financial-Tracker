@@ -9,17 +9,17 @@ export function PwaInstallCard() {
   const { canInstall, install, isIos, isStandalone } = usePwaInstall()
 
   return (
-    <Card>
-      <CardHeader className="border-b border-border/25">
+    <Card className="settings-section rounded-none bg-transparent ring-0">
+      <CardHeader className="px-0">
         <CardTitle className="flex items-center gap-2"><Smartphone className="size-4" /> Install on this device</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0">
         {isStandalone ? (
-          <p className="text-sm text-muted-foreground">Finance Tracker is running as an installed app.</p>
+          <p className="text-sm text-muted-foreground">Ledgerly is running as an installed app.</p>
         ) : canInstall ? (
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">Install Finance Tracker for quicker home-screen access.</p>
-            <Button onClick={() => void install().then((installed) => installed && toast.success("Finance Tracker installed."))}><Download /> Install app</Button>
+            <p className="text-sm text-muted-foreground">Install Ledgerly for quicker home-screen access.</p>
+            <Button onClick={() => void install().then((installed) => installed && toast.success("Ledgerly installed."))}><Download /> Install app</Button>
           </div>
         ) : isIos ? (
           <div className="flex gap-3 text-sm text-muted-foreground">

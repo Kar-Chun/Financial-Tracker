@@ -129,7 +129,7 @@
     @apply rounded-2xl bg-card ring-1 ring-border/35;
   }
 
-  /* Core finance read screens; entry forms retain their own styling. */
+  /* Shared read-screen and form surfaces; no accounting or layout ownership. */
   .insight-surface {
     @apply rounded-xl border border-border/35 bg-card/75;
   }
@@ -140,6 +140,23 @@
 
   .ledger-interactive {
     @apply rounded-lg transition-colors hover:bg-surface-elevated/60 focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none;
+  }
+
+  .form-fields {
+    @apply min-w-0 space-y-5;
+  }
+
+  .form-field {
+    @apply min-w-0 space-y-2;
+  }
+
+  .value-hero {
+    @apply mt-3 break-words font-serif text-[clamp(2rem,9vw,3.5rem)] leading-tight tracking-tight tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .settings-section {
+    @apply min-w-0 border-t border-border/30 pt-5;
   }
 
   input[data-slot="input"]:is([type="date"], [type="month"]) {
@@ -183,7 +200,9 @@
     padding-bottom: 0.625rem;
   }
 
-  [data-slot="dialog-content"] {
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-slot="sheet-content"] {
     max-height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem);
     overflow-y: auto;
   }

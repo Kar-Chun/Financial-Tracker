@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { describe, expect, it, vi } from "vitest"
 
@@ -9,6 +9,26 @@ import { MobileBottomNavigation, MobileQuickAddButton } from "@/components/layou
 vi.mock("@/components/layout/user-menu", () => ({ UserMenu: () => <div>User menu</div> }))
 
 describe("mobile bottom navigation", () => {
+  it("groups real More destinations and closes the sheet after navigation", () => {
+    render(<MemoryRouter initialEntries={["/budgets"]}>
+      <MobileBottomNavigation />
+      <Routes>
+        <Route path="/budgets" element={<p>Budget page</p>} />
+        <Route path="/goals" element={<p>Goals destination</p>} />
+      </Routes>
+    </MemoryRouter>)
+    expect(screen.getByRole("button", { name: "More navigation options" })).toHaveAttribute("aria-current", "page")
+    fireEvent.click(screen.getByRole("button", { name: "More navigation options" }))
+    const navigation = within(screen.getByRole("navigation", { name: "More navigation" }))
+    expect(navigation.getAllByRole("link")).toHaveLength(6)
+    for (const name of ["Plan", "Money", "Insights", "Account"]) {
+      expect(navigation.getByRole("heading", { name })).toBeInTheDocument()
+    }
+    fireEvent.click(navigation.getByRole("link", { name: "Savings Goals" }))
+    expect(screen.getByText("Goals destination")).toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: "More navigation" })).not.toBeInTheDocument()
+  })
+
   it("contains four balanced destinations without treating Quick Add as navigation", () => {
     render(<MemoryRouter initialEntries={["/dashboard"]}><MobileBottomNavigation /></MemoryRouter>)
 

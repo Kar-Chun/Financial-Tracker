@@ -1,3 +1,5 @@
+import { PageTitle } from "@/components/shared/finance-ui"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle, Settings } from "lucide-react"
 import { useEffect } from "react"
@@ -63,36 +65,32 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <p className="eyebrow">Workspace</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Manage your profile preferences and transaction categories.</p>
-      </header>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header><PageTitle title="Settings" description="Profile preferences and transaction categories." /></header>
 
       {profileQuery.isLoading ? <Skeleton className="h-96 max-w-2xl rounded-xl" /> : profileQuery.isError ? (
         <Card className="border-destructive/30"><CardContent className="py-10">Profile settings could not be loaded.</CardContent></Card>
       ) : (
-        <Card className="max-w-2xl border-0 bg-card/65 shadow-none ring-1 ring-white/4">
-          <CardHeader className="border-b border-border/25">
+        <Card className="rounded-none bg-transparent ring-0">
+          <CardHeader className="px-0">
             <CardTitle className="flex items-center gap-2"><Settings className="size-4" /> Profile</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-              <div className="space-y-2">
-                <Label>Display name</Label>
-                <Input {...register("displayName")} />
+          <CardContent className="px-0">
+            <form className="form-fields" onSubmit={handleSubmit(onSubmit)}>
+              <div className="form-field">
+                <Label htmlFor="profile-display-name">Display name</Label>
+                <Input id="profile-display-name" {...register("displayName")} />
                 {errors.displayName && <p className="text-xs text-destructive">{errors.displayName.message}</p>}
               </div>
-              <div className="space-y-2">
-                <Label>Base currency</Label>
-                <Input value={profileQuery.data?.base_currency ?? "SGD"} disabled />
+              <div className="form-field">
+                <Label htmlFor="profile-currency">Base currency</Label>
+                <Input id="profile-currency" value={profileQuery.data?.base_currency ?? "SGD"} disabled />
                 <p className="text-xs leading-5 text-muted-foreground">
                   Base currency is locked in V1 so historical snapshots and manual investment valuations cannot be silently invalidated.
                 </p>
               </div>
-              <div className="space-y-2">
-                <Label>Timezone</Label>
+              <div className="form-field">
+                <Label htmlFor="profile-timezone">Timezone</Label>
                 <Controller
                   name="timezone"
                   control={control}
@@ -102,7 +100,7 @@ export function SettingsPage() {
                       value={field.value}
                       onValueChange={field.onChange}
                     >
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectTrigger id="profile-timezone" className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {timezones.map((timezone) => <SelectItem key={timezone} value={timezone}>{timezone}</SelectItem>)}
                       </SelectContent>

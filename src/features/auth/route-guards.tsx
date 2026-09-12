@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/auth-context"
 
 function AuthLoadingScreen() {
   return (
-    <main className="grid min-h-svh place-items-center bg-muted/30">
+    <main className="grid min-h-svh place-items-center bg-background">
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
         <LoaderCircle className="size-5 animate-spin" />
         Securing your workspace…

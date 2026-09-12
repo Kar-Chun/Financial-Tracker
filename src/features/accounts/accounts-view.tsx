@@ -1,3 +1,6 @@
+import { buttonVariants } from "@/components/ui/button-variants"
+import { PageTitle } from "@/components/shared/finance-ui"
+
 import { Building2, Landmark, Pencil, Plus, WalletCards } from "lucide-react"
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
@@ -60,13 +63,9 @@ export function AccountsView({
   }
 
   return (
-    <div className="space-y-7">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Your money</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-        </div>
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <PageTitle title={title} description={description} />
         <Button onClick={openCreate}><Plus /> Add account</Button>
       </header>
 
@@ -78,21 +77,21 @@ export function AccountsView({
         <ErrorState onRetry={() => accountsQuery.refetch()} />
       ) : accounts.length === 0 ? (
         <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
-          <CardContent className="flex min-h-72 flex-col items-center justify-center text-center">
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><WalletCards className="size-7" /></span>
+          <CardContent className="flex min-h-48 flex-col items-center justify-center text-center">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><WalletCards className="size-5" /></span>
             <h2 className="mt-5 text-lg font-semibold">No {filterType ? "investment " : ""}accounts yet</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">Add an account to start tracking balances and financial activity.</p>
             <Button className="mt-5" onClick={openCreate}><Plus /> Add account</Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-7">
+        <div className="space-y-5">
           {accountGroups.map((group) => {
             const headingId = `account-group-${group.label.replaceAll(" ", "-").toLowerCase()}`
             return (
               <section key={group.label} aria-labelledby={headingId}>
                 <h2 id={headingId} className="section-heading mb-3 px-1">{group.label}</h2>
-                <div className="overflow-hidden rounded-2xl bg-card/70 ring-1 ring-white/4">
+                <div className="border-y border-border/30">
                   {group.accounts.map((account, index) => (
                     <AccountRow
                       key={account.id}
@@ -116,7 +115,7 @@ export function AccountsView({
             <h2 id="archived-accounts-heading" className="section-heading">Archived accounts</h2>
             <span className="text-xs text-muted-foreground">{archivedAccounts.length} {archivedAccounts.length === 1 ? "account" : "accounts"}</span>
           </div>
-          <div className="overflow-hidden rounded-2xl bg-card/45 ring-1 ring-white/4">
+          <div className="border-y border-border/20">
             {archivedAccounts.map((account, index) => (
               <ArchivedAccountRow key={account.id} account={account} bordered={index > 0} baseCurrency={baseCurrency} />
             ))}
@@ -161,8 +160,8 @@ function AccountRow({
     : formatCurrency(account.current_balance_minor ?? account.opening_balance_minor, account.currency_code)
 
   return (
-    <div className={cn("grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-4 sm:px-5", bordered && "border-t border-border/25")}>
-      <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <div className={cn("grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3", bordered && "border-t border-border/25")}>
+      <span className="flex size-10 items-center justify-center rounded-lg bg-surface-elevated text-brand-secondary">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
@@ -172,7 +171,7 @@ function AccountRow({
         </p>
       </div>
       <div className="text-right">
-        <p className="max-w-[45vw] whitespace-nowrap text-[clamp(0.85rem,3.8vw,1.125rem)] font-semibold tracking-tight tabular-nums sm:max-w-none">{primaryValue}</p>
+        <p className="max-w-[40vw] break-words [overflow-wrap:anywhere] text-[clamp(0.85rem,3.8vw,1.125rem)] font-semibold tracking-tight tabular-nums sm:max-w-none">{primaryValue}</p>
         <p className="text-[0.68rem] text-muted-foreground">{isInvestment ? "Base value" : "Calculated"}</p>
       </div>
       <div className="col-start-2 col-end-4 min-w-0">
@@ -196,7 +195,7 @@ function AccountRow({
         )}
         <div className="mt-3 flex flex-wrap gap-2">
           {isInvestment && !isDetailed && <Button size="sm" onClick={onValue}>Update value</Button>}
-          {isDetailed && <Button size="sm" render={<Link to={`/investments/${account.id}`} />}>View portfolio</Button>}
+          {isDetailed && <Link to={`/investments/${account.id}`} data-slot="button" className={buttonVariants({ size: "sm" })}>View portfolio</Link>}
           <Button size="sm" variant="outline" onClick={onEdit}><Pencil /> Edit</Button>
           <AccountLifecycleActions account={account} baseCurrency={baseCurrency} />
         </div>
@@ -218,8 +217,8 @@ function ArchivedAccountRow({
   const detailed = account.account_type === "investment" && account.investment_tracking_mode === "detailed"
 
   return (
-    <article className={cn("grid grid-cols-[auto_minmax(0,1fr)] gap-3 px-4 py-4 sm:px-5", bordered && "border-t border-border/25")}>
-      <span className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+    <article className={cn("grid grid-cols-[auto_minmax(0,1fr)] gap-3 py-3", bordered && "border-t border-border/25")}>
+      <span className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
@@ -229,7 +228,7 @@ function ArchivedAccountRow({
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {detailed && (
-            <Button size="sm" variant="ghost" render={<Link to={`/investments/${account.id}`} />}>View history</Button>
+            <Link to={`/investments/${account.id}`} data-slot="button" className={buttonVariants({ size: "sm", variant: "ghost" })}>View history</Link>
           )}
           <AccountLifecycleActions account={account} archived baseCurrency={baseCurrency} />
         </div>

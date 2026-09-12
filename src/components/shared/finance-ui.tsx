@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 export function PageTitle({ title, description, eyebrow }: { title: string; description?: string; eyebrow?: string }) {
   return <div className="min-w-0">
     {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-    <h1 className="font-serif text-[2rem] leading-tight tracking-tight sm:text-4xl">{title}</h1>
+    <h1 className="break-words font-serif text-[2rem] leading-tight tracking-tight [overflow-wrap:anywhere] sm:text-4xl">{title}</h1>
     {description && <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{description}</p>}
   </div>
 }
@@ -15,6 +15,14 @@ export function SectionHeader({ id, title, href, linkLabel = "View all" }: { id:
   return <div className="flex min-h-11 items-center justify-between gap-3">
     <h2 id={id} className="section-heading">{title}</h2>
     {href && <Link to={href} className="inline-flex min-h-11 shrink-0 items-center text-xs font-medium text-brand-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-ring">{linkLabel}</Link>}
+  </div>
+}
+
+/** Already-formatted values only: financial calculations remain in the caller/read model. */
+export function ValueSummary({ label, value, tone }: { label: string; value: string; tone?: "positive" | "negative" }) {
+  return <div className="insight-surface min-w-0 p-3.5">
+    <p className="text-xs leading-5 text-muted-foreground">{label}</p>
+    <p className={cn("mt-1 break-words text-base font-semibold tabular-nums [overflow-wrap:anywhere]", tone === "positive" && "text-positive", tone === "negative" && "text-negative")}>{value}</p>
   </div>
 }
 

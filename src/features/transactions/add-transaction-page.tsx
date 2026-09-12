@@ -1,8 +1,10 @@
+import { buttonVariants } from "@/components/ui/button-variants"
+import { PageTitle } from "@/components/shared/finance-ui"
+
 import { ArrowLeft, ReceiptText } from "lucide-react"
 import { useMemo } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAccounts } from "@/features/accounts/accounts-hooks"
 import { useAuth } from "@/features/auth/auth-context"
@@ -48,16 +50,12 @@ export function AddTransactionPage() {
   const leavePage = () => navigate(returnTo, { replace: true })
 
   return (
-    <section className="mx-auto flex min-h-svh w-full max-w-2xl flex-col bg-background lg:min-h-[calc(100vh-4.5rem)] lg:rounded-3xl lg:bg-card/45 lg:ring-1 lg:ring-white/5">
-      <header className="sticky top-0 z-20 grid min-h-18 grid-cols-[3rem_1fr_3rem] items-center border-b border-border/20 bg-background/95 pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:static lg:bg-transparent lg:pt-0">
-        <Button variant="ghost" size="icon" aria-label="Back to previous page" render={<Link to={returnTo} replace />}>
+    <section className="mx-auto flex min-h-svh w-full max-w-2xl flex-col bg-background lg:min-h-[calc(100vh-4.5rem)] ">
+      <header className="sticky top-0 z-20 grid min-h-18 grid-cols-[3rem_1fr] items-center border-b border-border/20 bg-background/95 pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:static lg:bg-transparent lg:pt-0">
+        <Link to={returnTo} replace aria-label="Back to previous page" data-slot="button" className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ArrowLeft className="size-5" />
-        </Button>
-        <div className="text-center">
-          <p className="eyebrow">New</p>
-          <h1 className="text-lg font-semibold tracking-tight">Add Transaction</h1>
-        </div>
-        <span aria-hidden="true" />
+        </Link>
+        <div className="min-w-0 py-4"><PageTitle title="Add Transaction" /></div>
       </header>
 
       {isLoading ? (
@@ -74,7 +72,7 @@ export function AddTransactionPage() {
         <PageMessage
           title="Add an account first"
           description="At least one active account is required before recording a transaction."
-          action={<Button render={<Link to="/accounts" />}>Go to accounts</Button>}
+          action={<Link to="/accounts" data-slot="button" className={buttonVariants({  })}>Go to accounts</Link>}
         />
       ) : (
         <TransactionForm
@@ -107,7 +105,7 @@ function getReturnPath(state: unknown) {
 
 function PageMessage({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
   return (
-    <div className="grid flex-1 place-items-center px-6 py-16 text-center">
+    <div className="grid flex-1 content-start place-items-center px-6 py-8 text-center">
       <div className="max-w-sm">
         <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <ReceiptText className="size-6" />

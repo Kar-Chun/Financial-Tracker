@@ -61,12 +61,12 @@ export function AuthPage({ mode }: AuthPageProps) {
   if (confirmationEmail) {
     return (
       <AuthFrame>
-        <Card className="shadow-lg shadow-slate-950/5">
+        <Card className="rounded-none bg-transparent ring-0">
           <CardContent className="py-10 text-center">
-            <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <span className="mx-auto flex size-12 items-center justify-center rounded-lg bg-surface-elevated text-brand-secondary">
               <MailCheck className="size-6" />
             </span>
-            <h1 className="mt-5 text-xl font-semibold">Check your email</h1>
+            <h1 className="mt-5 font-serif text-3xl">Check your email</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               We sent a confirmation link to <strong>{confirmationEmail}</strong>.
               Confirm your account, then return here to log in.
@@ -82,12 +82,12 @@ export function AuthPage({ mode }: AuthPageProps) {
 
   return (
     <AuthFrame>
-      <Card className="shadow-lg shadow-slate-950/5">
+      <Card className="rounded-none bg-transparent ring-0">
         <CardHeader className="text-center">
-          <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg bg-surface-elevated text-brand-secondary">
             <LockKeyhole className="size-5" />
           </span>
-          <h1 className="font-heading text-xl font-medium leading-snug">
+          <h1 className="font-serif text-3xl leading-tight">
             {isLogin ? "Welcome back" : "Create your workspace"}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -97,7 +97,7 @@ export function AuthPage({ mode }: AuthPageProps) {
           </p>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit((values) => mutation.mutate(values))}>
+          <form className="form-fields" onSubmit={handleSubmit((values) => mutation.mutate(values))}>
             {!isLogin && (
               <FormField label="Display name" error={errors.displayName?.message}>
                 <Input
@@ -169,15 +169,15 @@ export function SignupPage() {
 
 function AuthFrame({ children }: { children: ReactNode }) {
   return (
-    <main className="grid min-h-svh place-items-center bg-muted/40 px-4 py-10">
+    <main className="grid min-h-svh content-start justify-items-center bg-background pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:content-center">
       <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
+        <div className="mb-6 flex justify-center">
           <AppLogo />
         </div>
         {children}
         <Link
           to="/"
-          className="mx-auto mt-6 flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="mx-auto mt-4 flex min-h-11 w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" /> Back home
         </Link>
@@ -197,7 +197,7 @@ function FormField({
 }) {
   const inputId = label.toLowerCase().replaceAll(" ", "-")
   return (
-    <div className="space-y-2">
+    <div className="form-field">
       <Label htmlFor={inputId}>{label}</Label>
       {isValidElement<{ id?: string }>(children)
         ? cloneElement(children, { id: inputId })

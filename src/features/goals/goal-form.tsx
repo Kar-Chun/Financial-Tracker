@@ -46,7 +46,7 @@ export function GoalForm({ currencyCode, goal, entryPage = false, onCancel, onSa
     })
   }
 
-  const fields = <div className={entryPage ? "flex-1 space-y-5 px-5 py-6 sm:px-8" : "space-y-4"}>
+  const fields = <div className={entryPage ? "form-fields flex-1 px-5 py-5 sm:px-8" : "space-y-4"}>
     <Field label="Goal name" error={errors.name?.message}><Input className={entryPage ? "h-12 rounded-xl text-base md:text-sm" : undefined} placeholder="Japan Trip" autoComplete="off" {...register("name")} /></Field>
     <Field label={`Target amount (${currencyCode})`} error={errors.targetAmount?.message}><Input className={entryPage ? "h-12 rounded-xl text-base md:text-sm" : undefined} inputMode="decimal" autoComplete="off" placeholder="3000.00" {...register("targetAmount")} /></Field>
     <Field label="Target date (optional)" error={errors.targetDate?.message}><Input data-mobile-date className={entryPage ? "block h-12 w-full min-w-0 max-w-full rounded-xl text-base md:text-sm" : "block w-full min-w-0 max-w-full"} type="date" {...register("targetDate")} /></Field>
@@ -60,5 +60,5 @@ export function GoalForm({ currencyCode, goal, entryPage = false, onCancel, onSa
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
-  return <div className="space-y-2"><Label>{label}</Label>{children}{error && <p className="text-xs text-destructive">{error}</p>}</div>
+  return <div className="form-field"><Label>{label}</Label>{children}{error && <p className="text-xs text-destructive">{error}</p>}</div>
 }

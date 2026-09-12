@@ -13,7 +13,7 @@ const highlights = [
 
 export function WelcomePage() {
   return (
-    <main className="min-h-svh bg-[radial-gradient(circle_at_top_right,oklch(0.28_0.08_254),transparent_38%)] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]">
+    <main className="min-h-svh bg-background pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]">
       <div className="mx-auto flex min-h-svh max-w-6xl flex-col">
         <header className="flex items-center justify-between pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
           <AppLogo />
@@ -22,12 +22,12 @@ export function WelcomePage() {
           </Link>
         </header>
 
-        <section className="grid flex-1 content-start gap-10 pt-8 pb-6 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,0.72fr)] lg:content-center lg:items-center lg:gap-16 lg:py-16">
+        <section className="grid flex-1 content-start gap-7 pt-6 pb-6 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,0.72fr)] lg:content-center lg:items-center lg:gap-16 lg:py-16">
           <div className="max-w-2xl">
-            <span className="inline-flex rounded-full border bg-background/80 px-3 py-1 text-xs font-semibold text-primary shadow-xs">
+            <span className="section-heading">
               Secure personal finance tracking
             </span>
-            <h1 className="mt-5 text-[clamp(2.5rem,11vw,4.5rem)] leading-[1.02] font-semibold tracking-[-0.045em] text-balance">
+            <h1 className="mt-5 font-serif text-[clamp(2.25rem,10vw,4rem)] leading-[1.08] tracking-tight text-balance">
               Your finances, clear and connected.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
@@ -47,10 +47,10 @@ export function WelcomePage() {
             </div>
           </div>
 
-          <div className="grid gap-2.5 rounded-2xl bg-card/55 p-3 ring-1 ring-white/5 sm:grid-cols-3 lg:grid-cols-1 lg:p-4" aria-label="Ledgerly principles">
+          <div className="grid gap-0 border-y border-border/30 sm:grid-cols-3 lg:grid-cols-1" aria-label="Ledgerly principles">
             {highlights.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex min-h-16 items-center gap-3 rounded-xl bg-background/35 px-4 py-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+              <div key={label} className="flex min-h-16 items-center gap-3 border-b border-border/20 px-1 py-3 last:border-0">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-brand-secondary">
                   <Icon className="size-4" aria-hidden="true" />
                 </span>
                 <p className="text-sm font-medium text-foreground/90">{label}</p>

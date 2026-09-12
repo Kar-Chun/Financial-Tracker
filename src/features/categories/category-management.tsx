@@ -1,3 +1,5 @@
+import { FilterPill } from "@/components/shared/finance-ui"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Archive, ArchiveRestore, LoaderCircle, Pencil, Plus, Tags } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -32,7 +34,6 @@ import {
 import { useCategories } from "@/features/transactions/transactions-hooks"
 import { getCategoryDisplayName } from "@/features/transactions/transaction-logic"
 import { getErrorMessage } from "@/lib/errors"
-import { cn } from "@/lib/utils"
 import type { Category } from "@/types/finance"
 
 type CategoryDialogState = {
@@ -72,21 +73,16 @@ export function CategoryManagement() {
   }
 
   return (
-    <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
-      <CardHeader className="border-b border-border/25">
+    <Card className="settings-section rounded-none bg-transparent ring-0">
+      <CardHeader className="px-0">
         <CardTitle className="flex items-center gap-2"><Tags className="size-4" /> Categories</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="flex rounded-xl bg-surface p-1 ring-1 ring-border/25">
+      <CardContent className="space-y-4 px-0">
+        <div className="flex flex-wrap gap-2">
           {(["expense", "income"] as const).map((categoryType) => (
-            <button
-              key={categoryType}
-              type="button"
-              onClick={() => setType(categoryType)}
-              className={cn("flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize text-muted-foreground transition-colors", type === categoryType && "bg-primary text-primary-foreground")}
-            >
-              {categoryType} Categories
-            </button>
+            <FilterPill key={categoryType} active={type === categoryType} onClick={() => setType(categoryType)}>
+              {categoryType === "expense" ? "Expense" : "Income"} Categories
+            </FilterPill>
           ))}
         </div>
 
@@ -94,7 +90,7 @@ export function CategoryManagement() {
           <p className="rounded-lg border border-destructive/30 p-4 text-sm">Categories could not be loaded.</p>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="font-medium capitalize">{type} categories</h3>
                 <p className="text-xs text-muted-foreground">One parent level keeps transaction entry quick and predictable.</p>
@@ -125,7 +121,7 @@ export function CategoryManagement() {
                 <p className="mt-1 text-xs text-muted-foreground">Archived categories remain attached to historical transactions.</p>
                 <div className="mt-3 space-y-2">
                   {archived.sort(byName).map((category) => (
-                    <div key={category.id} className="flex items-center justify-between gap-4 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-border/20">
+                    <div key={category.id} className="flex items-center justify-between gap-4 border-b border-border/20 px-1 py-2.5">
                       <span className="text-sm text-muted-foreground">{getCategoryDisplayName(category, categories)}</span>
                       <Button variant="ghost" size="sm" disabled={archiveMutation.isPending} onClick={() => changeArchivedState(category, false)}><ArchiveRestore /> Restore</Button>
                     </div>
@@ -165,9 +161,9 @@ function CategoryRow({ category, subcategories, onAddChild, onRename, onArchive 
   onArchive: (category: Category) => void
 }) {
   return (
-    <div className="rounded-xl bg-surface/80 ring-1 ring-border/20">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
-        <span className="font-medium">{category.name}</span>
+    <div className="border-b border-border/30">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-2.5">
+        <span className="min-w-0 break-words font-medium">{category.name}</span>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={onAddChild}><Plus /> Subcategory</Button>
           <Button variant="ghost" size="icon-sm" aria-label={`Rename ${category.name}`} onClick={() => onRename(category)}><Pencil /></Button>
@@ -178,7 +174,7 @@ function CategoryRow({ category, subcategories, onAddChild, onRename, onArchive 
         <div className="border-t border-border/25 px-3 py-2">
           {subcategories.map((child) => (
             <div key={child.id} className="flex items-center justify-between gap-4 border-l border-primary/30 py-2 pl-4">
-              <span className="text-sm text-muted-foreground">{child.name}</span>
+              <span className="min-w-0 flex-1 break-words text-sm text-muted-foreground">{child.name}</span>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon-sm" aria-label={`Rename ${child.name}`} onClick={() => onRename(child)}><Pencil /></Button>
                 <Button variant="ghost" size="icon-sm" aria-label={`Archive ${child.name}`} onClick={() => onArchive(child)}><Archive /></Button>
@@ -224,7 +220,7 @@ function CategoryFormDialog({ state, categories, userId, onOpenChange }: { state
           <DialogDescription>{parent ? `This will appear under ${parent.name}.` : `Create an ${state?.categoryType ?? "expense"} category.`}</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-2"><Label htmlFor="category-name">Name</Label><Input id="category-name" autoFocus {...register("name")} />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
+          <div className="form-field"><Label htmlFor="category-name">Name</Label><Input id="category-name" autoFocus {...register("name")} />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
           <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button type="submit" disabled={mutation.isPending}>{mutation.isPending && <LoaderCircle className="animate-spin" />}{state?.category ? "Save name" : "Create category"}</Button></DialogFooter>
         </form>
       </DialogContent>

@@ -47,8 +47,8 @@ export function MonthlyBudgetDialog(props: CommonProps & { currentAmountMinor?: 
           <DialogTitle>{props.currentAmountMinor ? "Edit" : "Set"} monthly budget</DialogTitle>
           <DialogDescription>{formatBudgetMonth(props.monthStart)} · {props.currencyCode}. Budgets do not roll over.</DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={submit}>
-          <div className="space-y-2">
+        <form className="form-fields" onSubmit={submit}>
+          <div className="form-field">
             <Label htmlFor="monthly-budget-amount">Monthly budget</Label>
             <div className="relative"><span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">{props.currencyCode}</span><Input id="monthly-budget-amount" className="pl-14" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>
             {error && <p className="text-xs text-destructive">{error}</p>}
@@ -101,8 +101,8 @@ export function CategoryBudgetDialog(props: CommonProps & {
           <DialogTitle>{props.editing ? "Edit" : "Add"} category budget</DialogTitle>
           <DialogDescription>Parent expense categories include spending from their direct subcategories.</DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={submit}>
-          <div className="space-y-2">
+        <form className="form-fields" onSubmit={submit}>
+          <div className="form-field">
             <Label>Category</Label>
             {props.editing ? <div className="flex min-h-11 items-center rounded-xl bg-surface px-3 text-sm ring-1 ring-border/35">{props.editing.categoryName}</div> : (
               <Select items={items} value={categoryId || null} onValueChange={(value) => setCategoryId(value ?? "")}>
@@ -111,7 +111,7 @@ export function CategoryBudgetDialog(props: CommonProps & {
               </Select>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="form-field">
             <Label htmlFor="category-budget-amount">Limit</Label>
             <div className="relative"><span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">{props.currencyCode}</span><Input id="category-budget-amount" className="pl-14" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>
             {error && <p className="text-xs text-destructive">{error}</p>}

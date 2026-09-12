@@ -1,4 +1,4 @@
-import { ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, Sparkles, Target, WalletCards } from "lucide-react"
+import { ChevronRight, ChartNoAxesCombined, CircleGauge, Landmark, Menu, PiggyBank, Plus, ReceiptText, Settings, Sparkles, Target, WalletCards } from "lucide-react"
 import { useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 
@@ -13,12 +13,12 @@ const primaryItems = [
 ]
 
 const moreItems = [
-  { label: "AI Assistant", href: "/assistant", icon: Sparkles },
-  { label: "Budgets", href: "/budgets", icon: PiggyBank },
-  { label: "Savings Goals", href: "/goals", icon: Target },
-  { label: "Accounts", href: "/accounts", icon: WalletCards },
-  { label: "Investments", href: "/investments", icon: Landmark },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "AI Assistant", href: "/assistant", icon: Sparkles, group: "Insights" },
+  { label: "Budgets", href: "/budgets", icon: PiggyBank, group: "Plan" },
+  { label: "Savings Goals", href: "/goals", icon: Target, group: "Plan" },
+  { label: "Accounts", href: "/accounts", icon: WalletCards, group: "Money" },
+  { label: "Investments", href: "/investments", icon: Landmark, group: "Money" },
+  { label: "Settings", href: "/settings", icon: Settings, group: "Account" },
 ]
 
 export function MobileBottomNavigation() {
@@ -74,18 +74,20 @@ export function MobileBottomNavigation() {
         <SheetContent side="bottom" className="rounded-t-3xl border-border/40 bg-popover pb-[env(safe-area-inset-bottom)]">
           <SheetHeader className="border-b border-border/35 text-left">
             <SheetTitle>More</SheetTitle>
-            <SheetDescription>Assistant, goals, budgets, accounts, investments, settings, and your session.</SheetDescription>
+            <SheetDescription>Planning, money, and your account.</SheetDescription>
           </SheetHeader>
-          <nav className="grid gap-2 px-4" aria-label="More navigation">
-            {moreItems.map((item) => (
-              <NavLink
-                key={item.href}
-                to={item.href}
-                onClick={() => setMoreOpen(false)}
-              className="flex min-h-13 items-center gap-3 rounded-xl bg-surface px-4 text-sm font-medium ring-1 ring-border/25 transition-colors hover:bg-accent"
-              >
-                <item.icon className="size-5 text-primary" /> {item.label}
-              </NavLink>
+          <nav className="space-y-3 px-4" aria-label="More navigation">
+            {["Plan", "Money", "Insights", "Account"].map((group) => (
+              <section key={group} aria-label={group}>
+                <h2 className="section-heading mb-1">{group}</h2>
+                {moreItems.filter((item) => item.group === group).map((item) => (
+                  <NavLink key={item.href} to={item.href} onClick={() => setMoreOpen(false)}
+                    className={({ isActive }) => cn("ledger-interactive flex min-h-12 items-center gap-3 border-b border-border/20 px-1 text-sm font-medium", isActive && "text-primary")}>
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-brand-secondary"><item.icon className="size-4" aria-hidden="true" /></span>
+                    <span className="flex-1">{item.label}</span><ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                  </NavLink>
+                ))}
+              </section>
             ))}
           </nav>
           <div className="border-t border-border/35 p-4"><UserMenu /></div>

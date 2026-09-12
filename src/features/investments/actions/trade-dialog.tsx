@@ -122,9 +122,9 @@ export function TradeDialog({ accountId, currencyCode, today, holdings, type, op
             <Textarea id={`${type}-note`} value={note} onChange={(event) => setNote(event.target.value)} />
           </InvestmentActionField>
           {total !== null && total <= BigInt(Number.MAX_SAFE_INTEGER) && total >= BigInt(Number.MIN_SAFE_INTEGER) && (
-            <div className="rounded-xl bg-secondary/60 p-3 text-sm">
+            <div className="insight-surface p-3 text-sm">
               <p className="text-muted-foreground">{type === "buy" ? "Total cash required" : "Net sale proceeds"}</p>
-              <p className="mt-1 font-semibold tabular-nums">{formatCurrency(Number(type === "buy" ? -total : total), currencyCode)}</p>
+              <p className="mt-1 break-words font-semibold tabular-nums [overflow-wrap:anywhere]">{formatCurrency(Number(type === "buy" ? -total : total), currencyCode)}</p>
             </div>
           )}
           <InvestmentActionError message={error} />

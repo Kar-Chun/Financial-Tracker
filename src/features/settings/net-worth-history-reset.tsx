@@ -38,7 +38,7 @@ export function NetWorthHistoryReset() {
   }
 
   return (
-    <section className="max-w-2xl rounded-2xl bg-card/45 p-5 ring-1 ring-white/4 sm:p-6" aria-labelledby="data-history-heading">
+    <section className="settings-section" aria-labelledby="data-history-heading">
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
           <History className="size-5" aria-hidden="true" />
@@ -52,7 +52,7 @@ export function NetWorthHistoryReset() {
           <Button
             type="button"
             variant="ghost"
-            className="mt-4 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="mt-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setOpen(true)}
           >
             Reset history

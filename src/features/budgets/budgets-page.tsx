@@ -1,3 +1,5 @@
+import { PageTitle } from "@/components/shared/finance-ui"
+
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, Copy, LoaderCircle, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
@@ -37,11 +39,10 @@ export function BudgetsPage() {
   const currencyCode = summary.currency_code
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 sm:space-y-8">
+    <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6">
       <header>
-        <p className="eyebrow">Plan your spending</p>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight">Budgets</h1>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <PageTitle title="Budgets" />
           {summary.budget_exists && <Button variant="outline" size="sm" onClick={() => setMonthlyDialogOpen(true)}><Pencil /> Edit overall</Button>}
         </div>
       </header>
@@ -87,7 +88,7 @@ export function BudgetsPage() {
 
 function MonthNavigator({ monthStart, onChange }: { monthStart: string; onChange: (value: string) => void }) {
   return (
-    <div className="grid grid-cols-[3rem_1fr_3rem] items-center rounded-2xl bg-surface-elevated px-2 py-2 ring-1 ring-white/5" aria-label="Budget month">
+    <div className="grid grid-cols-[3rem_1fr_3rem] items-center rounded-full border border-border/35 bg-surface px-1 py-0.5" aria-label="Budget month">
       <Button variant="ghost" size="icon" aria-label="Previous month" onClick={() => onChange(shiftMonthStart(monthStart, -1))}><ChevronLeft /></Button>
       <div className="text-center text-base font-semibold">{formatBudgetMonth(monthStart)}</div>
       <Button variant="ghost" size="icon" aria-label="Next month" onClick={() => onChange(shiftMonthStart(monthStart, 1))}><ChevronRight /></Button>
@@ -100,10 +101,10 @@ function BudgetOverview({ summary }: { summary: MonthlyBudgetSummary }) {
   const progress = getBudgetProgress(summary.spent_minor, budget)
   const overBudget = (summary.over_budget_minor ?? 0) > 0
   return (
-    <section className="rounded-[1.75rem] bg-surface-elevated p-5 ring-1 ring-white/5 sm:p-7">
+    <section className="insight-surface p-4 sm:p-5">
       <p className="eyebrow">Monthly budget</p>
       <div className="mt-4 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="text-[clamp(1.75rem,8vw,3.25rem)] font-semibold tracking-tight text-foreground">{formatCurrency(summary.spent_minor, summary.currency_code)}</span>
+        <span className="break-words font-serif text-[clamp(1.75rem,7vw,2.75rem)] tracking-tight text-foreground [overflow-wrap:anywhere]">{formatCurrency(summary.spent_minor, summary.currency_code)}</span>
         <span className="text-base text-muted-foreground">/ {formatCurrency(budget, summary.currency_code)}</span>
       </div>
       <BudgetProgress value={progress.visualPercentage} overBudget={overBudget} />
@@ -111,7 +112,7 @@ function BudgetOverview({ summary }: { summary: MonthlyBudgetSummary }) {
         <span>{formatPercentage(progress.percentageUsed)} used</span>
         <span className={overBudget ? "text-destructive" : "text-muted-foreground"}>{overBudget ? `${formatCurrency(summary.over_budget_minor ?? 0, summary.currency_code)} over budget` : `${formatCurrency(summary.remaining_minor ?? 0, summary.currency_code)} remaining`}</span>
       </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-2 gap-3">
         <Guidance label={summary.period_status === "current" ? "Safe to spend" : "Month status"} value={getGuidanceValue(summary)} helper={getGuidanceHelper(summary)} />
         <Guidance label="Spending pace" value={paceLabel(summary.pace_status)} helper={paceHelper(summary)} tone={summary.pace_status === "over_budget" ? "negative" : summary.pace_status === "on_track" || summary.pace_status === "within_budget" ? "positive" : "neutral"} />
       </div>
@@ -120,16 +121,16 @@ function BudgetOverview({ summary }: { summary: MonthlyBudgetSummary }) {
 }
 
 function Guidance({ label, value, helper, tone = "neutral" }: { label: string; value: string; helper: string; tone?: "neutral" | "positive" | "negative" }) {
-  return <div className="rounded-2xl bg-surface px-4 py-4 ring-1 ring-border/25"><p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</p><p className={cn("mt-2 text-lg font-semibold", tone === "positive" && "text-positive", tone === "negative" && "text-destructive")}>{value}</p><p className="mt-1 text-xs text-muted-foreground">{helper}</p></div>
+  return <div className="min-w-0 border-t border-border/30 pt-3"><p className="text-xs font-medium text-muted-foreground">{label}</p><p className={cn("mt-2 break-words text-base font-semibold [overflow-wrap:anywhere]", tone === "positive" && "text-positive", tone === "negative" && "text-destructive")}>{value}</p><p className="mt-1 text-xs text-muted-foreground">{helper}</p></div>
 }
 
 function CategoryBudgetsSection({ summary, onAdd, onEdit }: { summary: MonthlyBudgetSummary; onAdd: () => void; onEdit: (budget: CategoryBudgetSummary) => void }) {
   const categoryTotal = summary.category_budgets.reduce((total, item) => total + item.budget_minor, 0)
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Category budgets</p><h2 className="mt-1 text-xl font-semibold">Optional limits</h2></div><Button variant="outline" size="sm" onClick={onAdd}><Plus /> Add</Button></div>
+      <div className="flex items-center justify-between gap-3"><div><h2 className="section-heading">Category budgets</h2><p className="mt-1 text-xs text-muted-foreground">Optional limits</p></div><Button variant="outline" size="sm" onClick={onAdd}><Plus /> Add</Button></div>
       {categoryTotal > (summary.overall_budget_minor ?? 0) && <p className="rounded-xl bg-amber-400/8 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-400/20">Your category budgets total {formatCurrency(categoryTotal, summary.currency_code)}, above the {formatCurrency(summary.overall_budget_minor ?? 0, summary.currency_code)} overall budget.</p>}
-      {summary.category_budgets.length === 0 ? <div className="rounded-2xl bg-surface-elevated px-5 py-8 text-center text-sm text-muted-foreground ring-1 ring-white/5">No category limits set. Your overall monthly budget still tracks all eligible expenses.</div> : summary.category_budgets.map((budget) => <CategoryBudgetRow key={budget.id} budget={budget} currencyCode={summary.currency_code} onEdit={() => onEdit(budget)} monthStart={summary.month_start} />)}
+      {summary.category_budgets.length === 0 ? <div className="insight-surface px-4 py-6 text-center text-sm text-muted-foreground">No category limits set. Your overall monthly budget still tracks all eligible expenses.</div> : summary.category_budgets.map((budget) => <CategoryBudgetRow key={budget.id} budget={budget} currencyCode={summary.currency_code} onEdit={() => onEdit(budget)} monthStart={summary.month_start} />)}
     </section>
   )
 }
@@ -146,7 +147,7 @@ function CategoryBudgetRow({ budget, currencyCode, onEdit, monthStart }: { budge
     })
   }
   return (
-    <div className="rounded-2xl bg-surface-elevated p-4 ring-1 ring-white/5 sm:p-5">
+    <div className="border-b border-border/30 py-4">
       <div className="flex min-w-0 items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate font-semibold">{budget.category_name}{budget.category_archived && <span className="ml-2 text-xs font-normal text-muted-foreground">Archived</span>}</h3><p className="mt-1 text-sm text-muted-foreground">{formatCurrency(budget.spent_minor, currencyCode)} / {formatCurrency(budget.budget_minor, currencyCode)}</p></div><div className="flex shrink-0"><Button variant="ghost" size="icon-sm" aria-label={`Edit ${budget.category_name} budget`} disabled={budget.category_archived} onClick={onEdit}><Pencil /></Button><Button variant="ghost" size="icon-sm" aria-label={`Remove ${budget.category_name} budget`} disabled={removeMutation.isPending} onClick={remove}>{removeMutation.isPending ? <LoaderCircle className="animate-spin" /> : <Trash2 />}</Button></div></div>
       <BudgetProgress value={progress.visualPercentage} overBudget={over} />
       <p className={cn("mt-2 text-sm", over ? "text-destructive" : "text-muted-foreground")}>{over ? `${formatCurrency(Math.abs(budget.remaining_minor), currencyCode)} over limit` : `${formatCurrency(budget.remaining_minor, currencyCode)} remaining`}</p>
@@ -155,7 +156,7 @@ function CategoryBudgetRow({ budget, currencyCode, onEdit, monthStart }: { budge
 }
 
 function BudgetProgress({ value, overBudget }: { value: number; overBudget: boolean }) {
-  return <div className="mt-4 h-2 overflow-hidden rounded-full bg-primary/12" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)}><div className={cn("h-full rounded-full transition-[width]", overBudget ? "bg-destructive" : "bg-primary")} style={{ width: `${value}%` }} /></div>
+  return <div className="mt-4 h-2 overflow-hidden rounded-full bg-primary/12" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)}><div className={cn("h-full rounded-full transition-[width] motion-reduce:transition-none", overBudget ? "bg-destructive" : "bg-primary")} style={{ width: `${value}%` }} /></div>
 }
 
 function NoBudgetState({ summary, onSet, onCopied }: { summary: MonthlyBudgetSummary; onSet: () => void; onCopied: () => void }) {
@@ -164,7 +165,7 @@ function NoBudgetState({ summary, onSet, onCopied }: { summary: MonthlyBudgetSum
     onSuccess: (result) => { const skipped = result.skipped_category_count; toast.success(skipped ? `Budget copied. ${skipped} archived category limit skipped.` : "Previous month budget copied."); onCopied() },
     onError: (cause) => toast.error(getErrorMessage(cause, "The previous budget could not be copied.")),
   })
-  return <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5"><CardContent className="flex min-h-72 flex-col items-center justify-center px-5 text-center"><PiggyBank className="size-10 text-primary" /><h2 className="mt-5 text-xl font-semibold">No budget set for {formatBudgetMonth(summary.month_start).replace(/ \d{4}$/, "")}</h2><p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">Set a monthly spending target to track your spending, remaining allowance, and pace.</p><div className="mt-5 flex flex-wrap justify-center gap-3"><Button onClick={onSet}>Set monthly budget</Button>{summary.previous_budget_exists && <Button variant="outline" disabled={copyMutation.isPending} onClick={copy}>{copyMutation.isPending ? <LoaderCircle className="animate-spin" /> : <Copy />}Copy previous month</Button>}</div></CardContent></Card>
+  return <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5"><CardContent className="flex min-h-48 flex-col items-center justify-center px-5 text-center"><PiggyBank className="size-7 text-brand-secondary" /><h2 className="mt-5 text-xl font-semibold">No budget set for {formatBudgetMonth(summary.month_start).replace(/ \d{4}$/, "")}</h2><p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">Set a monthly spending target to track your spending, remaining allowance, and pace.</p><div className="mt-5 flex flex-wrap justify-center gap-3"><Button onClick={onSet}>Set monthly budget</Button>{summary.previous_budget_exists && <Button variant="outline" disabled={copyMutation.isPending} onClick={copy}>{copyMutation.isPending ? <LoaderCircle className="animate-spin" /> : <Copy />}Copy previous month</Button>}</div></CardContent></Card>
 }
 
 function getGuidanceValue(summary: MonthlyBudgetSummary) {
@@ -190,5 +191,5 @@ function paceHelper(summary: MonthlyBudgetSummary) {
 }
 
 function formatPercentage(value: number) { return `${new Intl.NumberFormat("en-SG", { maximumFractionDigits: 1 }).format(value)}%` }
-function BudgetError({ onRetry }: { onRetry: () => void }) { return <Card className="border-destructive/30"><CardContent className="py-12 text-center"><h1 className="text-lg font-semibold">Budgets unavailable</h1><p className="mt-2 text-sm text-muted-foreground">Check your connection and ensure the V1.4 migration is applied.</p><Button className="mt-5" variant="outline" onClick={onRetry}>Try again</Button></CardContent></Card> }
-function BudgetSkeleton() { return <div className="mx-auto max-w-4xl space-y-5"><Skeleton className="h-12 w-48" /><Skeleton className="h-16 rounded-2xl" /><Skeleton className="h-80 rounded-[1.75rem]" /><Skeleton className="h-40 rounded-2xl" /></div> }
+function BudgetError({ onRetry }: { onRetry: () => void }) { return <Card className="border-destructive/30"><CardContent className="py-6 text-center"><h1 className="text-lg font-semibold">Budgets unavailable</h1><p className="mt-2 text-sm text-muted-foreground">Check your connection and ensure the V1.4 migration is applied.</p><Button className="mt-5" variant="outline" onClick={onRetry}>Try again</Button></CardContent></Card> }
+function BudgetSkeleton() { return <div className="mx-auto max-w-4xl space-y-5"><Skeleton className="h-12 w-48" /><Skeleton className="h-16 rounded-2xl" /><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-40 rounded-2xl" /></div> }

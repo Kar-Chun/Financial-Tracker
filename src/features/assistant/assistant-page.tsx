@@ -1,3 +1,5 @@
+import { PageTitle } from "@/components/shared/finance-ui"
+
 import { ArrowRight, Bot, Eraser, Send, Sparkles } from "lucide-react"
 import { useRef, useState } from "react"
 import { Link } from "react-router-dom"
@@ -65,13 +67,10 @@ export function AssistantPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-7">
+    <div className="mx-auto max-w-3xl space-y-5">
       <header>
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="eyebrow">Read-only insights</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight">AI Financial Assistant</h1>
-          </div>
+          <PageTitle title="Assistant" eyebrow="Read-only insights" />
           {messages.length > 0 && (
             <Button type="button" variant="ghost" size="sm" onClick={() => { setMessages([]); setError(null) }}>
               <Eraser aria-hidden="true" /> Clear
@@ -86,18 +85,18 @@ export function AssistantPage() {
       {!isOnline && <div role="status" className="rounded-2xl bg-amber-400/8 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-400/20">AI Assistant requires an internet connection. Prompts are not queued.</div>}
 
       {messages.length === 0 ? (
-        <section className="overflow-hidden rounded-3xl bg-card/70 p-5 ring-1 ring-white/5 sm:p-7">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Bot className="size-5" aria-hidden="true" /></div>
-          <h2 className="mt-5 text-xl font-semibold">What would you like to understand?</h2>
+        <section className="insight-surface p-4 sm:p-5">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-surface-elevated text-brand-secondary"><Bot className="size-5" aria-hidden="true" /></div>
+          <h2 className="mt-4 text-lg font-semibold">What would you like to understand?</h2>
           <p className="mt-1 text-sm text-muted-foreground">Suggested questions use real tracker data only after you send them.</p>
           <div className="mt-5 flex flex-wrap gap-2">
             {suggestions.map((suggestion) => (
-              <button key={suggestion} type="button" onClick={() => void send(suggestion)} disabled={isSending || !isOnline} className="min-h-11 rounded-full bg-surface px-4 text-left text-sm text-secondary-foreground ring-1 ring-white/5 transition-colors hover:bg-accent disabled:opacity-50">
+              <button key={suggestion} type="button" onClick={() => void send(suggestion)} disabled={isSending || !isOnline} className="min-h-11 rounded-full border border-border/35 bg-surface px-3 py-2 text-left text-xs text-secondary-foreground ring-1 ring-white/5 transition-colors hover:bg-accent disabled:opacity-50">
                 {suggestion}
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => void send("Review my month", "monthly_review")} disabled={isSending || !isOnline} className="mt-6 flex min-h-14 w-full items-center justify-between rounded-2xl bg-primary/10 px-4 text-left text-sm font-medium text-primary ring-1 ring-primary/20 transition-colors hover:bg-primary/15 disabled:opacity-50">
+          <button type="button" onClick={() => void send("Review my month", "monthly_review")} disabled={isSending || !isOnline} className="mt-4 flex min-h-12 w-full items-center justify-between rounded-xl bg-primary/10 px-4 text-left text-sm font-medium text-primary ring-1 ring-primary/20 transition-colors hover:bg-primary/15 disabled:opacity-50">
             <span className="flex items-center gap-3"><Sparkles className="size-5" aria-hidden="true" />Review my month</span><ArrowRight className="size-4" aria-hidden="true" />
           </button>
         </section>
@@ -108,9 +107,9 @@ export function AssistantPage() {
         </section>
       )}
 
-      {error && <div role="alert" className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground ring-1 ring-destructive/25">{error}</div>}
+      {error && <div role="alert" className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-negative ring-1 ring-destructive/25">{error}</div>}
 
-      <form onSubmit={(event) => { event.preventDefault(); void send(input) }} className="sticky bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap))] z-10 rounded-2xl bg-popover/95 p-2 shadow-xl shadow-black/15 ring-1 ring-white/8 backdrop-blur-xl lg:bottom-4">
+      <form onSubmit={(event) => { event.preventDefault(); void send(input) }} className="sticky bottom-[calc(var(--mobile-navigation-height)+var(--mobile-floating-action-gap))] z-10 rounded-2xl bg-popover/95 p-2 ring-1 ring-border/40 backdrop-blur-xl lg:bottom-4">
         <label htmlFor="assistant-question" className="sr-only">Ask about your finances</label>
         <div className="flex items-center gap-2">
           <Input id="assistant-question" value={input} onChange={(event) => setInput(event.target.value)} maxLength={2_000} disabled={isSending} placeholder="Ask about your finances" className="min-h-12 border-0 bg-transparent shadow-none focus-visible:ring-0" />
@@ -126,7 +125,7 @@ export function AssistantPage() {
 function ConversationMessage({ message }: { message: AssistantMessage }) {
   const action = message.suggestedAction
   return (
-    <article className={cn("max-w-[92%] rounded-2xl px-4 py-3", message.role === "user" ? "ml-auto bg-primary text-primary-foreground" : "bg-card/65 ring-1 ring-white/5")}>
+    <article className={cn("max-w-[92%] rounded-2xl px-4 py-3", message.role === "user" ? "ml-auto border border-primary/25 bg-primary/10 text-foreground" : "insight-surface")}>
       <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.text}</p>
       {message.role === "assistant" && message.usedTools?.length ? (
         <p className="mt-3 border-t border-border/30 pt-2 text-xs text-muted-foreground">Based on: {[...new Set(message.usedTools)].map((tool) => toolLabels[tool] ?? "Tracker data").join(" · ")}</p>

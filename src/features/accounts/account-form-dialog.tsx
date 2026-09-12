@@ -131,7 +131,7 @@ export function AccountFormDialog({
             Store labels only—never enter account numbers, credentials, or PINs.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="form-fields" onSubmit={handleSubmit(onSubmit)}>
           <FormField label="Name" error={errors.name?.message}>
             <Input placeholder="Daily spending" {...register("name")} />
           </FormField>
@@ -222,7 +222,7 @@ function getDefaults(account: AccountSummaryRow | null | undefined, initialType:
 
 function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+    <div className="form-field">
       <Label>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}

@@ -10,7 +10,7 @@ type InvestmentActionFieldProps = {
 
 export function InvestmentActionField({ children, label, htmlFor }: InvestmentActionFieldProps) {
   return (
-    <div className="space-y-2">
+    <div className="form-field">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>

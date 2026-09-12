@@ -103,7 +103,7 @@ export function ValuationDialog({ account, open, onOpenChange }: ValuationDialog
             Enter both values manually. Ledgerly does not fetch exchange rates.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="form-fields" onSubmit={handleSubmit(onSubmit)}>
           <FormField label={`Native value (${account.currency_code})`} error={errors.nativeValue?.message}>
             <Input inputMode="decimal" {...register("nativeValue")} />
           </FormField>
@@ -145,7 +145,7 @@ function getDefaults(account: AccountSummaryRow | null): ValuationFormValues {
 
 function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+    <div className="form-field">
       <Label>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}

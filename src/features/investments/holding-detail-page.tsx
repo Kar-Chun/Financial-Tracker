@@ -1,7 +1,9 @@
+import { PageTitle } from "@/components/shared/finance-ui"
+
 import { ArrowLeft } from "lucide-react"
 import { Link, Navigate, useParams } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDetailedInvestment } from "@/features/investments/investments-hooks"
 import { multiplyDecimalToMinorUnits } from "@/features/investments/investment-logic"
@@ -46,25 +48,21 @@ export function HoldingDetailPage() {
   ].sort((left, right) => right.date.localeCompare(left.date))
 
   return (
-    <div className="mx-auto max-w-2xl space-y-7">
+    <div className="mx-auto max-w-2xl space-y-5">
       <header className="flex items-center gap-3">
-        <Button
-          size="icon"
-          variant="ghost"
+        <Link
+          to={`/investments/${accountId}`}
+          data-slot="button"
+          className={buttonVariants({ size: "icon", variant: "ghost" })}
           aria-label="Back to investment account"
-          render={<Link to={`/investments/${accountId}`} />}
         >
           <ArrowLeft />
-        </Button>
-        <div>
-          <p className="eyebrow">Holding</p>
-          <h1 className="text-2xl font-semibold">{holding.symbol}</h1>
-          <p className="text-sm text-muted-foreground">{holding.name}</p>
-        </div>
+        </Link>
+        <PageTitle eyebrow="Holding" title={holding.symbol} description={holding.name} />
       </header>
 
-      <section className="rounded-3xl bg-card/65 p-5 ring-1 ring-white/5">
-        <dl className="grid grid-cols-2 gap-5">
+      <section className="min-w-0">
+        <dl className="grid grid-cols-2 gap-3">
           <Metric
             label="Quantity"
             value={new Intl.NumberFormat("en-SG", { maximumFractionDigits: 10 }).format(holding.quantity)}
@@ -91,17 +89,17 @@ export function HoldingDetailPage() {
 
       <section>
         <h2 className="section-heading mb-3">Activity</h2>
-        <div className="overflow-hidden rounded-2xl bg-card/55 ring-1 ring-white/5">
+        <div className="border-y border-border/30">
           {activity.map((item, index) => (
             <div
               key={item.id}
-              className={`flex justify-between gap-4 px-4 py-3 ${index ? "border-t border-border/25" : ""}`}
+              className={`flex min-w-0 justify-between gap-3 py-3 ${index ? "border-t border-border/25" : ""}`}
             >
               <div>
                 <p className="text-sm font-medium">{item.title}</p>
                 <p className="text-xs text-muted-foreground">{formatShortDate(item.date)}</p>
               </div>
-              <p className="text-sm tabular-nums">{item.detail}</p>
+              <p className="max-w-[55%] break-words text-right text-sm tabular-nums [overflow-wrap:anywhere]">{item.detail}</p>
             </div>
           ))}
           {activity.length === 0 && (
@@ -128,9 +126,9 @@ function formatInvestmentPrice(value: number, currencyCode: string) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="insight-surface min-w-0 p-3.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 break-words font-semibold tabular-nums">{value}</dd>
+      <dd className="mt-1 break-words font-semibold tabular-nums [overflow-wrap:anywhere]">{value}</dd>
     </div>
   )
 }

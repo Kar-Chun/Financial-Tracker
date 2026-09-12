@@ -27,15 +27,13 @@ vi.mock("@/features/dashboard/dashboard-hooks", () => ({
     },
   }),
 }))
-vi.mock("@/features/budgets/budget-hooks", () => ({ useBudgetSummary: () => ({ isError: true }) }))
-vi.mock("@/features/goals/goals-hooks", () => ({ useSavingsGoals: () => ({ isError: true }) }))
+vi.mock("@/features/budgets/budget-hooks", () => ({ useBudgetSummary: () => ({ isError: false, data: { budget_exists: true } }) }))
 vi.mock("@/features/dashboard/net-worth-trend-card", () => ({
   NetWorthTrendCard: () => <section>Total net worth</section>,
 }))
 vi.mock("@/features/dashboard/account-overview", () => ({ AccountOverview: () => null }))
 vi.mock("@/features/dashboard/recent-transactions-card", () => ({ RecentTransactionsCard: () => null }))
-vi.mock("@/features/dashboard/investments-card", () => ({ InvestmentsCard: () => null }))
-vi.mock("@/features/dashboard/spending-breakdown-card", () => ({ SpendingBreakdownCard: () => null }))
+vi.mock("@/features/dashboard/monthly-budget-card", () => ({ MonthlyBudgetCard: () => <a href="/budgets">Monthly budget</a> }))
 vi.mock("@/features/dashboard/metric-card", () => ({
   MetricCard: ({ label }: { label: string }) => <section>{label}</section>,
 }))
@@ -48,6 +46,9 @@ describe("DashboardPage header", () => {
     expect(screen.queryByText(/good morning/i)).not.toBeInTheDocument()
     expect(screen.queryByText("Kar Chun")).not.toBeInTheDocument()
     expect(screen.getByText("Today's spending")).toBeInTheDocument()
+    expect(screen.getByText("Monthly spent")).toBeInTheDocument()
+    expect(screen.queryByText(/monthly income/i)).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Monthly budget" })).toHaveAttribute("href", "/budgets")
     expect(screen.queryByText("Net cash flow")).not.toBeInTheDocument()
   })
 })

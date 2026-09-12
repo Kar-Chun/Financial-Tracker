@@ -1,4 +1,4 @@
-import { BanknoteArrowDown, BanknoteArrowUp, WalletCards } from "lucide-react"
+import { BanknoteArrowUp, WalletCards } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { buttonVariants } from "@/components/ui/button-variants"
@@ -11,13 +11,9 @@ import { MonthlyBudgetCard } from "@/features/dashboard/monthly-budget-card"
 import { useBudgetSummary } from "@/features/budgets/budget-hooks"
 import { getCurrentMonthStart } from "@/features/budgets/budget-dates"
 import { MetricCard } from "@/features/dashboard/metric-card"
-import { InvestmentsCard } from "@/features/dashboard/investments-card"
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
 import { RecentTransactionsCard } from "@/features/dashboard/recent-transactions-card"
-import { SpendingBreakdownCard } from "@/features/dashboard/spending-breakdown-card"
-import { SavingsGoalsCard } from "@/features/dashboard/savings-goals-card"
 import { TodaysSpendingCard } from "@/features/dashboard/todays-spending-card"
-import { useSavingsGoals } from "@/features/goals/goals-hooks"
 import { cn } from "@/lib/utils"
 
 export function DashboardPage() {
@@ -27,7 +23,6 @@ export function DashboardPage() {
   const currencyCode = profile?.base_currency ?? "SGD"
   const timezone = profile?.timezone ?? "Asia/Singapore"
   const budgetQuery = useBudgetSummary(getCurrentMonthStart(timezone), Boolean(profile))
-  const goalsQuery = useSavingsGoals(false, Boolean(profile))
 
   if (dashboardQuery.isLoading || profileQuery.isLoading) return <DashboardSkeleton />
   if (dashboardQuery.isError || profileQuery.isError || !dashboardQuery.data) {
@@ -41,14 +36,14 @@ export function DashboardPage() {
     )
   }
 
-  const { accounts, dailySpending, monthly, spendingGroups, transactions, snapshots } = dashboardQuery.data
+  const { accounts, dailySpending, monthly, transactions, snapshots } = dashboardQuery.data
   const foreignAccounts = accounts.filter((account) => account.account_type !== "investment" && !account.included_in_net_worth)
 
   if (accounts.length === 0) {
     return (
       <div className="space-y-7">
         <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
-          <CardContent className="flex min-h-80 flex-col items-center justify-center text-center">
+          <CardContent className="flex min-h-56 flex-col items-center justify-center text-center">
             <WalletCards className="size-10 text-primary" />
             <h2 className="mt-5 text-xl font-semibold">Start with your first account</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
@@ -58,13 +53,12 @@ export function DashboardPage() {
           </CardContent>
         </Card>
         {!budgetQuery.isError && <MonthlyBudgetCard summary={budgetQuery.data} />}
-        {!goalsQuery.isError && <SavingsGoalsCard summary={goalsQuery.data} />}
       </div>
     )
   }
 
   return (
-    <div className="space-y-7 sm:space-y-8">
+    <div className="space-y-5 sm:space-y-7">
       <NetWorthTrendCard snapshots={snapshots} currencyCode={currencyCode} />
 
       {foreignAccounts.length > 0 && (
@@ -73,9 +67,8 @@ export function DashboardPage() {
         </div>
       )}
 
-      <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Monthly financial summary">
-        <MetricCard label="Monthly income" amountMinor={monthly.incomeMinor} currencyCode={currencyCode} helper="Transfers excluded" icon={BanknoteArrowDown} tone="positive" />
-        <MetricCard label="Monthly spent" amountMinor={monthly.expensesMinor} currencyCode={currencyCode} helper="Recorded expenses" icon={BanknoteArrowUp} tone="negative" />
+      <section className="grid grid-cols-2 gap-3 sm:gap-4" aria-label="Monthly financial summary">
+        <MetricCard label="Monthly spent" amountMinor={monthly.expensesMinor} currencyCode={currencyCode} helper="This calendar month" icon={BanknoteArrowUp} />
         <TodaysSpendingCard
           averageMinor={dailySpending.sevenDayAverageMinor}
           currencyCode={currencyCode}
@@ -86,16 +79,10 @@ export function DashboardPage() {
 
       {!budgetQuery.isError && <MonthlyBudgetCard summary={budgetQuery.data} />}
 
-      <section className="grid gap-7 xl:grid-cols-[minmax(20rem,0.9fr)_minmax(0,1.1fr)]">
+      <section className="grid gap-5 xl:grid-cols-[minmax(20rem,0.9fr)_minmax(0,1.1fr)]">
         <AccountOverview accounts={accounts} baseCurrency={currencyCode} />
         <RecentTransactionsCard transactions={transactions} todayDate={dailySpending.localDate} />
       </section>
-
-      {!goalsQuery.isError && <SavingsGoalsCard summary={goalsQuery.data} />}
-
-      <InvestmentsCard accounts={accounts} baseCurrency={currencyCode} />
-
-      <SpendingBreakdownCard groups={spendingGroups} currencyCode={currencyCode} />
     </div>
   )
 }
@@ -103,9 +90,9 @@ export function DashboardPage() {
 function DashboardSkeleton() {
   return (
     <div className="space-y-7">
-      <Skeleton className="h-72 w-full rounded-[1.75rem]" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        {[0, 1, 2].map((item) => <Skeleton key={item} className="h-32 rounded-2xl" />)}
+      <Skeleton className="h-56 w-full rounded-xl" />
+      <div className="grid grid-cols-2 gap-3">
+        {[0, 1].map((item) => <Skeleton key={item} className="h-32 rounded-2xl" />)}
       </div>
       <Skeleton className="h-80 rounded-2xl" />
     </div>

@@ -53,5 +53,7 @@ describe("AccountOverview", () => {
     expect(screen.getByText("$12,345.67")).toBeInTheDocument()
     expect(screen.getByText("Interactive Brokers Investment")).toBeInTheDocument()
     expect(screen.getByText("$123,456.78")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /DBS Multiplier Savings Account/ })).toHaveAttribute("href", "/accounts")
+    expect(screen.getByRole("link", { name: /Interactive Brokers Investment/ })).toHaveAttribute("href", "/accounts")
   })
 })

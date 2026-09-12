@@ -24,6 +24,31 @@ describe("RecentTransactionsCard", () => {
     expect(screen.getByText("Transfer · Today")).toBeInTheDocument()
     expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "transfer: $200.00")).toBeInTheDocument()
     expect(screen.queryByText("account-source-id")).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Caifan/ })).toHaveAttribute("href", "/transactions")
+    expect(screen.getByRole("link", { name: /DBS Savings → Cash Wallet/ })).toHaveAttribute("href", "/transactions")
+  })
+
+  it("limits the Dashboard preview to three rows and keeps View all", () => {
+    render(
+      <MemoryRouter>
+        <RecentTransactionsCard
+          transactions={[
+            expense("First", "first"),
+            expense("Second", "second"),
+            expense("Third", "third"),
+            expense("Fourth", "fourth"),
+          ]}
+          todayDate="2026-08-23"
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText("First")).toBeInTheDocument()
+    expect(screen.getByText("Second")).toBeInTheDocument()
+    expect(screen.getByText("Third")).toBeInTheDocument()
+    expect(screen.queryByText("Fourth")).not.toBeInTheDocument()
+    expect(screen.getAllByRole("link")).toHaveLength(4)
+    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/transactions")
   })
 })
 

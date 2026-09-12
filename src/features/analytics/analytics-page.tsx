@@ -2,8 +2,8 @@ import { ArrowDownRight, ArrowUpRight, CalendarDays, ChartNoAxesCombined, Receip
 import { useMemo, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
+import { FilterPill, MetricTile, PageTitle, SectionHeader } from "@/components/shared/finance-ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSpendingAnalytics } from "@/features/analytics/analytics-hooks"
 import { getCategoryPercentage, getSpendingComparison, getSpendingInsights } from "@/features/analytics/analytics-logic"
@@ -29,22 +29,13 @@ export function AnalyticsPage() {
   const currency = profileQuery.data?.base_currency ?? "SGD"
 
   return (
-    <div className="space-y-7">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Spending insights</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Analytics</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Understand how much you spend, where it goes, and how it compares with an equivalent previous period.
-          </p>
-        </div>
-        <Select items={analyticsPeriodOptions} value={preset} onValueChange={(value) => setPreset(value as AnalyticsPeriodPreset)}>
-          <SelectTrigger className="w-full rounded-xl bg-card/70 sm:w-48"><CalendarDays /><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {analyticsPeriodOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </header>
+    <div className="space-y-5">
+      <PageTitle eyebrow="Spending insights" title="Analytics" description="Understand where your money goes." />
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]" role="group" aria-label="Analytics period">
+        {analyticsPeriodOptions.map((option) => (
+          <FilterPill key={option.value} active={preset === option.value} onClick={() => setPreset(option.value)}>{option.label}</FilterPill>
+        ))}
+      </div>
 
       {profileQuery.isLoading || analyticsQuery.isLoading ? <AnalyticsSkeleton /> : profileQuery.isError || analyticsQuery.isError || !analyticsQuery.data ? (
         <Card className="border-destructive/30">
@@ -73,11 +64,11 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
 
   return (
     <>
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Total Spent" value={formatCurrency(data.summary.total_spent_minor, currency)} detail={<ComparisonLabel comparison={comparison} />} icon={ReceiptText} />
-        <MetricCard label="Average Daily Spend" value={formatCurrency(data.summary.average_daily_spend_minor, currency)} detail="Across every day in the selected period" icon={CalendarDays} />
-        <MetricCard label="Largest Category" value={data.summary.largest_category_name ?? "—"} detail="Parent-category aggregation" icon={Tags} />
-        <MetricCard label="Number of Expenses" value={data.summary.expense_count.toLocaleString("en-SG")} detail="Recorded expense transactions" icon={ChartNoAxesCombined} />
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <MetricTile label="Total Spent" value={formatCurrency(data.summary.total_spent_minor, currency)} detail={<ComparisonLabel comparison={comparison} />} icon={ReceiptText} />
+        <MetricTile label="Average Daily Spend" value={formatCurrency(data.summary.average_daily_spend_minor, currency)} detail="Includes zero-spending days" icon={CalendarDays} />
+        <MetricTile label="Largest Category" value={data.summary.largest_category_name ?? "—"} detail="Includes subcategories" icon={Tags} />
+        <MetricTile label="Expense Count" value={data.summary.expense_count.toLocaleString("en-SG")} detail="In this period" icon={ChartNoAxesCombined} />
       </section>
 
       {data.excluded_foreign_expense_count > 0 && (
@@ -86,38 +77,38 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
         </div>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
-        <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
-          <CardHeader><CardTitle>Spending over time</CardTitle></CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            <div className="h-60 w-full sm:h-72" role="img" aria-label="Bar chart of spending over time">
+      <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
+        <Card className="min-w-0 gap-3 rounded-xl border-0 bg-transparent py-0 shadow-none ring-0">
+          <CardHeader className="px-0"><CardTitle>Spending trend</CardTitle></CardHeader>
+          <CardContent className="px-0">
+            <div className="h-48 w-full sm:h-60" role="img" aria-label="Bar chart of spending over time">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                  <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={28} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tickFormatter={(value: number) => compactNumber.format(value / 100)} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
+                <BarChart data={chartData} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.45} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={28} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+                  <YAxis tickLine={false} axisLine={false} tickFormatter={(value: number) => compactNumber.format(value / 100)} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
                   <Tooltip
                     cursor={{ fill: "color-mix(in oklch, var(--accent) 35%, transparent)" }}
                     contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "0.625rem", color: "var(--popover-foreground)" }}
                     formatter={(value) => [formatCurrency(Number(value), currency), "Spent"]}
                     labelStyle={{ color: "var(--muted-foreground)" }}
                   />
-                  <Bar dataKey="amount_minor" name="Spent" fill="var(--primary)" radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="amount_minor" name="Spent" fill="var(--primary)" radius={[2, 2, 0, 0]} maxBarSize={28} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
-          <CardHeader><CardTitle>Deterministic insights</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {insights.map((insight) => <p key={insight} className="rounded-xl bg-surface p-3.5 text-sm leading-6 text-secondary-foreground">{insight}</p>)}
-          </CardContent>
-        </Card>
+        <SpendingByCategory data={data} currency={currency} />
       </section>
 
-      <SpendingByCategory data={data} currency={currency} />
+      <Card className="min-w-0 gap-3 rounded-xl border-0 bg-transparent py-0 shadow-none ring-0">
+        <CardHeader className="px-0"><CardTitle>Period insights</CardTitle></CardHeader>
+        <CardContent className="insight-surface divide-y divide-border/25 px-4">
+          {insights.map((insight) => <p key={insight} className="py-3 text-sm leading-6 text-secondary-foreground">{insight}</p>)}
+        </CardContent>
+      </Card>
     </>
   )
 }
@@ -125,28 +116,28 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
 function SpendingByCategory({ data, currency }: { data: SpendingAnalytics; currency: string }) {
   const [expanded, setExpanded] = useState<string | null>(null)
   return (
-    <Card className="border-0 bg-card/55 shadow-none ring-1 ring-white/4">
-      <CardHeader><CardTitle>Spending by Category</CardTitle></CardHeader>
-      <CardContent className="space-y-2">
+    <Card className="min-w-0 gap-3 rounded-xl border-0 bg-transparent py-0 shadow-none ring-0">
+      <CardHeader className="px-0"><SectionHeader id="category-spending-heading" title="Spending by category" /></CardHeader>
+      <CardContent className="divide-y divide-border/25 border-y border-border/30 px-0">
         {data.categories.map((category) => {
           const key = category.category_id ?? "uncategorised"
           const percentage = getCategoryPercentage(category.amount_minor, data.summary.total_spent_minor)
           const canExpand = category.subcategories.length > 0 || category.direct_amount_minor > 0
           const isExpanded = expanded === key
           return (
-            <div key={key} className="overflow-hidden rounded-xl bg-surface/75 ring-1 ring-white/3">
-              <button type="button" disabled={!canExpand} onClick={() => setExpanded(isExpanded ? null : key)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-4 p-4 text-left disabled:cursor-default">
+            <div key={key} className="min-w-0">
+              <button type="button" disabled={!canExpand} onClick={() => setExpanded(isExpanded ? null : key)} aria-expanded={canExpand ? isExpanded : undefined} className="grid min-h-16 w-full grid-cols-[minmax(0,1fr)_auto] gap-4 rounded-lg py-3 text-left focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default">
                 <div className="min-w-0">
                   <div className="flex items-center justify-between gap-4">
-                    <span className="truncate font-medium">{category.name}</span>
+                    <span className="break-words text-sm font-medium">{category.name}</span>
                     <span className="text-sm font-semibold tabular-nums sm:hidden">{percentage}%</span>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary" style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold tabular-nums">{formatCurrency(category.amount_minor, currency)}</p>
+                <div className="max-w-[40vw] text-right sm:max-w-64">
+                  <p className="text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">{formatCurrency(category.amount_minor, currency)}</p>
                   <p className="hidden text-xs text-muted-foreground sm:block">{percentage}% of total</p>
                 </div>
               </button>
@@ -175,21 +166,15 @@ function ComparisonLabel({ comparison }: { comparison: ReturnType<typeof getSpen
   return <span className={cn("inline-flex items-center gap-1", decrease ? "text-positive" : "text-negative")}>{decrease ? <ArrowDownRight className="size-3.5" /> : <ArrowUpRight className="size-3.5" />}{comparison.percentage}% {decrease ? "less" : "more"} vs previous period</span>
 }
 
-function MetricCard({ label, value, detail, icon: Icon }: { label: string; value: string; detail: React.ReactNode; icon: React.ComponentType<{ className?: string }> }) {
-  return (
-    <Card className="border-0 bg-card/75 shadow-none ring-1 ring-white/4"><CardContent className="pt-6"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow leading-5">{label}</p><p className="mt-2 truncate text-2xl font-semibold tracking-tight">{value}</p></div><div className="rounded-full bg-primary/10 p-2 text-primary"><Icon className="size-4" /></div></div><div className="mt-3 text-xs leading-5 text-muted-foreground">{detail}</div></CardContent></Card>
-  )
-}
-
 function EmptyAnalytics({ excludedForeignExpenseCount }: { excludedForeignExpenseCount: number }) {
   const title = excludedForeignExpenseCount > 0
     ? "No base-currency spending recorded for this period."
     : "No spending recorded for this period yet."
-  return <Card><CardContent className="py-16 text-center"><div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><ChartNoAxesCombined className="size-5" /></div><h2 className="mt-4 font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{excludedForeignExpenseCount > 0 ? `${excludedForeignExpenseCount} foreign-currency expense${excludedForeignExpenseCount === 1 ? " was" : "s were"} excluded because automatic FX conversion is unavailable.` : "Add an expense to start seeing your spending insights."}</p></CardContent></Card>
+  return <Card className="insight-surface py-0"><CardContent className="px-5 py-8 text-center"><div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><ChartNoAxesCombined className="size-5" /></div><h2 className="mt-4 font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{excludedForeignExpenseCount > 0 ? `${excludedForeignExpenseCount} foreign-currency expense${excludedForeignExpenseCount === 1 ? " was" : "s were"} excluded because automatic FX conversion is unavailable.` : "Add an expense to start seeing your spending insights."}</p></CardContent></Card>
 }
 
 function AnalyticsSkeleton() {
-  return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-36 rounded-xl" />)}</div><Skeleton className="h-80 rounded-xl" /><Skeleton className="h-80 rounded-xl" /></div>
+  return <div className="space-y-6"><div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-32 rounded-xl" />)}</div><Skeleton className="h-52 rounded-xl" /><Skeleton className="h-52 rounded-xl" /></div>
 }
 
 function formatBucket(value: string, granularity: "day" | "month") {

@@ -8,7 +8,7 @@ import { TodaysSpendingCard } from "@/features/dashboard/todays-spending-card"
 import { formatCurrency } from "@/lib/currency"
 
 describe("today's spending card", () => {
-  it("renders today's amount with only the seven-day average helper", () => {
+  it("renders today's authoritative amount with only the seven-day average", () => {
     render(
       <MemoryRouter>
         <TodaysSpendingCard currencyCode="SGD" localDate="2026-09-09" todayMinor={1_840} averageMinor={2_130} />

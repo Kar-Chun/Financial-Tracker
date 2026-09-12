@@ -1,5 +1,5 @@
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { MoreHorizontal, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react"
+import { Fragment, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -13,6 +13,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { FilterPill, PageTitle } from "@/components/shared/finance-ui"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { TransactionRowContent } from "@/features/transactions/transaction-row-content"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,10 +25,9 @@ import { useAccounts } from "@/features/accounts/accounts-hooks"
 import { useAuth } from "@/features/auth/auth-context"
 import { TransactionFormDialog } from "@/features/transactions/transaction-form-dialog"
 import { useCategories, useSoftDeleteTransaction, useTransactions } from "@/features/transactions/transactions-hooks"
-import { getCategoryDisplayName, getTransactionAmount, getTransactionDisplayDetails } from "@/features/transactions/transaction-logic"
+import { getCategoryDisplayName } from "@/features/transactions/transaction-logic"
 import { buildTransactionPageFilters, getInitialTransactionFilterState } from "@/features/transactions/transaction-filter-state"
 import { flattenTransactionPages } from "@/features/transactions/transactions-service"
-import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
 import { cn } from "@/lib/utils"
@@ -103,13 +105,9 @@ export function TransactionsPage() {
   ]
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Daily activity</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Transactions</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Record income, expenses, and same-currency transfers.</p>
-        </div>
+        <PageTitle title="Transactions" />
         {(accountsQuery.data?.length ?? 0) > 0 ? (
           <Button className="hidden lg:inline-flex" render={<Link to="/transactions/new" state={{ returnTo: "/transactions" }} />}>
             <Plus /> Add transaction
@@ -119,25 +117,23 @@ export function TransactionsPage() {
         )}
       </header>
 
-      <Card className="border-0 bg-card/55 py-0 shadow-none ring-1 ring-white/4">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Input type="month" value={month} onChange={(event) => changeMonth(event.target.value)} aria-label="Filter month" />
-          <FilterSelect value={typeFilter} onValueChange={changeType} placeholder="All types" items={[
-            { value: "all", label: "All types" },
-            { value: "expense", label: "Expense" },
-            { value: "income", label: "Income" },
-            { value: "transfer", label: "Transfer" },
-          ]} />
+      <section aria-label="Transaction filters" className="space-y-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Transaction type">
+          {[{ value: "all", label: "All" }, { value: "expense", label: "Expense" }, { value: "income", label: "Income" }, { value: "transfer", label: "Transfer" }].map((item) => <FilterPill key={item.value} active={typeFilter === item.value} onClick={() => changeType(item.value)}>{item.label}</FilterPill>)}
+        </div>
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
+          <Input className="col-span-2 rounded-full bg-surface sm:col-span-1" type="month" value={month} onChange={(event) => changeMonth(event.target.value)} aria-label="Filter month" />
+
           <FilterSelect value={accountFilter} onValueChange={setAccountFilter} placeholder="All accounts" items={accountFilterItems} />
           <FilterSelect value={categoryFilter} onValueChange={setCategoryFilter} placeholder="All categories" items={categoryFilterItems} />
           {exactDate && eligibleSpending && (
-            <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/8 px-3 py-2 text-xs text-muted-foreground sm:col-span-2 xl:col-span-4">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/8 px-3 py-2 text-xs text-muted-foreground col-span-2 sm:col-span-3">
               <span>Eligible expenses for {formatLongDate(exactDate)}</span>
               <Button type="button" size="sm" variant="ghost" onClick={clearDailySpendingFilter}>Show full month</Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {isLoading ? (
         <div className="space-y-3">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-20 rounded-2xl" />)}</div>
@@ -149,15 +145,19 @@ export function TransactionsPage() {
         <EmptyState title="No transactions found" description="Add your first transaction or adjust the filters above." actionHref="/transactions/new" actionLabel="Add transaction" />
       ) : (
         <>
-          <div className="overflow-hidden rounded-2xl bg-card/70 ring-1 ring-white/4">
+          <div>
             {transactions.map((transaction, index) => (
-              <TransactionRow
-                key={transaction.id}
-                transaction={transaction}
-                bordered={index > 0}
-                onEdit={() => openEdit(transaction)}
-                onDelete={() => setDeleteTarget(transaction)}
-              />
+              <Fragment key={transaction.id}>
+                {(index === 0 || transactions[index - 1].transaction_date !== transaction.transaction_date) && (
+                  <h2 className="section-heading border-b border-border/30 pt-5 pb-2 first:pt-0">{formatLongDate(transaction.transaction_date)}</h2>
+                )}
+                <TransactionRow
+                  transaction={transaction}
+                  bordered={index > 0 && transactions[index - 1].transaction_date === transaction.transaction_date}
+                  onEdit={() => openEdit(transaction)}
+                  onDelete={() => setDeleteTarget(transaction)}
+                />
+              </Fragment>
             ))}
           </div>
           {transactionsQuery.hasNextPage && (
@@ -199,50 +199,25 @@ export function TransactionsPage() {
 
 export function TransactionRow({ transaction, bordered, onEdit, onDelete }: { transaction: TransactionRecord; bordered: boolean; onEdit: () => void; onDelete: () => void }) {
   const type = transaction.transaction_type
-  const Icon = type === "income" ? ArrowDownLeft : type === "transfer" ? ArrowRightLeft : ArrowUpRight
-  const amount = getTransactionAmount(transaction)
-  const account = transaction.entries[0]?.account
-  const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account
-  const display = getTransactionDisplayDetails(transaction)
-  const subtitle = `${display.context} · ${formatLongDate(transaction.transaction_date)}`
   const editable = type === "expense" || type === "income" || type === "transfer"
-  const currency = account?.currency_code ?? source?.currency_code ?? "SGD"
-  const displayAmount = type === "income"
-    ? formatSignedCurrency(amount, currency)
-    : type === "expense"
-      ? formatSignedCurrency(-amount, currency)
-      : formatCurrency(amount, currency)
-
-  return (
-    <div className={cn("grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3.5 sm:flex sm:px-5 sm:py-4", bordered && "border-t border-border/20")}>
-      <span className={cn(
-        "flex size-10 shrink-0 items-center justify-center rounded-full",
-        type === "income" ? "bg-positive/10 text-positive" : type === "expense" ? "bg-negative/10 text-negative" : "bg-primary/10 text-primary",
-      )}>
-        <Icon className="size-5" aria-hidden="true" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm leading-5 font-medium">{display.title}</p>
-        <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
-      </div>
-      <p className={cn("max-w-[42vw] shrink-0 whitespace-nowrap text-right text-[clamp(0.78rem,3.5vw,0.875rem)] font-semibold tabular-nums sm:max-w-none", type === "income" && "text-positive", type === "expense" && "text-negative", type === "transfer" && "text-brand-secondary")}>
-        <span className="sr-only">{type}: </span>
-        {displayAmount}
-      </p>
-      {editable && (
-        <div className="col-start-2 col-end-4 flex justify-end gap-1">
-          <Button size="icon-sm" variant="ghost" aria-label={`Edit ${type} transaction`} onClick={onEdit}><Pencil /></Button>
-          <Button size="icon-sm" variant="ghost" aria-label={`Delete ${type} transaction`} onClick={onDelete}><Trash2 /></Button>
-        </div>
-      )}
-    </div>
-  )
+  const content = <TransactionRowContent transaction={transaction} dateLabel={formatLongDate(transaction.transaction_date)} />
+  return <div className={cn("flex min-w-0 items-center gap-1", bordered && "border-t border-border/25")}>
+    {editable ? <button type="button" className="ledger-row ledger-interactive min-w-0 flex-1" aria-label={`Edit ${type} transaction`} onClick={onEdit}>{content}</button>
+      : <div className="ledger-row min-w-0 flex-1">{content}</div>}
+    {editable && <DropdownMenu>
+      <DropdownMenuTrigger render={<Button className="min-h-11 min-w-11" variant="ghost" size="icon-sm" aria-label={`Actions for ${transaction.description?.trim() || type}`} />}><MoreHorizontal /></DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem className="min-h-11" onClick={onEdit}><Pencil /> Edit</DropdownMenuItem>
+        <DropdownMenuItem className="min-h-11" variant="destructive" aria-label={`Delete ${type} transaction`} onClick={onDelete}><Trash2 /> Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>}
+  </div>
 }
 
 function FilterSelect({ value, onValueChange, placeholder, items }: { value: string; onValueChange: (value: string) => void; placeholder: string; items: Array<{ value: string; label: string }> }) {
   return (
     <Select items={items} value={value} onValueChange={(nextValue) => nextValue && onValueChange(nextValue)}>
-      <SelectTrigger className="w-full"><SelectValue placeholder={placeholder} /></SelectTrigger>
+      <SelectTrigger aria-label={placeholder} className="w-full min-w-0 rounded-full bg-surface"><SelectValue className="min-w-0 overflow-hidden" placeholder={placeholder} /></SelectTrigger>
       <SelectContent>{items.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
     </Select>
   )
@@ -251,7 +226,7 @@ function FilterSelect({ value, onValueChange, placeholder, items }: { value: str
 function EmptyState({ title, description, actionLabel, actionHref }: { title: string; description: string; actionLabel: string; actionHref: string }) {
   return (
     <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
-      <CardContent className="flex min-h-64 flex-col items-center justify-center text-center">
+      <CardContent className="flex min-h-48 flex-col items-center justify-center text-center">
         <ReceiptText className="size-9 text-primary" />
         <h2 className="mt-4 text-lg font-semibold">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>

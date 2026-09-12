@@ -38,18 +38,32 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
   }))
 
   return (
-    <section className={cn("overflow-hidden rounded-[1.75rem] bg-card/35 py-5 sm:px-8 sm:py-8", className)} aria-labelledby="net-worth-heading">
-      <div className="px-1 sm:px-0">
-        <div className="flex items-center gap-2">
+    <section className={cn("min-w-0 py-1 sm:py-3", className)} aria-labelledby="net-worth-heading">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 id="net-worth-heading" className="eyebrow">Total net worth</h2>
-          <span className="size-1.5 rounded-full bg-positive" aria-hidden="true" />
-          <span className="text-[0.68rem] text-muted-foreground">Updated today</span>
+          <div className="flex shrink-0 gap-1 rounded-full border border-border/30 bg-surface p-0.5">
+            {([30, 90] as const).map((days) => (
+              <button
+                key={days}
+                type="button"
+                aria-pressed={period === days}
+                onClick={() => setPeriod(days)}
+                className={cn(
+                  "min-h-11 min-w-12 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                  period === days ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {days === 30 ? "1M" : "3M"}
+              </button>
+            ))}
+          </div>
         </div>
-        <p className="mt-2 whitespace-nowrap font-serif text-[clamp(2.15rem,11.5vw,4.75rem)] leading-none font-normal tracking-[-0.055em] text-foreground tabular-nums">
+        <p className="mt-2 break-words font-serif text-[clamp(2rem,9.5vw,3.75rem)] leading-tight font-normal tracking-[-0.035em] [overflow-wrap:anywhere] text-foreground tabular-nums">
           {formatCurrency(latest?.total_value_base_minor ?? 0, currencyCode)}
         </p>
         {changeMinor !== null && (
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
             <span className={cn(
               "rounded-full px-2.5 py-1 font-semibold tabular-nums",
               changeMinor >= 0 ? "bg-positive/10 text-positive" : "bg-negative/10 text-negative",
@@ -62,15 +76,15 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
           </div>
         )}
         {changeMinor === null && (
-          <p className="mt-4 text-xs text-muted-foreground">Not enough history yet</p>
+          <p className="mt-2 text-xs text-muted-foreground">Not enough history yet</p>
         )}
       </div>
 
-      <div className="mt-5 h-30 w-full sm:h-36" role="img" aria-label={`Net worth trend over ${period === 30 ? "one month" : "three months"}`}>
+      <div className="mt-3 h-32 w-full sm:h-44" role="img" aria-label={`Net worth trend over ${period === 30 ? "one month" : "three months"}`}>
         {chartData.length > 1 ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 2, bottom: 8, left: 2 }}>
-              <XAxis dataKey={netWorthChartKeys.snapshotDate} hide />
+              <XAxis dataKey={netWorthChartKeys.snapshotDate} tickFormatter={formatSnapshotTooltipLabel} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={48} />
               <YAxis hide domain={["dataMin", "dataMax"]} />
               <Tooltip
                 cursor={{ stroke: "var(--border)", strokeDasharray: "3 3" }}
@@ -78,7 +92,7 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
                 formatter={(value) => [formatCurrency(Number(value), currencyCode), "Net worth"]}
                 labelFormatter={formatSnapshotTooltipLabel}
               />
-              <Line type="monotone" dataKey={netWorthChartKeys.totalValueMinor} stroke="var(--primary)" strokeWidth={2.25} dot={false} activeDot={{ r: 4, fill: "var(--primary)", stroke: "var(--background)", strokeWidth: 2 }} />
+              <Line type="monotone" dataKey={netWorthChartKeys.totalValueMinor} stroke="var(--primary)" strokeWidth={1.75} isAnimationActive={false} dot={false} activeDot={{ r: 4, fill: "var(--primary)", stroke: "var(--background)", strokeWidth: 2 }} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
@@ -86,23 +100,6 @@ export function NetWorthTrendCard({ snapshots, currencyCode, className }: { snap
             More daily snapshots will build your trend.
           </div>
         )}
-      </div>
-
-      <div className="mx-auto mt-2 grid max-w-xs grid-cols-2 gap-2 rounded-full bg-surface p-1">
-        {([30, 90] as const).map((days) => (
-          <button
-            key={days}
-            type="button"
-            aria-pressed={period === days}
-            onClick={() => setPeriod(days)}
-            className={cn(
-              "min-h-9 rounded-full px-4 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-              period === days ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {days === 30 ? "1M" : "3M"}
-          </button>
-        ))}
       </div>
     </section>
   )

@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, CalendarDays, ChartNoAxesCombined, ReceiptText, Tags } from "lucide-react"
 import { useMemo, useState } from "react"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 import { FilterPill, MetricTile, PageTitle, SectionHeader } from "@/components/shared/finance-ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -113,33 +113,55 @@ function AnalyticsContent({ data, currency }: { data: SpendingAnalytics; currenc
   )
 }
 
+const categoryColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
+
 function SpendingByCategory({ data, currency }: { data: SpendingAnalytics; currency: string }) {
   const [expanded, setExpanded] = useState<string | null>(null)
+  const categories = [...data.categories].sort((left, right) => right.amount_minor - left.amount_minor)
+  // Sum the already-aggregated parent amounts, never their children again.
+  const categoryTotal = categories.reduce((total, category) => total + category.amount_minor, 0)
   return (
     <Card className="min-w-0 gap-3 rounded-xl border-0 bg-transparent py-0 shadow-none ring-0">
       <CardHeader className="px-0"><SectionHeader id="category-spending-heading" title="Spending by category" /></CardHeader>
-      <CardContent className="divide-y divide-border/25 border-y border-border/30 px-0">
-        {data.categories.map((category) => {
+      <CardContent className="px-0">
+        {categoryTotal > 0 && (
+          <div className="relative mx-auto mb-3 h-64 w-full max-w-72" role="img" aria-label="Donut chart of spending by category">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={categories} dataKey="amount_minor" nameKey="name" cx="50%" cy="50%" innerRadius={82} outerRadius={118} startAngle={90} endAngle={-270} stroke="var(--background)" strokeWidth={1} isAnimationActive={false}>
+                  {categories.map((category, index) => <Cell key={category.category_id ?? "uncategorised"} fill={categoryColors[index % categoryColors.length]} />)}
+                </Pie>
+                <Tooltip
+                  wrapperStyle={{ zIndex: 10 }}
+                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "0.625rem", color: "var(--popover-foreground)" }}
+                  itemStyle={{ color: "var(--popover-foreground)" }}
+                  formatter={(value, name) => [`${formatCurrency(Number(value), currency)} · ${getCategoryPercentage(Number(value), categoryTotal)}%`, name]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="w-36 text-center">
+                <p className="text-lg font-semibold leading-tight tabular-nums [overflow-wrap:anywhere]">{formatCurrency(categoryTotal, currency)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Total spent</p>
+              </div>
+            </div>
+          </div>
+        )}
+        <ul aria-label="Category breakdown" className="divide-y divide-border/25 border-y border-border/30">
+        {categories.map((category, index) => {
           const key = category.category_id ?? "uncategorised"
-          const percentage = getCategoryPercentage(category.amount_minor, data.summary.total_spent_minor)
+          const percentage = getCategoryPercentage(category.amount_minor, categoryTotal)
           const canExpand = category.subcategories.length > 0 || category.direct_amount_minor > 0
           const isExpanded = expanded === key
           return (
-            <div key={key} className="min-w-0">
-              <button type="button" disabled={!canExpand} onClick={() => setExpanded(isExpanded ? null : key)} aria-expanded={canExpand ? isExpanded : undefined} className="grid min-h-16 w-full grid-cols-[minmax(0,1fr)_auto] gap-4 rounded-lg py-3 text-left focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default">
-                <div className="min-w-0">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="break-words text-sm font-medium">{category.name}</span>
-                    <span className="text-sm font-semibold tabular-nums sm:hidden">{percentage}%</span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${percentage}%` }} />
-                  </div>
-                </div>
-                <div className="max-w-[40vw] text-right sm:max-w-64">
-                  <p className="text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">{formatCurrency(category.amount_minor, currency)}</p>
-                  <p className="hidden text-xs text-muted-foreground sm:block">{percentage}% of total</p>
-                </div>
+            <li key={key} className="min-w-0">
+              <button type="button" disabled={!canExpand} onClick={() => setExpanded(isExpanded ? null : key)} aria-expanded={canExpand ? isExpanded : undefined} className="grid min-h-12 w-full grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,6.5rem)] items-center gap-2 rounded-lg py-3 text-left focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full" style={{ background: categoryColors[index % categoryColors.length] }} />
+                  <span className="text-sm font-medium [overflow-wrap:anywhere]">{category.name}</span>
+                </span>
+                <span className="text-right text-xs tabular-nums text-muted-foreground">{percentage}%</span>
+                <span className="text-right text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">{formatCurrency(category.amount_minor, currency)}</span>
               </button>
               {isExpanded && (
                 <div className="border-t border-border/25 px-4 py-3">
@@ -147,9 +169,10 @@ function SpendingByCategory({ data, currency }: { data: SpendingAnalytics; curre
                   {category.subcategories.map((subcategory) => <CategoryDetail key={subcategory.category_id} label={subcategory.name} value={subcategory.amount_minor} currency={currency} />)}
                 </div>
               )}
-            </div>
+            </li>
           )
         })}
+        </ul>
       </CardContent>
     </Card>
   )

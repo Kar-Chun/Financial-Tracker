@@ -3,6 +3,14 @@ type ErrorWithMessage = {
 }
 
 const friendlyErrors: Array<[string, string]> = [
+  ["Account balance changed", "Account balance changed. Review the updated balance and try again."],
+  ["Only Bank and Cash", "Only active Bank and Cash accounts can be reconciled."],
+  ["Current account balance is unavailable", "The current balance could not be verified. Refresh the account and try again."],
+  ["Reconciliation difference is too large", "The balance difference is too large to process safely."],
+  ["Reconciliation amount or note is invalid", "Check the balance and keep the Note within 500 characters."],
+  ["Balance adjustments are read-only", "Balance adjustments are read-only. Reconcile again to correct the balance."],
+  ["Authentication is required", "Please sign in again before making financial changes."],
+  ["Account not found", "This account is no longer available. Refresh your accounts."],
   ["You're offline.", "You're offline. Reconnect before saving financial changes."],
   ["Invalid login credentials", "The email or password is incorrect."],
   ["Email not confirmed", "Confirm your email before signing in."],

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AccountLifecycleActions } from "@/features/accounts/account-lifecycle-actions"
 import { AccountFormDialog } from "@/features/accounts/account-form-dialog"
+import { AccountDetailDialog } from "@/features/accounts/account-detail-dialog"
 import { useAccounts, useArchivedAccounts } from "@/features/accounts/accounts-hooks"
 import type { ArchivedAccount } from "@/features/accounts/accounts-service"
 import { ValuationDialog } from "@/features/accounts/valuation-dialog"
@@ -34,6 +35,7 @@ export function AccountsView({
   const archivedQuery = useArchivedAccounts()
   const profileQuery = useProfile()
   const [formOpen, setFormOpen] = useState(false)
+  const [detailAccountId, setDetailAccountId] = useState<string | null>(null)
   const [editingAccount, setEditingAccount] = useState<AccountSummaryRow | null>(null)
   const [valuationAccount, setValuationAccount] = useState<AccountSummaryRow | null>(null)
   const accounts = useMemo(
@@ -41,6 +43,7 @@ export function AccountsView({
     [accountsQuery.data, filterType],
   )
   const baseCurrency = profileQuery.data?.base_currency ?? "SGD"
+  const detailAccount = accounts.find((account) => account.id === detailAccountId)
   const archivedAccounts = useMemo(
     () => (archivedQuery.data ?? []).filter((account) => !filterType || account.account_type === filterType),
     [archivedQuery.data, filterType],
@@ -99,6 +102,7 @@ export function AccountsView({
                       baseCurrency={baseCurrency}
                       bordered={index > 0}
                       onEdit={() => openEdit(account)}
+                      onDetail={() => setDetailAccountId(account.id)}
                       onValue={() => setValuationAccount(account)}
                     />
                   ))}
@@ -130,6 +134,7 @@ export function AccountsView({
       )}
 
       <AccountFormDialog open={formOpen} onOpenChange={setFormOpen} account={editingAccount} initialType={filterType ?? "bank"} />
+      {detailAccount && <AccountDetailDialog key={detailAccount.id} account={detailAccount} onClose={() => setDetailAccountId(null)} />}
       <ValuationDialog account={valuationAccount} open={Boolean(valuationAccount)} onOpenChange={(open) => !open && setValuationAccount(null)} />
     </div>
   )
@@ -140,12 +145,14 @@ function AccountRow({
   baseCurrency,
   bordered,
   onEdit,
+  onDetail,
   onValue,
 }: {
   account: AccountSummaryRow
   baseCurrency: string
   bordered: boolean
   onEdit: () => void
+  onDetail: () => void
   onValue: () => void
 }) {
   const Icon = account.account_type === "investment" ? Landmark : account.account_type === "bank" ? Building2 : WalletCards
@@ -165,7 +172,9 @@ function AccountRow({
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <h2 className="line-clamp-2 text-sm leading-5 font-semibold sm:text-base">{account.name}</h2>
+        <h2 className="line-clamp-2 text-sm leading-5 font-semibold sm:text-base">
+          {isInvestment ? account.name : <button type="button" className="min-h-11 text-left underline decoration-border underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring" onClick={onDetail} aria-label={`View ${account.name} account details`}>{account.name}</button>}
+        </h2>
         <p className="truncate text-xs capitalize text-muted-foreground">
           {[account.institution, account.account_type, account.currency_code].filter(Boolean).join(" · ")}
         </p>

@@ -72,6 +72,12 @@ export function getCategoryDisplayName(category: Category, categories: Category[
 
 export function getTransactionDisplayDetails(transaction: TransactionRecord) {
   const note = transaction.description?.trim() || null
+  if (transaction.transaction_type === "adjustment") {
+    return {
+      title: note ?? "Balance adjustment",
+      context: `Reconciliation · ${transaction.entries[0]?.account?.name ?? "Account"}`,
+    }
+  }
   const category = transaction.category?.name ?? "Uncategorised"
   const account = transaction.entries[0]?.account?.name ?? "Account"
   const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account?.name ?? "Account"

@@ -7,13 +7,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { AccountsView } from "@/features/accounts/accounts-view"
 
 const mocks = vi.hoisted(() => ({
+  active: [] as Array<{
+    id: string; name: string; account_type: "bank" | "cash"; currency_code: string;
+    current_balance_minor: number; opening_balance_minor: number; included_in_net_worth: boolean;
+  }>,
   archive: vi.fn(),
   restore: vi.fn(),
   remove: vi.fn(),
 }))
 
 vi.mock("@/features/accounts/accounts-hooks", () => ({
-  useAccounts: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }),
+  useAccounts: () => ({ data: mocks.active, isLoading: false, isError: false, refetch: vi.fn() }),
   useArchivedAccounts: () => ({
     data: [{
       id: "test-ibkr",
@@ -41,18 +45,28 @@ vi.mock("@/features/auth/profile-service", () => ({
 }))
 
 beforeEach(() => {
+  mocks.active = []
   mocks.archive.mockReset()
   mocks.restore.mockReset()
   mocks.remove.mockReset()
 })
 
 describe("archived account management", () => {
+  it.each(["bank", "cash"] as const)("opens active %s details without adding a reconciliation control to the list", (accountType) => {
+    mocks.active = [{ id: "active", name: "My account", account_type: accountType, currency_code: "SGD", current_balance_minor: 10000, opening_balance_minor: 10000, included_in_net_worth: true }]
+    render(<MemoryRouter><AccountsView /></MemoryRouter>)
+    expect(screen.queryByRole("button", { name: "Reconcile balance" })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "View My account account details" }))
+    expect(screen.getByRole("button", { name: "Reconcile balance" })).toBeInTheDocument()
+  })
+
   it("keeps archived accounts discoverable with restore and deliberate delete actions", () => {
     render(<MemoryRouter><AccountsView /></MemoryRouter>)
 
     expect(screen.getByRole("heading", { name: "Archived accounts" })).toBeInTheDocument()
     expect(screen.getByText("Test IBKR")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /restore/i })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Reconcile balance" })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: /delete permanently/i }))
     const confirmation = screen.getByLabelText("Type DELETE to confirm permanent account deletion")

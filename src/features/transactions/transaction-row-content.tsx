@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight } from "lucide-react"
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Scale } from "lucide-react"
 
 import { getTransactionAmount, getTransactionDisplayDetails } from "@/features/transactions/transaction-logic"
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
@@ -8,12 +8,13 @@ import type { TransactionRecord } from "@/types/finance"
 /** Shared read-only presentation for the recent list and paginated ledger. */
 export function TransactionRowContent({ transaction, dateLabel }: { transaction: TransactionRecord; dateLabel: string }) {
   const type = transaction.transaction_type
-  const Icon = type === "income" ? ArrowDownLeft : type === "transfer" ? ArrowRightLeft : ArrowUpRight
+  const Icon = type === "adjustment" ? Scale : type === "income" ? ArrowDownLeft : type === "transfer" ? ArrowRightLeft : ArrowUpRight
   const display = getTransactionDisplayDetails(transaction)
   const source = transaction.entries.find((entry) => entry.amount_minor < 0)?.account
   const currency = transaction.entries[0]?.account?.currency_code ?? source?.currency_code ?? "SGD"
   const amount = getTransactionAmount(transaction)
-  const value = type === "income" ? formatSignedCurrency(amount, currency)
+  const value = type === "adjustment" ? formatSignedCurrency(transaction.entries[0]?.amount_minor ?? 0, currency)
+    : type === "income" ? formatSignedCurrency(amount, currency)
     : type === "expense" ? formatSignedCurrency(-amount, currency) : formatCurrency(amount, currency)
 
   return <>

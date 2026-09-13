@@ -6,6 +6,7 @@ import {
   getArchivedAccounts,
   getAccountSummaries,
   restoreAccount,
+  reconcileAccountBalance,
   saveAccount,
   saveInvestmentValuation,
 } from "@/features/accounts/accounts-service"
@@ -48,6 +49,11 @@ export function useArchivedAccounts() {
 export function useSaveAccount() {
   const invalidate = useInvalidateAccountDependentData()
   return useMutation({ mutationFn: saveAccount, onSuccess: invalidate })
+}
+
+export function useReconcileAccount() {
+  const invalidate = useInvalidateAccountDependentData()
+  return useMutation({ mutationFn: reconcileAccountBalance, retry: false, onSuccess: invalidate })
 }
 
 export function useArchiveAccount() {

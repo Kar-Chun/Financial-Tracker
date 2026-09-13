@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase"
+import { z } from "zod"
 import { performFinancialMutation } from "@/lib/network"
 import { parseRpcResponse } from "@/lib/rpc-validation"
 import type { AccountType } from "@/types/finance"
@@ -38,12 +39,41 @@ export type ArchivedAccount = {
 
 export type AccountDeletionResult = {
   account_id: string
+  reconciliations_purged?: number
   soft_deleted_transactions_purged: number
   investment_valuations_deleted: number
   investment_holdings_deleted: number
   investment_trades_deleted: number
   investment_prices_deleted: number
   investment_cash_events_deleted: number
+}
+
+export type ReconcileAccountInput = {
+  accountId: string
+  expectedCurrentBalanceMinor: number
+  actualBalanceMinor: number
+  expectedCurrencyCode: string
+  note: string
+}
+
+const reconciliationResultSchema = z.object({
+  transaction_id: z.string().nullable(),
+  balance_minor: z.number().int(),
+  adjustment_minor: z.number().int(),
+})
+
+export async function reconcileAccountBalance(input: ReconcileAccountInput) {
+  return performFinancialMutation(async () => {
+    const { data, error } = await getSupabaseClient().rpc("reconcile_account_balance", {
+      p_account_id: input.accountId,
+      p_expected_current_balance_minor: input.expectedCurrentBalanceMinor,
+      p_actual_balance_minor: input.actualBalanceMinor,
+      p_expected_currency_code: input.expectedCurrencyCode,
+      p_note: input.note.trim() || null,
+    })
+    if (error) throw error
+    return parseRpcResponse(reconciliationResultSchema, data)
+  })
 }
 
 export async function getAccountSummaries() {

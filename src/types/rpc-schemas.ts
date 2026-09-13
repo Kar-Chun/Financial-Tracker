@@ -347,6 +347,7 @@ export const archivedAccountSchema = z.object({
 })
 
 export const accountDeletionResultSchema = z.object({
+  reconciliations_purged: z.number().int().nonnegative().optional(),
   account_id: z.string(),
   soft_deleted_transactions_purged: z.number().int(),
   investment_valuations_deleted: z.number().int(),

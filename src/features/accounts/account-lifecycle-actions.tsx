@@ -132,13 +132,13 @@ export function AccountLifecycleActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Permanently delete “{account.name}”?</AlertDialogTitle>
             <AlertDialogDescription>
-              This is intended for mistaken or test accounts. It cannot be undone, and the server will reject it if any active transaction uses this account.
+              This is intended for mistaken or test accounts. It cannot be undone. Active ordinary transactions block deletion; reconciliation-only adjustments can be removed with this account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="rounded-xl bg-destructive/8 p-3 text-sm text-muted-foreground ring-1 ring-destructive/20">
             <p className="font-medium text-foreground">This may permanently remove:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>the account and its already-deleted transaction remnants</li>
+              <li>the account, its reconciliation adjustments, and already-deleted transaction remnants</li>
               {account.account_type === "investment" && <li>manual investment valuations</li>}
               {account.investment_tracking_mode === "detailed" && <li>holdings, trades, prices, and investment cash events</li>}
             </ul>

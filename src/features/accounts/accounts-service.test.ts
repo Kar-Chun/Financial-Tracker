@@ -7,6 +7,7 @@ import {
   deleteAccountPermanently,
   getAccountSummaries,
   restoreAccount,
+  reconcileAccountBalance,
 } from "@/features/accounts/accounts-service"
 import { OfflineFinancialMutationError } from "@/lib/network"
 import { UnexpectedRpcResponseError } from "@/lib/rpc-validation"
@@ -24,6 +25,24 @@ beforeEach(() => {
 })
 
 describe("account lifecycle services", () => {
+  it("sends reviewed/actual integers and native currency to one reconciliation RPC", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: { transaction_id: "adjustment", balance_minor: 241772, adjustment_minor: -1350 }, error: null })
+    const result = await reconcileAccountBalance({ accountId: "bank", actualBalanceMinor: 241772, expectedCurrentBalanceMinor: 243122, expectedCurrencyCode: "SGD", note: " Missing activity " })
+    expect(result.adjustment_minor).toBe(-1350)
+    expect(supabaseMock.rpc).toHaveBeenCalledExactlyOnceWith("reconcile_account_balance", {
+      p_account_id: "bank", p_actual_balance_minor: 241772, p_expected_current_balance_minor: 243122,
+      p_expected_currency_code: "SGD", p_note: "Missing activity",
+    })
+  })
+
+  it("blocks reconciliation offline and rejects malformed responses safely", async () => {
+    const input = { accountId: "bank", actualBalanceMinor: 95000, expectedCurrentBalanceMinor: 100000, expectedCurrencyCode: "USD", note: "" }
+    Object.defineProperty(navigator, "onLine", { configurable: true, value: false })
+    await expect(reconcileAccountBalance(input)).rejects.toBeInstanceOf(OfflineFinancialMutationError)
+    expect(supabaseMock.rpc).not.toHaveBeenCalled()
+    Object.defineProperty(navigator, "onLine", { configurable: true, value: true })
+    await expect(reconcileAccountBalance(input)).rejects.toBeInstanceOf(UnexpectedRpcResponseError)
+  })
   it("uses the authenticated archive and restore RPCs", async () => {
     await archiveAccount("account-a")
     await restoreAccount("account-a")

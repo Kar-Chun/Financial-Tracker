@@ -106,6 +106,7 @@ Confirm the project reference before pushing. This repository is not linked auto
 16. `202609040002_centralize_eligible_spending.sql`
 17. `202609090001_add_dashboard_today_spending.sql`
 18. `202609100001_add_transaction_note_suggestions.sql`
+19. `202609130001_add_account_reconciliation.sql`
 
 Do not recreate tables manually in the Table Editor.
 
@@ -164,9 +165,19 @@ When adding an Expense or Income, typing at least two non-whitespace characters 
 
 Archive preserves an account and all history but removes it from active summaries, investment totals, and new transaction selectors. The server permits archive only when the existing authoritative represented value is exactly zero: transaction-derived balance for Bank/Cash, latest valuation plus later transfers for Simple investments, or broker cash plus priced holdings for Detailed investments. Archived accounts remain visible under **Archived accounts** and can be restored without creating financial activity.
 
-Permanent deletion is a separate, typed-confirmation action intended for mistaken or test accounts. The authenticated atomic RPC rejects any account referenced by an active transaction. If every reference is already soft-deleted, it purges each complete deleted transaction structure before removing only that account's valuations or Detailed holdings, trades, prices, and cash events. Shared manual FX rates and every unrelated account record remain untouched. Today's net-worth snapshot is refreshed after deletion; historical daily snapshots are intentionally not reconstructed.
+Permanent deletion is a separate, typed-confirmation action intended for mistaken or test accounts. The authenticated atomic RPC rejects accounts referenced by active ordinary or legacy adjustment history. Marked reconciliation-only adjustments and complete already-soft-deleted transaction structures can be purged before removing only that account's valuations or Detailed holdings, trades, prices, and cash events. Shared manual FX rates and every unrelated account record remain untouched. Today's net-worth snapshot is refreshed after deletion; historical daily snapshots are intentionally not reconstructed.
 
 Migration `202608270001_add_safe_account_lifecycle.sql` replaces the archive check, adds restore/permanent-delete RPCs, and preserves direct-table write restrictions. Follow [account lifecycle verification](supabase/ACCOUNT_LIFECYCLE_VERIFICATION.md) after applying it.
+
+## Account reconciliation
+
+Open an active Bank/Cash account's name in Accounts, then choose **Reconcile balance** in its detail dialog. Enter the actual current balance in that account's native currency (negative balances are supported). Confirmation sends the reviewed balance/currency and the actual balance, not a browser-authoritative difference.
+
+The authenticated RPC locks the account, reuses `get_account_summaries()`, rejects stale previews, and creates one marked `adjustment` transaction with one signed entry dated in the profile timezone. Equal balances create nothing. Ordinary transaction create/edit/delete and reconciliation share a per-user transaction lock, including edits away from an old account. Today’s snapshot refresh uses the existing helper; foreign Bank/Cash remains excluded from base Net Worth without FX.
+
+Adjustments appear as read-only history under All. They do not affect spending, income, cash flow, budgets, Today's Spending, the seven-day average, or Note suggestions. Correct mistakes by reconciling again. Investment and archived accounts cannot be reconciled. Reconciliation-only history may be purged during deliberate permanent account deletion; active ordinary history still blocks deletion. Historical snapshots are not rebuilt. Goal allocations remain untouched; available goal cash naturally reflects the corrected Bank/Cash balance.
+
+Apply the new migration before deploying the frontend. Generated types are intentionally untouched; the existing application adapter declares the new RPC until normal type regeneration after migration. See [reconciliation verification](supabase/ACCOUNT_RECONCILIATION_VERIFICATION.md) and the accompanying rollback-only SQL test.
 
 ## Monthly budgeting
 

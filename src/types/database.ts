@@ -1,4 +1,4 @@
-import type { Database as GeneratedDatabase } from "@/types/database.generated"
+import type { Database as GeneratedDatabase, Json } from "@/types/database.generated"
 
 export type { CompositeTypes, Enums, Json, Tables, TablesInsert, TablesUpdate } from "@/types/database.generated"
 
@@ -19,6 +19,7 @@ type InvestmentTradeArgs = NullableOptional<
 
 type ApplicationFunctions = Omit<
   GeneratedFunctions,
+  | "reconcile_account_balance"
   | "get_transaction_note_suggestions"
   | "get_transactions_page"
   | "record_goal_allocation"
@@ -31,6 +32,17 @@ type ApplicationFunctions = Omit<
   | "upsert_manual_fx_rate"
   | "upsert_savings_goal"
 > & {
+  // Pending migration contract; regenerate database.generated.ts after deployment.
+  reconcile_account_balance: {
+    Args: {
+      p_account_id: string
+      p_expected_current_balance_minor: number
+      p_actual_balance_minor: number
+      p_expected_currency_code: string
+      p_note?: string | null
+    }
+    Returns: Json
+  }
   get_transaction_note_suggestions: {
     Args: {
       p_query: string

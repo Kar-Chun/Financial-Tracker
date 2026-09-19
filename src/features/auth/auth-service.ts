@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase"
+import { getConfirmationRedirectUrl } from "@/features/auth/auth-redirect"
 
 type SignUpInput = {
   email: string
@@ -11,6 +12,7 @@ export async function signUp({ email, password, displayName }: SignUpInput) {
     email,
     password,
     options: {
+      emailRedirectTo: getConfirmationRedirectUrl(),
       data: {
         display_name: displayName.trim() || null,
       },

@@ -69,7 +69,8 @@ export function AuthPage({ mode }: AuthPageProps) {
             <h1 className="mt-5 font-serif text-3xl">Check your email</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               We sent a confirmation link to <strong>{confirmationEmail}</strong>.
-              Confirm your account, then return here to log in.
+              Open the link to confirm your email and return to Ledgerly.
+              If you aren't signed in automatically, log in after confirming.
             </p>
             <Button className="mt-6" variant="outline" onClick={() => navigate("/login")}>
               Go to login

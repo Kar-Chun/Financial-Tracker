@@ -114,6 +114,8 @@ Do not recreate tables manually in the Table Editor.
 
 New Auth users receive a profile and default categories through a database trigger. If email confirmation is enabled, signup shows a confirmation message and protected routes remain unavailable until a session exists.
 
+Email confirmation uses Supabase's standard `{{ .ConfirmationURL }}` email link and the browser client's implicit session flow, not a custom token-hash or PKCE callback. Signup supplies `emailRedirectTo` as the active app origin plus `/login`, so production and local signup return to their respective apps. The SDK processes the returned session before auth parameters are removed from the visible URL; the existing public-route guard then opens Dashboard. Failed/expired links show a safe auth-specific message, never the returned tokens or raw error description. There is no separate callback route, password-recovery, magic-link, or email-change UI.
+
 RLS is enabled on every user/financial table. Direct financial and category mutations are withheld from browser roles. Validated `SECURITY DEFINER` RPCs use an empty `search_path`, derive ownership from `auth.uid()`, and validate every referenced row. Follow [V1 RLS verification](supabase/RLS_VERIFICATION.md) and [V1.1 verification](supabase/V1_1_VERIFICATION.md) after migration.
 
 ## Money, balances, and investments
@@ -287,11 +289,13 @@ No Supabase secret, Gemini key, or service-role credential belongs in Vercel's f
 After Vercel provides the production URL, open Supabase Dashboard > Authentication > URL Configuration:
 
 1. Set **Site URL** to the exact HTTPS production URL.
-2. Add the exact production URL to **Redirect URLs** if it is not already allowed.
-3. Keep the local Vite URL as an additional redirect only if local confirmation testing is needed.
-4. If Vercel preview signups need email confirmation, add an appropriately scoped preview redirect pattern separately; prefer an exact production redirect for production.
+2. Add that production origin followed by `/login` to **Redirect URLs** (the exact `emailRedirectTo` path).
+3. For local testing, also allow `http://localhost:5173/login`. Vite defaults to port 5173; if it starts on another port, allow that exact origin plus `/login` instead. `127.0.0.1` is a separate origin and only needs an entry if you actually use it.
+4. Allow an exact preview origin plus `/login` only when testing preview signups. Do not allow arbitrary Vercel projects or all domains.
 
-Signup does not hardcode a host. Supabase uses the configured Site URL for email-confirmation redirects, and the browser client detects the returned session in the URL. Do not deploy until migration status and the production environment variables have been confirmed.
+Under **Authentication > Email Templates > Confirm signup**, the confirmation link should be `<a href="{{ .ConfirmationURL }}">Confirm your email</a>`. Do not link directly to `SiteURL`/`RedirectTo`, or construct a `TokenHash`/`code` callback: those do not match this implementation. Hosted URL settings and email templates are not controlled by this repository and must be checked in the intended Supabase project. A missing/disallowed redirect can fall back to Site URL, so it must not remain a development address in production.
+
+Signup does not hardcode a host or require another Vercel environment variable. After updating hosted settings and deploying the frontend, request a **fresh** signup email from production and verify that confirmation opens `/login`, establishes the session, then opens `/dashboard` with no auth credentials left in the URL. Repeat locally using the allowed Vite port, test an expired link, and test logout followed by another user's login. Old emails may still contain their original redirect. Do not share full confirmation URLs or tokens when troubleshooting. Do not deploy until migration status and the existing production environment variables have been confirmed.
 
 V2 does not change `vercel.json` or require additional Vercel environment variables. Apply both V2 migrations in order, then rebuild/redeploy. Existing installed-app users may need to close and reopen once after the service-worker update.
 

@@ -4,16 +4,23 @@ import type { Session } from "@supabase/supabase-js"
 
 import { clearSensitiveCacheForUserChange } from "@/features/auth/auth-cache"
 import { AuthContext, type AuthContextValue } from "@/features/auth/auth-context"
-import { isSupabaseConfigured, supabase } from "@/lib/supabase"
+import { AuthConfirmationError } from "@/features/auth/auth-confirmation-error"
+import { clearAuthReturnParameters } from "@/features/auth/auth-redirect"
+import { authReturnKind, isSupabaseConfigured, supabase } from "@/lib/supabase"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured)
+  const [confirmationError, setConfirmationError] = useState(false)
   const currentUserId = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
     if (!supabase) return
+    const client = supabase
+    let active = true
+    let ready = authReturnKind === null
+    let latestSession: Session | null = null
 
     let authEventReceived = false
     const applySession = (nextSession: Session | null) => {
@@ -25,15 +32,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return
       authEventReceived = true
-      applySession(nextSession)
+      latestSession = nextSession
+      if (ready) applySession(nextSession)
     })
 
-    void supabase.auth.getSession().then(({ data: sessionData }) => {
-      if (!authEventReceived) applySession(sessionData.session)
-    })
+    const bootstrap = async () => {
+      try {
+        let invalidReturn = authReturnKind === "invalid"
+        if (authReturnKind !== null) {
+          // initialize() reuses the SDK's initialization promise. Do not
+          // verifyOtp/exchange tokens a second time or erase its URL early.
+          const result = await client.auth.initialize()
+          invalidReturn ||= Boolean(result.error)
+          if (!active) return
+          clearAuthReturnParameters()
+        }
+        const { data: sessionData, error } = await client.auth.getSession()
+        if (!active) return
+        ready = true
+        const nextSession = authEventReceived ? latestSession : sessionData.session
+        if (authReturnKind !== null) {
+          setConfirmationError(invalidReturn || Boolean(error) || !nextSession)
+          applySession(nextSession)
+        } else if (!authEventReceived) {
+          applySession(nextSession)
+        }
+      } catch {
+        if (!active) return
+        ready = true
+        if (authReturnKind !== null) {
+          clearAuthReturnParameters()
+          setConfirmationError(true)
+        }
+        applySession(authEventReceived ? latestSession : null)
+      }
+    }
+    void bootstrap()
 
-    return () => data.subscription.unsubscribe()
+    return () => {
+      active = false
+      data.subscription.unsubscribe()
+    }
   }, [queryClient])
 
   const value = useMemo<AuthContextValue>(
@@ -48,5 +89,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [isLoading, session],
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>{confirmationError ? <AuthConfirmationError /> : children}</AuthContext.Provider>
 }

@@ -125,10 +125,6 @@
     @apply text-[0.72rem] font-semibold tracking-[0.13em] text-muted-foreground uppercase;
   }
 
-  .finance-surface {
-    @apply rounded-2xl bg-card ring-1 ring-border/35;
-  }
-
   /* Shared read-screen and form surfaces; no accounting or layout ownership. */
   .insight-surface {
     @apply rounded-xl border border-border/35 bg-card/75;

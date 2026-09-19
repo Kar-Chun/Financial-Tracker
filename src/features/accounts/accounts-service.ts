@@ -37,17 +37,6 @@ export type ArchivedAccount = {
   detailed_started_on: string | null
 }
 
-export type AccountDeletionResult = {
-  account_id: string
-  reconciliations_purged?: number
-  soft_deleted_transactions_purged: number
-  investment_valuations_deleted: number
-  investment_holdings_deleted: number
-  investment_trades_deleted: number
-  investment_prices_deleted: number
-  investment_cash_events_deleted: number
-}
-
 export type ReconcileAccountInput = {
   accountId: string
   expectedCurrentBalanceMinor: number

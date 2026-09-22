@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  calculateNetCashFlow,
   getCategoryDisplayName,
   transactionFormSchema,
   validateTransactionDraft,
@@ -9,6 +8,7 @@ import {
 import {
   applyTransferToBalances,
   buildEntryAmounts,
+  calculateNetCashFlow,
   getEffectiveInvestmentValues,
   transferPreservesNetWorth,
 } from "@/test/reference-models/transaction-reference-model"

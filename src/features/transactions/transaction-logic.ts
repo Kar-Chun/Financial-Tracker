@@ -55,14 +55,6 @@ export function getTransactionAmount(transaction: TransactionRecord) {
   return Math.abs(entry?.amount_minor ?? 0)
 }
 
-export function calculateNetCashFlow(transactions: TransactionRecord[]) {
-  return transactions.reduce((total, transaction) => {
-    if (transaction.transaction_type === "income") return total + getTransactionAmount(transaction)
-    if (transaction.transaction_type === "expense") return total - getTransactionAmount(transaction)
-    return total
-  }, 0)
-}
-
 export function getCategoryDisplayName(category: Category, categories: Category[]) {
   const parent = category.parent_id
     ? categories.find((candidate) => candidate.id === category.parent_id)

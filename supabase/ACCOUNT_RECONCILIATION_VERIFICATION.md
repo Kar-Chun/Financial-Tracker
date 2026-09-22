@@ -31,7 +31,7 @@ Nothing was deployed remotely during implementation.
 3. Regenerate types through the established workflow, inspecting the output before replacing the committed generated artifact. Do not commit CLI diagnostic output as TypeScript. Keep the small RPC adapter for nullable Note arguments and existing exact investment decimals.
 
    ```powershell
-   npx.cmd supabase gen types typescript --linked --schema public | Out-File src/types/database.generated.ts -Encoding utf8
+   npm.cmd run db:types -- --project-ref YOUR_CONFIRMED_PROJECT_REF
    npm.cmd test
    npm.cmd run lint
    npm.cmd run build

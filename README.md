@@ -37,14 +37,16 @@ Frontend code is feature-based under `src/features`. Supabase access lives in sm
 The Supabase schema declaration in `src/types/database.generated.ts` is generated from the linked live schema and must not be edited manually. After applying schema migrations to the confirmed project, regenerate it with:
 
 ```bash
-npx supabase@latest gen types typescript --linked --schema public > src/types/database.generated.ts
+npm run db:types -- --project-ref YOUR_CONFIRMED_PROJECT_REF
 ```
 
-From Windows PowerShell, preserve UTF-8 explicitly:
+From Windows PowerShell, use the same workflow through `npm.cmd`:
 
 ```powershell
-npx.cmd supabase gen types typescript --linked --schema public | Out-File src/types/database.generated.ts -Encoding utf8
+npm.cmd run db:types -- --project-ref YOUR_CONFIRMED_PROJECT_REF
 ```
+
+The command requires your confirmed reference to match `supabase/.temp/project-ref`; it does not link projects or apply migrations. It uses the existing npm/Supabase CLI workflow, pinned to `2.117.0` (the version recorded in the current artifact), with non-interactive installation. Authenticate with the CLI first. Output goes to a unique temporary file; CLI failures, chatter, missing schema sections, and TypeScript errors prevent replacement. Only validated UTF-8 output replaces the destination, and temporary output is cleaned up. Raw CLI diagnostics are not printed. No service-role credentials are needed. Review the resulting diff and run tests, lint, and build before committing. When updating the pinned CLI version, review its generated output as well.
 
 `src/types/database.ts` is a small client-contract adapter for PostgreSQL function nullability and exact decimal-string `NUMERIC` inputs. Application read models remain feature/domain types, and complex JSON RPC responses are validated at runtime before financial data reaches the UI.
 

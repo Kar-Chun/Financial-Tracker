@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { getMonthlySummary, groupExpensesByParent } from "@/features/dashboard/dashboard-logic"
+import { getMonthlySummary, groupExpensesByParent } from "@/test/reference-models/dashboard-reference-model"
 import type { Category } from "@/types/finance"
 import type { TransactionRecord } from "@/types/finance"
 
-describe("dashboard financial calculations", () => {
+describe("dashboard regression reference model (not database integration)", () => {
   it("counts only base-currency income and expenses", () => {
     const transactions = [
       record("income", 100_000, "SGD"),

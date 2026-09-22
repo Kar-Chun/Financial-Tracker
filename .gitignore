@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 supabase/.temp/
+src/types/.database-types-*.ts
 
 # Local environment files and secrets
 .env

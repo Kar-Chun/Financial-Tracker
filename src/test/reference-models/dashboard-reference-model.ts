@@ -1,5 +1,7 @@
-import { calculateNetCashFlow, getTransactionAmount } from "@/features/transactions/transaction-logic"
+// Regression reference for prefiltered fixtures, not the authoritative Dashboard RPC.
+import { getTransactionAmount } from "@/features/transactions/transaction-logic"
 import { getCurrentMonthInput } from "@/lib/dates"
+import { calculateNetCashFlow } from "@/test/reference-models/transaction-reference-model"
 import type { Category, TransactionRecord } from "@/types/finance"
 
 export function getMonthlySummary(

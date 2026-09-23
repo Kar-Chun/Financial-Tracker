@@ -9,7 +9,7 @@ const migrations = migrationNames.map((name) => readFileSync(resolve(migrationDi
 describe("release database security posture", () => {
   it("keeps migrations ordered and appends bounded reads after the lifecycle/history controls", () => {
     expect(migrationNames).toEqual([...migrationNames].sort())
-    expect(migrationNames.slice(-9)).toEqual([
+    expect(migrationNames.slice(-10)).toEqual([
       "202608240006_add_ai_abuse_protection.sql",
       "202608270001_add_safe_account_lifecycle.sql",
       "202608280001_add_net_worth_history_reset.sql",
@@ -19,6 +19,7 @@ describe("release database security posture", () => {
       "202609100001_add_transaction_note_suggestions.sql",
       "202609130001_add_account_reconciliation.sql",
       "202609220001_add_daily_transaction_reminders.sql",
+      "202609230001_add_full_data_export.sql",
     ])
   })
 

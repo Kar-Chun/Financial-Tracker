@@ -20,6 +20,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Multiple base-currency savings goals with virtual allocations, progress, target-date guidance, history, and archival
 - An authenticated, read-only AI Financial Assistant grounded by allowlisted deterministic finance tools
 - Optional daily transaction reminders through standards-based PWA Web Push
+- Full personal-data export as CSVs and a versioned JSON backup in a local ZIP
 
 ## Stack and architecture
 
@@ -112,12 +113,17 @@ Confirm the project reference before pushing. This repository is not linked auto
 18. `202609100001_add_transaction_note_suggestions.sql`
 19. `202609130001_add_account_reconciliation.sql`
 20. `202609220001_add_daily_transaction_reminders.sql`
+21. `202609230001_add_full_data_export.sql`
 
 Do not recreate tables manually in the Table Editor.
 
 Daily reminders run once per day at 9:00 PM Singapore time through one project-wide `0 13 * * *` Cron job, a dedicated Edge Function, and a durable per-user/Singapore-day claim. The browser receives only the public VAPID key. See [daily reminder deployment and verification](supabase/DAILY_TRANSACTION_REMINDER.md) for the required Edge secrets, Vault/Cron SQL, deployment order, manual invocation procedure, and installed-iPhone checklist.
 
 ## Authentication and security
+
+**Settings > Data & Privacy > Export Ledgerly data** prepares a local ZIP containing human-readable CSV files, `backup.json` (format version 1), `manifest.json`, and a README. It includes retained archived/deleted financial records and stored snapshots. Exact minor-unit money and investment decimals are strings in the JSON. The export contains personal financial information; store it securely. Supported touch/standalone apps offer **Share / Save to Files** after preparation; desktop uses a download. No backup is uploaded or cached remotely. Import/Restore is not supported.
+
+The authenticated, read-only `export_user_data_v1()` RPC uses an explicit field allowlist and includes only the caller's records. Push credentials, Auth sessions, scheduler state and AI operational data are excluded. Apply the migration, regenerate types against the confirmed project with the existing `db:types` workflow, then rebuild. See [export inventory, format and verification](supabase/FULL_DATA_EXPORT.md) for all included data, size boundaries and deployment/manual checks.
 
 New Auth users receive a profile and default categories through a database trigger. If email confirmation is enabled, signup shows a confirmation message and protected routes remain unavailable until a session exists.
 

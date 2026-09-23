@@ -33,6 +33,8 @@ describe("Settings refreshed sections", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }))
     await waitFor(() => expect(mocks.saveProfile).toHaveBeenCalledWith({ displayName: "Alex Tan", timezone: "Asia/Singapore" }, expect.any(Object)))
     expect(screen.getByText("Add to Home Screen")).toBeInTheDocument()
+    expect(screen.getByText("Data & Privacy")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Export Ledgerly data" })).toBeInTheDocument()
   })
 
   it("keeps category type pills and category creation wired to the existing mutation", async () => {

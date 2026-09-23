@@ -23,6 +23,7 @@ import { PwaInstallCard } from "@/components/shared/pwa-install-card"
 import { useProfile, useUpdateProfile } from "@/features/auth/profile-service"
 import { CategoryManagement } from "@/features/categories/category-management"
 import { NotificationSettings } from "@/features/notifications/notification-settings"
+import { DataExportSettings } from "@/features/data-export/data-export-settings"
 import { NetWorthHistoryReset } from "@/features/settings/net-worth-history-reset"
 import { getErrorMessage } from "@/lib/errors"
 
@@ -121,6 +122,7 @@ export function SettingsPage() {
 
       <CategoryManagement />
       <NotificationSettings />
+      <DataExportSettings />
       <PwaInstallCard />
       <NetWorthHistoryReset />
     </div>

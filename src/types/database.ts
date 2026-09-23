@@ -19,6 +19,7 @@ type InvestmentTradeArgs = NullableOptional<
 
 type ApplicationFunctions = Omit<
   GeneratedFunctions,
+  | "export_user_data_v1"
   | "enable_daily_transaction_reminder"
   | "get_notification_settings"
   | "remove_current_push_subscription"
@@ -36,6 +37,10 @@ type ApplicationFunctions = Omit<
   | "upsert_manual_fx_rate"
   | "upsert_savings_goal"
 > & {
+  export_user_data_v1: {
+    Args: Record<never, never>
+    Returns: Json
+  }
   enable_daily_transaction_reminder: {
     Args: {
       p_endpoint: string

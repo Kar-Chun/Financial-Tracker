@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PwaInstallCard } from "@/components/shared/pwa-install-card"
 import { useProfile, useUpdateProfile } from "@/features/auth/profile-service"
 import { CategoryManagement } from "@/features/categories/category-management"
+import { NotificationSettings } from "@/features/notifications/notification-settings"
 import { NetWorthHistoryReset } from "@/features/settings/net-worth-history-reset"
 import { getErrorMessage } from "@/lib/errors"
 
@@ -119,6 +120,7 @@ export function SettingsPage() {
       )}
 
       <CategoryManagement />
+      <NotificationSettings />
       <PwaInstallCard />
       <NetWorthHistoryReset />
     </div>

@@ -10,7 +10,6 @@ describe("release database security posture", () => {
   it("keeps migrations ordered and appends bounded reads after the lifecycle/history controls", () => {
     expect(migrationNames).toEqual([...migrationNames].sort())
     expect(migrationNames.slice(-9)).toEqual([
-      "202608240005_add_ai_read_models.sql",
       "202608240006_add_ai_abuse_protection.sql",
       "202608270001_add_safe_account_lifecycle.sql",
       "202608280001_add_net_worth_history_reset.sql",
@@ -19,6 +18,7 @@ describe("release database security posture", () => {
       "202609090001_add_dashboard_today_spending.sql",
       "202609100001_add_transaction_note_suggestions.sql",
       "202609130001_add_account_reconciliation.sql",
+      "202609220001_add_daily_transaction_reminders.sql",
     ])
   })
 
@@ -29,6 +29,7 @@ describe("release database security posture", () => {
       "savings_goals", "goal_allocations", "manual_fx_rates", "investment_holdings",
       "investment_trades", "investment_prices", "investment_cash_events",
       "ai_rate_limit_config", "ai_request_usage",
+      "notification_preferences", "push_subscriptions", "notification_deliveries",
     ]
     for (const table of tables) {
       expect(migrations, `${table} must enable RLS`).toContain(`alter table public.${table} enable row level security`)
@@ -70,4 +71,20 @@ describe("release database security posture", () => {
     expect(providerCall).toBeGreaterThan(claim)
     expect(edge).not.toContain("SERVICE_ROLE")
   })
+
+  it("keeps notification worker secrets out of browser source", () => {
+    const browserFiles = readBrowserSource(resolve(process.cwd(), "src"))
+    expect(browserFiles).not.toMatch(/WEB_PUSH_VAPID_PRIVATE_KEY|DAILY_REMINDER_CRON_SECRET|SUPABASE_SERVICE_ROLE_KEY/)
+    expect(browserFiles).toContain("VITE_WEB_PUSH_VAPID_PUBLIC_KEY")
+  })
 })
+
+function readBrowserSource(directory: string): string {
+  return readdirSync(directory, { withFileTypes: true }).map((entry) => {
+    const path = resolve(directory, entry.name)
+    if (entry.isDirectory()) return readBrowserSource(path)
+    return /\.(?:ts|tsx)$/.test(entry.name) && !entry.name.includes(".test.")
+      ? readFileSync(path, "utf8")
+      : ""
+  }).join("\n")
+}

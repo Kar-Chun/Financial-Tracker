@@ -19,6 +19,7 @@ vi.mock("@/features/categories/categories-hooks", () => ({
 }))
 vi.mock("@/features/settings/net-worth-history-hooks", () => ({ useResetNetWorthHistory: () => ({ mutate: mocks.resetHistory, isPending: false }) }))
 vi.mock("@/lib/pwa-install", () => ({ usePwaInstall: () => ({ canInstall: false, isIos: true, isStandalone: false }) }))
+vi.mock("@/features/notifications/notification-settings", () => ({ NotificationSettings: () => <section>Notifications</section> }))
 
 beforeEach(() => vi.clearAllMocks())
 

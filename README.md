@@ -19,6 +19,7 @@ Ledgerly is a secure personal finance tracker for understanding current assets, 
 - Independent monthly overall budgets, optional parent-category limits, spending pace, and safe daily guidance
 - Multiple base-currency savings goals with virtual allocations, progress, target-date guidance, history, and archival
 - An authenticated, read-only AI Financial Assistant grounded by allowlisted deterministic finance tools
+- Optional daily transaction reminders through standards-based PWA Web Push
 
 ## Stack and architecture
 
@@ -52,11 +53,12 @@ The command requires your confirmed reference to match `supabase/.temp/project-r
 
 ## Environment
 
-Create `.env.local` with browser-safe values from Supabase Project Settings > API:
+Create `.env.local` with the browser-safe Supabase values and the Web Push public key:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+VITE_WEB_PUSH_VAPID_PUBLIC_KEY=your-public-vapid-key
 ```
 
 `.env.local` is ignored by Git. Never place a Supabase `service_role` key, database password, or access token in frontend environment variables.
@@ -109,8 +111,11 @@ Confirm the project reference before pushing. This repository is not linked auto
 17. `202609090001_add_dashboard_today_spending.sql`
 18. `202609100001_add_transaction_note_suggestions.sql`
 19. `202609130001_add_account_reconciliation.sql`
+20. `202609220001_add_daily_transaction_reminders.sql`
 
 Do not recreate tables manually in the Table Editor.
+
+Daily reminders run once per day at 9:00 PM Singapore time through one project-wide `0 13 * * *` Cron job, a dedicated Edge Function, and a durable per-user/Singapore-day claim. The browser receives only the public VAPID key. See [daily reminder deployment and verification](supabase/DAILY_TRANSACTION_REMINDER.md) for the required Edge secrets, Vault/Cron SQL, deployment order, manual invocation procedure, and installed-iPhone checklist.
 
 ## Authentication and security
 
@@ -284,9 +289,10 @@ Configure these browser-safe environment variables in the Vercel project:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+VITE_WEB_PUSH_VAPID_PUBLIC_KEY=your-public-vapid-key
 ```
 
-No Supabase secret, Gemini key, or service-role credential belongs in Vercel's frontend environment. Gemini secrets are configured only for the Supabase Edge Function.
+No Supabase secret, Gemini key, Web Push private key, scheduler secret, or service-role credential belongs in Vercel's frontend environment. Server secrets are configured only for their Supabase Edge Functions.
 
 After Vercel provides the production URL, open Supabase Dashboard > Authentication > URL Configuration:
 

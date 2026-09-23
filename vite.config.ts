@@ -12,14 +12,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'service-worker.ts',
       registerType: 'autoUpdate',
       manifest: pwaManifest,
-      workbox: {
-        cleanupOutdatedCaches: true,
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         globIgnores: ['icons/pwa-*.png'],
-        navigateFallback: '/index.html',
-        runtimeCaching: [],
       },
     }),
   ],

@@ -19,7 +19,11 @@ type InvestmentTradeArgs = NullableOptional<
 
 type ApplicationFunctions = Omit<
   GeneratedFunctions,
+  | "enable_daily_transaction_reminder"
+  | "get_notification_settings"
+  | "remove_current_push_subscription"
   | "reconcile_account_balance"
+  | "set_daily_transaction_reminder"
   | "get_transaction_note_suggestions"
   | "get_transactions_page"
   | "record_goal_allocation"
@@ -32,7 +36,27 @@ type ApplicationFunctions = Omit<
   | "upsert_manual_fx_rate"
   | "upsert_savings_goal"
 > & {
-  // Pending migration contract; regenerate database.generated.ts after deployment.
+  enable_daily_transaction_reminder: {
+    Args: {
+      p_endpoint: string
+      p_p256dh: string
+      p_auth: string
+    }
+    Returns: Json
+  }
+  get_notification_settings: {
+    Args: Record<never, never>
+    Returns: Json
+  }
+  remove_current_push_subscription: {
+    Args: { p_endpoint: string }
+    Returns: boolean
+  }
+  set_daily_transaction_reminder: {
+    Args: { p_enabled: boolean }
+    Returns: Json
+  }
+  // Pending migration contracts; regenerate database.generated.ts after deployment.
   reconcile_account_balance: {
     Args: {
       p_account_id: string

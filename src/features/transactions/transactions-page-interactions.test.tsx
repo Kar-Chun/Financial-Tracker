@@ -35,6 +35,24 @@ function openPage(url = "/transactions") {
 }
 
 describe("refreshed transaction controls", () => {
+  it("retains loaded rows when refresh or loading more fails", () => {
+    const refetch = vi.fn()
+    hooks.transactions.mockReturnValue({ data: { pages: [{ items: [transaction] }] }, isError: true, error: new TypeError("Failed to fetch"), refetch })
+    openPage()
+    expect(screen.getByText("Lunch note")).toBeInTheDocument()
+    expect(screen.getByRole("status")).toHaveTextContent("Showing the latest loaded data")
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+    expect(refetch).toHaveBeenCalledOnce()
+  })
+
+  it("shows the initial error instead of an empty ledger", () => {
+    hooks.transactions.mockReturnValue({ isError: true, error: new TypeError("Failed to fetch") })
+    openPage()
+    expect(screen.getByText("Transactions could not be loaded.")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument()
+    expect(screen.queryByText("No transactions found")).not.toBeInTheDocument()
+  })
+
   it.each(["expense", "income", "transfer"])("passes the %s pill through to server filters", (type) => {
     openPage()
     fireEvent.click(screen.getByRole("button", { name: type[0].toUpperCase() + type.slice(1) }))

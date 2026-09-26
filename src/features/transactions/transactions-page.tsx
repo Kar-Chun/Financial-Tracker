@@ -32,6 +32,8 @@ import { formatLongDate, getCurrentMonthInput } from "@/lib/dates"
 import { getErrorMessage } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import type { TransactionRecord } from "@/types/finance"
+import { QueryRefreshNotice } from "@/components/shared/query-refresh-notice"
+import { isBlockingReadError } from "@/lib/query-policy"
 
 export function TransactionsPage() {
   const { user } = useAuth()
@@ -91,7 +93,7 @@ export function TransactionsPage() {
   }
 
   const isLoading = transactionsQuery.isLoading || accountsQuery.isLoading || categoriesQuery.isLoading
-  const hasError = transactionsQuery.isError || accountsQuery.isError || categoriesQuery.isError
+  const hasError = [transactionsQuery, accountsQuery, categoriesQuery].some(isBlockingReadError)
   const accountFilterItems = [
     { value: "all", label: "All accounts" },
     ...(accountsQuery.data ?? []).map((account) => ({ value: account.id, label: account.name })),
@@ -135,10 +137,11 @@ export function TransactionsPage() {
         </div>
       </section>
 
+      {!hasError && <QueryRefreshNotice queries={[transactionsQuery, accountsQuery, categoriesQuery]} />}
       {isLoading ? (
         <div className="space-y-3">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-20 rounded-2xl" />)}</div>
       ) : hasError ? (
-        <Card className="border-destructive/30"><CardContent className="py-10 text-center">Transactions could not be loaded.</CardContent></Card>
+        <Card className="border-destructive/30"><CardContent className="py-10 text-center"><p>Transactions could not be loaded.</p><Button className="mt-4" variant="outline" onClick={() => { void transactionsQuery.refetch(); void accountsQuery.refetch(); void categoriesQuery.refetch() }}>Try again</Button></CardContent></Card>
       ) : (accountsQuery.data?.length ?? 0) === 0 ? (
         <EmptyState title="Add an account first" description="Transactions need an active bank or cash account." actionLabel="Go to accounts" actionHref="/accounts" />
       ) : transactions.length === 0 ? (

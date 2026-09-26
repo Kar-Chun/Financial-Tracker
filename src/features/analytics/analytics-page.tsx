@@ -17,6 +17,9 @@ import type { SpendingAnalytics } from "@/features/analytics/analytics-types"
 import { useProfile } from "@/features/auth/profile-service"
 import { formatCurrency } from "@/lib/currency"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { QueryRefreshNotice } from "@/components/shared/query-refresh-notice"
+import { isBlockingReadError } from "@/lib/query-policy"
 
 export function AnalyticsPage() {
   const [preset, setPreset] = useState<AnalyticsPeriodPreset>("this_month")
@@ -27,6 +30,7 @@ export function AnalyticsPage() {
   }, [preset, profileQuery.data])
   const analyticsQuery = useSpendingAnalytics(preset, selectedPeriod)
   const currency = profileQuery.data?.base_currency ?? "SGD"
+  const hasError = isBlockingReadError(profileQuery) || isBlockingReadError(analyticsQuery) || !analyticsQuery.data || !profileQuery.data
 
   return (
     <div className="space-y-5">
@@ -37,11 +41,13 @@ export function AnalyticsPage() {
         ))}
       </div>
 
-      {profileQuery.isLoading || analyticsQuery.isLoading ? <AnalyticsSkeleton /> : profileQuery.isError || analyticsQuery.isError || !analyticsQuery.data ? (
+      {!hasError && <QueryRefreshNotice queries={[profileQuery, analyticsQuery]} />}
+      {profileQuery.isLoading || analyticsQuery.isLoading ? <AnalyticsSkeleton /> : hasError || !analyticsQuery.data ? (
         <Card className="border-destructive/30">
           <CardContent className="py-12 text-center">
             <p className="font-medium">Spending analytics could not be loaded.</p>
             <p className="mt-1 text-sm text-muted-foreground">Try again after checking your connection and migration status.</p>
+            <Button className="mt-4" variant="outline" onClick={() => { void profileQuery.refetch(); if (selectedPeriod) void analyticsQuery.refetch() }}>Try again</Button>
           </CardContent>
         </Card>
       ) : analyticsQuery.data.summary.total_spent_minor === 0 ? (

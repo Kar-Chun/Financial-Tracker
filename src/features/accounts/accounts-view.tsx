@@ -19,6 +19,8 @@ import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import type { AccountSummaryRow } from "@/types/finance"
 import type { AccountType } from "@/types/finance"
+import { QueryRefreshNotice } from "@/components/shared/query-refresh-notice"
+import { isBlockingReadError } from "@/lib/query-policy"
 
 type AccountsViewProps = {
   filterType?: AccountType
@@ -72,11 +74,12 @@ export function AccountsView({
         <Button onClick={openCreate}><Plus /> Add account</Button>
       </header>
 
+      <QueryRefreshNotice queries={[accountsQuery, archivedQuery]} />
       {accountsQuery.isLoading ? (
         <div className="space-y-4">
           {[0, 1, 2].map((item) => <Skeleton key={item} className="h-24 rounded-2xl" />)}
         </div>
-      ) : accountsQuery.isError ? (
+      ) : isBlockingReadError(accountsQuery) ? (
         <ErrorState onRetry={() => accountsQuery.refetch()} />
       ) : accounts.length === 0 ? (
         <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
@@ -113,7 +116,7 @@ export function AccountsView({
         </div>
       )}
 
-      {!archivedQuery.isLoading && !archivedQuery.isError && archivedAccounts.length > 0 && (
+      {!archivedQuery.isLoading && !isBlockingReadError(archivedQuery) && archivedAccounts.length > 0 && (
         <section aria-labelledby="archived-accounts-heading">
           <div className="mb-3 flex items-center justify-between gap-3 px-1">
             <h2 id="archived-accounts-heading" className="section-heading">Archived accounts</h2>
@@ -127,14 +130,14 @@ export function AccountsView({
         </section>
       )}
 
-      {archivedQuery.isError && (
+      {isBlockingReadError(archivedQuery) && (
         <div className="rounded-2xl bg-destructive/8 px-4 py-3 text-sm text-destructive ring-1 ring-destructive/20">
           Archived accounts could not be loaded. Try refreshing this page.
         </div>
       )}
 
       <AccountFormDialog open={formOpen} onOpenChange={setFormOpen} account={editingAccount} initialType={filterType ?? "bank"} />
-      {detailAccount && <AccountDetailDialog key={detailAccount.id} account={detailAccount} onClose={() => setDetailAccountId(null)} />}
+      {detailAccount && !isBlockingReadError(accountsQuery) && <AccountDetailDialog key={detailAccount.id} account={detailAccount} refreshQuery={accountsQuery} onClose={() => setDetailAccountId(null)} />}
       <ValuationDialog account={valuationAccount} open={Boolean(valuationAccount)} onOpenChange={(open) => !open && setValuationAccount(null)} />
     </div>
   )

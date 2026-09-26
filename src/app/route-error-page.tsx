@@ -1,11 +1,16 @@
 import { buttonVariants } from "@/components/ui/button-variants"
 import { AlertTriangle } from "lucide-react"
-import { Link } from "react-router-dom"
+import { useEffect } from "react"
+import { Link, useLocation, useRouteError } from "react-router-dom"
+import { reportRouteFailure } from "@/lib/query-diagnostics"
 
 import { AppLogo } from "@/components/shared/app-logo"
 import { Button } from "@/components/ui/button"
 
 export function RouteErrorPage() {
+  const error = useRouteError()
+  const { pathname } = useLocation()
+  useEffect(() => { reportRouteFailure(error, pathname) }, [error, pathname])
   return (
     <main className="grid min-h-svh place-items-center bg-background px-5 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] text-foreground">
       <section className="w-full max-w-md insight-surface p-5 text-center sm:p-6" aria-labelledby="route-error-heading">

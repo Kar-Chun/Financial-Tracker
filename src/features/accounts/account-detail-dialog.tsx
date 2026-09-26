@@ -12,8 +12,10 @@ import { formatCurrency, formatSignedCurrency, parseCurrencyToMinor } from "@/li
 import { getErrorMessage } from "@/lib/errors"
 import { offlineFinancialMutationMessage } from "@/lib/network"
 import type { AccountSummaryRow } from "@/types/finance"
+import { QueryRefreshNotice } from "@/components/shared/query-refresh-notice"
+import type { ReadQueryState } from "@/lib/query-policy"
 
-export function AccountDetailDialog({ account, onClose }: { account: AccountSummaryRow; onClose: () => void }) {
+export function AccountDetailDialog({ account, onClose, refreshQuery }: { account: AccountSummaryRow; onClose: () => void; refreshQuery?: ReadQueryState }) {
   const [reconciling, setReconciling] = useState(false)
   const [pending, setPending] = useState(false)
   const eligible = (account.account_type === "bank" || account.account_type === "cash") && account.current_balance_minor !== null
@@ -24,6 +26,7 @@ export function AccountDetailDialog({ account, onClose }: { account: AccountSumm
           <DialogTitle>{reconciling ? "Reconcile balance" : account.name}</DialogTitle>
           <DialogDescription>{reconciling && `${account.name} · `}{account.account_type === "bank" ? "Bank" : account.account_type === "cash" ? "Cash" : "Investment"} · {account.currency_code}</DialogDescription>
         </DialogHeader>
+        {refreshQuery && <QueryRefreshNotice queries={[refreshQuery]} />}
         {reconciling && eligible ? (
           <ReconciliationForm account={account} onClose={onClose} onPendingChange={setPending} />
         ) : (

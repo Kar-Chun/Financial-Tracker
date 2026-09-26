@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Session } from "@supabase/supabase-js"
 
@@ -89,5 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [isLoading, session],
   )
 
-  return <AuthContext.Provider value={value}>{confirmationError ? <AuthConfirmationError /> : children}</AuthContext.Provider>
+  // Clearing QueryClient alone does not reset every mounted QueryObserver.
+  // Remount consumers on identity changes so none can retain another user's
+  // rendered result or local form state. Token refresh keeps the same key.
+  return <AuthContext.Provider value={value}><Fragment key={session?.user.id ?? "signed-out"}>{confirmationError ? <AuthConfirmationError /> : children}</Fragment></AuthContext.Provider>
 }

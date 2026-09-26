@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AuthProvider } from "@/features/auth/auth-provider"
 import { useAuth } from "@/features/auth/auth-context"
-import { PublicOnlyRoute } from "@/features/auth/route-guards"
+import { ProtectedRoute, PublicOnlyRoute } from "@/features/auth/route-guards"
+import { createAppQueryClient } from "@/app/query-client"
 
 const authMocks = vi.hoisted(() => ({
   callback: undefined as ((event: AuthChangeEvent, session: Session | null) => void) | undefined,
@@ -42,6 +43,34 @@ beforeEach(() => {
 })
 
 describe("AuthProvider cache lifecycle", () => {
+  it("gates financial reads until auth is ready and never renders the prior user's cached result after switching", async () => {
+    let finishSession!: (value: { data: { session: Session }; error: null }) => void
+    authMocks.getSession.mockReturnValue(new Promise((resolve) => { finishSession = resolve }))
+    const read = vi.fn().mockResolvedValue("first-user loaded data")
+    function FinancialProbe() {
+      const query = useQuery({ queryKey: ["accounts", "summaries"], queryFn: read })
+      return <><p>{query.data ?? "Waiting for financial data"}</p><input aria-label="Local draft" defaultValue="" /></>
+    }
+    const client = createAppQueryClient()
+    render(<QueryClientProvider client={client}><AuthProvider>
+      <MemoryRouter initialEntries={["/accounts"]}><Routes>
+        <Route element={<ProtectedRoute />}><Route path="/accounts" element={<FinancialProbe />} /></Route>
+      </Routes></MemoryRouter>
+    </AuthProvider></QueryClientProvider>)
+    expect(read).not.toHaveBeenCalled()
+    await act(async () => { finishSession({ data: { session: session("first") }, error: null }) })
+    expect(await screen.findByText("first-user loaded data")).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText("Local draft"), { target: { value: "first user's draft" } })
+    act(() => authMocks.callback?.("TOKEN_REFRESHED", session("first")))
+    expect(screen.getByLabelText("Local draft")).toHaveValue("first user's draft")
+    read.mockImplementation(() => new Promise<string>(() => undefined))
+    act(() => authMocks.callback?.("SIGNED_IN", session("second")))
+    expect(screen.queryByText("first-user loaded data")).not.toBeInTheDocument()
+    expect(screen.getByText("Waiting for financial data")).toBeInTheDocument()
+    expect(screen.getByLabelText("Local draft")).toHaveValue("")
+    client.clear()
+  })
+
   it("waits for SDK URL initialization, removes credentials, then navigates once to Dashboard", async () => {
     authMocks.returnKind = "implicit"
     window.history.replaceState(null, "", "/login#access_token=test-access&refresh_token=test-refresh&expires_in=3600&token_type=bearer")

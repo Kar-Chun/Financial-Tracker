@@ -3,7 +3,7 @@ import { PageTitle, ValueSummary } from "@/components/shared/finance-ui"
 
 import { ArrowLeft, Banknote, CircleDollarSign, MoreHorizontal, Plus, RefreshCw, TrendingDown, TrendingUp } from "lucide-react"
 import { useState } from "react"
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -17,6 +17,8 @@ import type { DetailedCashEvent, DetailedTrade } from "@/features/investments/in
 import { formatCurrency, formatSignedCurrency } from "@/lib/currency"
 import { formatShortDate, getDateInputInTimeZone } from "@/lib/dates"
 import { cn } from "@/lib/utils"
+import { QueryRefreshNotice } from "@/components/shared/query-refresh-notice"
+import { isBlockingReadError } from "@/lib/query-policy"
 
 type DialogName = "buy" | "sell" | "prices" | "fx" | "holding" | "dividend" | "adjustment" | null
 
@@ -27,7 +29,12 @@ export function InvestmentAccountPage() {
   const profile = useProfile()
   const [dialog, setDialog] = useState<DialogName>(null)
   if (query.isLoading || profile.isLoading) return <Skeleton className="h-[40rem] rounded-3xl" />
-  if (query.isError || !query.data || !accountId) return <Navigate to="/investments" replace />
+  if (isBlockingReadError(query) || isBlockingReadError(profile) || !query.data || !profile.data || !accountId) return (
+    <section className="rounded-xl border border-destructive/30 p-6 text-center">
+      <h1 className="font-semibold">Investment account could not be loaded.</h1>
+      <Button className="mt-4" variant="outline" onClick={() => { void query.refetch(); void profile.refetch() }}>Try again</Button>
+    </section>
+  )
   const data = query.data; const { account, value, holdings, trades, cash_events: events } = data
   const baseCurrency = profile.data?.base_currency ?? "SGD"
   const today = getDateInputInTimeZone(profile.data?.timezone ?? "Asia/Singapore")
@@ -39,6 +46,7 @@ export function InvestmentAccountPage() {
   const totalMarket = Math.max(value.holdings_value_minor, 0)
 
   return <div className="space-y-5">
+    <QueryRefreshNotice queries={[query, profile]} />
     <header className="flex items-center gap-3"><Link to="/investments" aria-label="Back to investments" data-slot="button" className={buttonVariants({ variant: "ghost", size: "icon" })}><ArrowLeft /></Link><div className="min-w-0"><PageTitle eyebrow="Detailed portfolio" title={account.name} /><p className="mt-1 text-xs text-muted-foreground">{account.institution ?? "Investment account"} · {account.currency_code}</p></div></header>
     <section className="min-w-0 border-b border-border/30 pb-5"><p className="section-heading">Account value</p><p className="value-hero">{value.native_value_minor === null ? "Price needed" : formatCurrency(value.native_value_minor, account.currency_code)}</p>{value.base_value_available && value.base_value_minor !== null && account.currency_code !== baseCurrency && <p className="mt-2 text-sm text-muted-foreground">{formatCurrency(value.base_value_minor, baseCurrency)} base value</p>}{!value.base_value_available && <button className="mt-3 text-left text-sm text-amber-200 underline-offset-4 hover:underline" onClick={() => setDialog(value.missing_price_count > 0 ? "prices" : "fx")}>Base value unavailable · add {value.missing_price_count > 0 ? "missing prices" : `${account.currency_code} → ${baseCurrency} FX`}</button>}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric label="Broker cash" value={formatCurrency(value.broker_cash_minor, account.currency_code)} /><Metric label="Holdings" value={formatCurrency(value.holdings_value_minor, account.currency_code)} /><Metric label="Unrealised" value={value.unrealized_gain_minor === null ? "Price needed" : formatSignedCurrency(value.unrealized_gain_minor, account.currency_code)} tone={value.unrealized_gain_minor ?? undefined} /><Metric label="Realised" value={formatSignedCurrency(value.realized_gain_minor, account.currency_code)} tone={value.realized_gain_minor} /></div>

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { createAppQueryClient } from "@/app/query-client"
 
 import { Toaster } from "@/components/ui/sonner"
 import { OfflineIndicator } from "@/components/shared/offline-indicator"
@@ -10,17 +11,7 @@ type AppProvidersProps = {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            refetchOnWindowFocus: false,
-            staleTime: 30_000,
-          },
-        },
-      }),
-  )
+  const [queryClient] = useState(createAppQueryClient)
 
   return (
     <QueryClientProvider client={queryClient}>

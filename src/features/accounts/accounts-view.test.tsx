@@ -14,10 +14,12 @@ const mocks = vi.hoisted(() => ({
   archive: vi.fn(),
   restore: vi.fn(),
   remove: vi.fn(),
+  error: null as Error | null,
+  refetch: vi.fn(),
 }))
 
 vi.mock("@/features/accounts/accounts-hooks", () => ({
-  useAccounts: () => ({ data: mocks.active, isLoading: false, isError: false, refetch: vi.fn() }),
+  useAccounts: () => ({ data: mocks.active, isLoading: false, isError: Boolean(mocks.error), error: mocks.error, refetch: mocks.refetch }),
   useArchivedAccounts: () => ({
     data: [{
       id: "test-ibkr",
@@ -46,12 +48,25 @@ vi.mock("@/features/auth/profile-service", () => ({
 
 beforeEach(() => {
   mocks.active = []
+  mocks.error = null
+  mocks.refetch.mockReset()
   mocks.archive.mockReset()
   mocks.restore.mockReset()
   mocks.remove.mockReset()
 })
 
 describe("archived account management", () => {
+  it("preserves loaded balances and account detail through a transient refresh failure", () => {
+    mocks.active = [{ id: "active", name: "My account", account_type: "bank", currency_code: "SGD", current_balance_minor: 10000, opening_balance_minor: 10000, included_in_net_worth: true }]
+    const page = render(<MemoryRouter><AccountsView /></MemoryRouter>)
+    fireEvent.click(screen.getByRole("button", { name: "View My account account details" }))
+    mocks.error = new TypeError("Failed to fetch")
+    page.rerender(<MemoryRouter><AccountsView /></MemoryRouter>)
+    expect(screen.getByRole("dialog")).toHaveTextContent("$100.00")
+    expect(screen.getByRole("status")).toHaveTextContent("Showing the latest loaded data")
+    expect(screen.queryByText("Accounts could not be loaded.")).not.toBeInTheDocument()
+  })
+
   it.each(["bank", "cash"] as const)("opens active %s details without adding a reconciliation control to the list", (accountType) => {
     mocks.active = [{ id: "active", name: "My account", account_type: accountType, currency_code: "SGD", current_balance_minor: 10000, opening_balance_minor: 10000, included_in_net_worth: true }]
     render(<MemoryRouter><AccountsView /></MemoryRouter>)

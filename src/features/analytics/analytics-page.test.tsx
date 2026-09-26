@@ -24,6 +24,23 @@ beforeEach(() => {
 })
 
 describe("Analytics presentation", () => {
+  it("preserves the selected period's charts on a transient refresh failure", () => {
+    const refetch = vi.fn()
+    hooks.analytics.mockReturnValue({ data, isError: true, error: new TypeError("Load failed"), refetch })
+    render(<AnalyticsPage />)
+    expect(screen.getByRole("img", { name: "Bar chart of spending over time" })).toBeInTheDocument()
+    expect(screen.getByRole("status")).toHaveTextContent("Showing the latest loaded data")
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+    expect(refetch).toHaveBeenCalledOnce()
+  })
+
+  it("does not hide an authorization error behind cached charts", () => {
+    hooks.analytics.mockReturnValue({ data, isError: true, error: { code: "42501" } })
+    render(<AnalyticsPage />)
+    expect(screen.getByText("Spending analytics could not be loaded.")).toBeInTheDocument()
+    expect(screen.queryByRole("img")).not.toBeInTheDocument()
+  })
+
   it("renders the returned metrics and keeps category details accessible as text", () => {
     render(<AnalyticsPage />)
     expect(screen.getByRole("heading", { name: "Analytics" })).toBeInTheDocument()

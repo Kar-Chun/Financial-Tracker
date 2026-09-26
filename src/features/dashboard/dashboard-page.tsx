@@ -15,6 +15,9 @@ import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
 import { RecentTransactionsCard } from "@/features/dashboard/recent-transactions-card"
 import { TodaysSpendingCard } from "@/features/dashboard/todays-spending-card"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { QueryRefreshNotice } from "@/components/shared/query-refresh-notice"
+import { isBlockingReadError } from "@/lib/query-policy"
 
 export function DashboardPage() {
   const dashboardQuery = useDashboard()
@@ -25,12 +28,13 @@ export function DashboardPage() {
   const budgetQuery = useBudgetSummary(getCurrentMonthStart(timezone), Boolean(profile))
 
   if (dashboardQuery.isLoading || profileQuery.isLoading) return <DashboardSkeleton />
-  if (dashboardQuery.isError || profileQuery.isError || !dashboardQuery.data) {
+  if (isBlockingReadError(dashboardQuery) || isBlockingReadError(profileQuery) || !dashboardQuery.data || !profile) {
     return (
       <Card className="border-destructive/30">
         <CardContent className="py-12 text-center">
           <h1 className="text-lg font-semibold">Dashboard unavailable</h1>
           <p className="mt-2 text-sm text-muted-foreground">Check your connection and ensure the V1 migrations are applied.</p>
+          <Button className="mt-4" variant="outline" onClick={() => { void dashboardQuery.refetch(); void profileQuery.refetch() }}>Try again</Button>
         </CardContent>
       </Card>
     )
@@ -42,6 +46,7 @@ export function DashboardPage() {
   if (accounts.length === 0) {
     return (
       <div className="space-y-7">
+        <QueryRefreshNotice queries={[dashboardQuery, profileQuery]} />
         <Card className="border-0 bg-card/60 shadow-none ring-1 ring-white/5">
           <CardContent className="flex min-h-56 flex-col items-center justify-center text-center">
             <WalletCards className="size-10 text-primary" />
@@ -59,6 +64,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-5 sm:space-y-7">
+      <QueryRefreshNotice queries={[dashboardQuery, profileQuery]} />
       <NetWorthTrendCard snapshots={snapshots} currencyCode={currencyCode} />
 
       {foreignAccounts.length > 0 && (

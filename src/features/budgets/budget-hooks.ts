@@ -9,7 +9,7 @@ export function useBudgetSummary(monthStart: string, enabled = true) {
     queryKey: [...budgetQueryKey, monthStart],
     queryFn: () => getMonthlyBudgetSummary(monthStart),
     enabled,
-    staleTime: 15_000,
+    staleTime: 30_000,
   })
 }
 

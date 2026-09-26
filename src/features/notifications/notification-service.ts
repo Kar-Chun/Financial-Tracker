@@ -21,11 +21,11 @@ export type NotificationPreference = z.infer<typeof notificationPreferenceSchema
 export type NotificationPermissionStatus = "allowed" | "not_allowed" | "blocked" | "unsupported"
 
 export class NotificationSetupError extends Error {
-  readonly code: "unsupported" | "blocked" | "configuration" | "subscription"
+  readonly code: "unsupported" | "blocked" | "configuration" | "subscription" | "subscription_conflict" | "device_limit"
 
   constructor(
     message: string,
-    code: "unsupported" | "blocked" | "configuration" | "subscription",
+    code: NotificationSetupError["code"],
   ) {
     super(message)
     this.name = "NotificationSetupError"
@@ -66,6 +66,9 @@ export async function enableDailyReminder() {
       throw new NotificationSetupError("Notifications are not configured yet.", "configuration")
     }
     const applicationServerKey = urlBase64ToUint8Array(publicKey)
+    const client = getSupabaseClient()
+    // Start reading the identity without delaying the permission user gesture.
+    const initialSession = client.auth.getSession().catch(() => ({ data: { session: null }, error: true }))
 
     const permission = Notification.permission === "granted"
       ? "granted"
@@ -74,11 +77,22 @@ export async function enableDailyReminder() {
       throw new NotificationSetupError("Notification permission was not allowed.", "blocked")
     }
 
+    const { data: sessionData, error: sessionError } = await initialSession
+    const userId = sessionData.session?.user.id
+    if (sessionError || !userId) throw new NotificationSetupError("Sign in again to enable notifications.", "subscription")
+    const assertCurrentUser = async () => {
+      const { data, error } = await client.auth.getSession()
+      if (error || data.session?.user.id !== userId) {
+        throw new NotificationSetupError("The session changed. Enable notifications again.", "subscription")
+      }
+    }
+
     const registration = await navigator.serviceWorker.ready
-    let subscription = await registration.pushManager.getSubscription()
-    if (!subscription) {
+    const existing = await registration.pushManager.getSubscription()
+    const subscribe = async () => {
+      await assertCurrentUser()
       try {
-        subscription = await registration.pushManager.subscribe({
+        return await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey,
         })
@@ -86,18 +100,42 @@ export async function enableDailyReminder() {
         throw new NotificationSetupError("This device could not enable notifications.", "subscription")
       }
     }
-
-    const serialised = subscriptionJsonSchema.safeParse(subscription.toJSON())
-    if (!serialised.success) {
-      throw new NotificationSetupError("This device returned an invalid notification subscription.", "subscription")
+    const register = async (subscription: PushSubscription) => {
+      const serialised = subscriptionJsonSchema.safeParse(subscription.toJSON())
+      if (!serialised.success) {
+        throw new NotificationSetupError("This device returned an invalid notification subscription.", "subscription")
+      }
+      await assertCurrentUser()
+      const { data, error } = await client.rpc("enable_daily_transaction_reminder", {
+        p_endpoint: serialised.data.endpoint,
+        p_p256dh: serialised.data.keys.p256dh,
+        p_auth: serialised.data.keys.auth,
+      })
+      if (error?.code === "P2001") throw new NotificationSetupError("This notification subscription cannot be registered.", "subscription_conflict")
+      if (error?.code === "P2002") throw new NotificationSetupError("Notification device limit reached.", "device_limit")
+      if (error) throw new NotificationSetupError("Notifications could not be enabled.", "subscription")
+      await assertCurrentUser()
+      const preference = parseRpcResponse(notificationPreferenceSchema, data)
+      if (preference.user_id !== userId) throw new NotificationSetupError("The session changed. Enable notifications again.", "subscription")
+      return preference
     }
-    const { data, error } = await getSupabaseClient().rpc("enable_daily_transaction_reminder", {
-      p_endpoint: serialised.data.endpoint,
-      p_p256dh: serialised.data.keys.p256dh,
-      p_auth: serialised.data.keys.auth,
-    })
-    if (error) throw error
-    return parseRpcResponse(notificationPreferenceSchema, data)
+
+    try {
+      return await register(existing ?? await subscribe())
+    } catch (error) {
+      // Only an existing local subscription with an explicit ownership conflict
+      // may be replaced. Do not unsubscribe on quota, auth or transport errors.
+      if (!existing || !(error instanceof NotificationSetupError) || error.code !== "subscription_conflict") throw error
+      await assertCurrentUser()
+      let removed = false
+      try { removed = await existing.unsubscribe() } catch { /* Safe local failure below. */ }
+      if (!removed) throw new NotificationSetupError("This device could not renew notifications. Try again.", "subscription")
+      const fresh = await subscribe()
+      if (fresh.endpoint === existing.endpoint) throw new NotificationSetupError("This device could not renew notifications. Try again.", "subscription")
+      // One fresh attempt only. The old server row remains owned by its account
+      // until normal expired-subscription cleanup removes it.
+      return register(fresh)
+    }
   })
 }
 

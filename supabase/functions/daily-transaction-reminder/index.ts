@@ -2,6 +2,8 @@ import { sendPushNotification } from "npm:@mmmike/web-push@1.0.1/send"
 import { createClient } from "npm:@supabase/supabase-js@2"
 
 import {
+  MAX_PUSH_SUBSCRIPTIONS,
+  REMINDER_BATCH_SIZE,
   runDailyReminderWorker,
   type DeliveryOutcome,
   type PushSubscriptionRecord,
@@ -35,11 +37,18 @@ Deno.serve(async (request) => {
     }
 
     const client = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } })
+    // Pin the first database-supplied Singapore date across this invocation.
+    let reminderDate: string | undefined
     const result = await runDailyReminderWorker({
       claimReminders: async () => {
-        const { data, error } = await client.rpc("claim_daily_transaction_reminders", { p_limit: 50 })
+        const { data, error } = await client.rpc("claim_daily_transaction_reminders", {
+          p_limit: REMINDER_BATCH_SIZE,
+          ...(reminderDate ? { p_local_date: reminderDate } : {}),
+        })
         if (error) throw error
-        return (data ?? []) as ReminderClaim[]
+        const claims = (data ?? []) as ReminderClaim[]
+        reminderDate ??= claims[0]?.reminder_local_date
+        return claims
       },
       isReminderEnabled: async (userId) => {
         const { data, error } = await client
@@ -55,6 +64,9 @@ Deno.serve(async (request) => {
           .from("push_subscriptions")
           .select("id,endpoint,p256dh,auth")
           .eq("user_id", userId)
+          .order("updated_at", { ascending: false })
+          .order("id")
+          .limit(MAX_PUSH_SUBSCRIPTIONS)
         if (error) throw error
         return (data ?? []) as PushSubscriptionRecord[]
       },
@@ -84,6 +96,10 @@ Deno.serve(async (request) => {
         if (error || data !== true) throw error ?? new Error("Reminder claim completion was rejected.")
       },
     })
+    if (result.stop_reason) {
+      console.error(JSON.stringify({ request_id: requestId, category: result.stop_reason, claimed: result.claimed, batches: result.batches }))
+      return json(result, 503)
+    }
     return json(result, 200)
   } catch {
     console.error(JSON.stringify({ request_id: requestId, category: "worker_failure" }))

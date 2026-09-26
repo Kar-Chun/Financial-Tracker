@@ -9,7 +9,7 @@ import {
   saveDailyReminderPreference,
 } from "@/features/notifications/notification-service"
 
-const supabaseMock = vi.hoisted(() => ({ rpc: vi.fn() }))
+const supabaseMock = vi.hoisted(() => ({ rpc: vi.fn(), auth: { getSession: vi.fn() } }))
 vi.mock("@/lib/supabase", () => ({ getSupabaseClient: () => supabaseMock }))
 
 const storedPreference = {
@@ -21,6 +21,7 @@ beforeEach(() => {
   vi.unstubAllEnvs()
   vi.stubEnv("VITE_WEB_PUSH_VAPID_PUBLIC_KEY", "B".repeat(87))
   Object.defineProperty(navigator, "onLine", { configurable: true, value: true })
+  supabaseMock.auth.getSession.mockReset().mockResolvedValue({ data: { session: { user: { id: "owner" } } }, error: null })
   supabaseMock.rpc.mockReset()
   supabaseMock.rpc.mockResolvedValue({ data: storedPreference, error: null })
 })
@@ -77,6 +78,83 @@ describe("daily reminder browser subscription", () => {
     expect(supabaseMock.rpc).toHaveBeenCalledOnce()
   })
 
+  it("replaces a conflicting local subscription once, without removing or reassigning its server row", async () => {
+    const existing = subscription()
+    const fresh = subscription("https://fcm.googleapis.com/fcm/send/fresh-device")
+    const { subscribe } = installWebPush({ permission: "granted", existing })
+    subscribe.mockResolvedValue(fresh)
+    supabaseMock.rpc.mockResolvedValueOnce({ data: null, error: { code: "P2001", message: "untrusted detail" } })
+    await expect(enableDailyReminder()).resolves.toEqual(storedPreference)
+    expect(existing.unsubscribe).toHaveBeenCalledOnce()
+    expect(subscribe).toHaveBeenCalledOnce()
+    expect(supabaseMock.rpc).toHaveBeenCalledTimes(2)
+    expect(supabaseMock.rpc.mock.calls.map((call) => call[0])).toEqual([
+      "enable_daily_transaction_reminder", "enable_daily_transaction_reminder",
+    ])
+    expect(supabaseMock.rpc.mock.calls[1][1].p_endpoint).toBe(fresh.endpoint)
+    expect(vi.mocked(existing.unsubscribe).mock.invocationCallOrder[0]).toBeLessThan(subscribe.mock.invocationCallOrder[0])
+  })
+
+  it.each(["P2002", "42501", "unknown"])("does not unsubscribe a valid local device on %s", async (code) => {
+    const existing = subscription()
+    const { subscribe } = installWebPush({ permission: "granted", existing })
+    supabaseMock.rpc.mockResolvedValueOnce({ data: null, error: { code, message: existing.endpoint } })
+    await expect(enableDailyReminder()).rejects.toThrow(code === "P2002" ? "Notification device limit reached." : "Notifications could not be enabled.")
+    expect(existing.unsubscribe).not.toHaveBeenCalled()
+    expect(subscribe).not.toHaveBeenCalled()
+  })
+
+  it("stops when unsubscribe fails", async () => {
+    const existing = subscription()
+    vi.mocked(existing.unsubscribe).mockResolvedValue(false)
+    const { subscribe } = installWebPush({ permission: "granted", existing })
+    supabaseMock.rpc.mockResolvedValueOnce({ data: null, error: { code: "P2001" } })
+    await expect(enableDailyReminder()).rejects.toThrow("could not renew")
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(supabaseMock.rpc).toHaveBeenCalledOnce()
+  })
+
+  it("does not attempt to register the old endpoint again if the browser fails to replace it", async () => {
+    const existing = subscription()
+    installWebPush({ permission: "granted", existing })
+    supabaseMock.rpc.mockResolvedValueOnce({ data: null, error: { code: "P2001" } })
+    await expect(enableDailyReminder()).rejects.toThrow("could not renew")
+    expect(supabaseMock.rpc).toHaveBeenCalledOnce()
+  })
+
+  it("never loops when a fresh endpoint is also rejected", async () => {
+    const existing = subscription()
+    const fresh = subscription("https://fcm.googleapis.com/fcm/send/fresh-device")
+    const { subscribe } = installWebPush({ permission: "granted", existing })
+    subscribe.mockResolvedValue(fresh)
+    supabaseMock.rpc.mockResolvedValue({ data: null, error: { code: "P2001" } })
+    await expect(enableDailyReminder()).rejects.toThrow("cannot be registered")
+    expect(supabaseMock.rpc).toHaveBeenCalledTimes(2)
+    expect(subscribe).toHaveBeenCalledOnce()
+    expect(fresh.unsubscribe).not.toHaveBeenCalled()
+  })
+
+  it("does not replace a newly created subscription on an unexpected conflict", async () => {
+    const { subscribe, unsubscribe } = installWebPush({ permission: "granted" })
+    supabaseMock.rpc.mockResolvedValue({ data: null, error: { code: "P2001" } })
+    await expect(enableDailyReminder()).rejects.toThrow("cannot be registered")
+    expect(subscribe).toHaveBeenCalledOnce()
+    expect(unsubscribe).not.toHaveBeenCalled()
+    expect(supabaseMock.rpc).toHaveBeenCalledOnce()
+  })
+
+  it("aborts recovery if the session changes while registration is pending", async () => {
+    const existing = subscription()
+    const { subscribe } = installWebPush({ permission: "granted", existing })
+    supabaseMock.rpc.mockImplementationOnce(async () => {
+      supabaseMock.auth.getSession.mockResolvedValue({ data: { session: { user: { id: "new-user" } } }, error: null })
+      return { data: null, error: { code: "P2001" } }
+    })
+    await expect(enableDailyReminder()).rejects.toThrow("session changed")
+    expect(existing.unsubscribe).not.toHaveBeenCalled()
+    expect(subscribe).not.toHaveBeenCalled()
+  })
+
   it("disables the daily reminder without unsubscribing the device", async () => {
     const { unsubscribe } = installWebPush({ permission: "granted", existing: subscription() })
     supabaseMock.rpc.mockResolvedValueOnce({
@@ -130,11 +208,11 @@ function installWebPush({
   return { requestPermission, subscribe, unsubscribe: vi.mocked(created.unsubscribe) }
 }
 
-function subscription() {
+function subscription(endpoint = "https://fcm.googleapis.com/fcm/send/device-a") {
   return {
-    endpoint: "https://fcm.googleapis.com/fcm/send/device-a",
+    endpoint,
     toJSON: () => ({
-      endpoint: "https://fcm.googleapis.com/fcm/send/device-a",
+      endpoint,
       keys: { p256dh: "p".repeat(87), auth: "a".repeat(22) },
     }),
     unsubscribe: vi.fn().mockResolvedValue(true),

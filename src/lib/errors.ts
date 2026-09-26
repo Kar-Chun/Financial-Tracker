@@ -3,6 +3,7 @@ type ErrorWithMessage = {
 }
 
 const friendlyErrors: Array<[string, string]> = [
+  ["Notification device limit reached", "You've reached the device limit for notifications. Remove an existing device before adding another."],
   ["Expense and Income require", "Choose a Bank or Cash account for an expense or income."],
   ["Investment number", "Enter a valid investment value within the supported precision and range."],
   ["Account balance changed", "Account balance changed. Review the updated balance and try again."],

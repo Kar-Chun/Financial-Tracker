@@ -115,12 +115,15 @@ Confirm the project reference before pushing. This repository is not linked auto
 20. `202609220001_add_daily_transaction_reminders.sql`
 21. `202609230001_add_full_data_export.sql`
 22. `202609260001_harden_financial_input_boundaries.sql`
+23. `202609260002_harden_push_subscriptions_and_reminder_batches.sql`
 
 Do not recreate tables manually in the Table Editor.
 
 Security Remediation Phase 1 hardens ordinary Expense/Income account types and exact investment numeric inputs without rewriting history. Financial mutation hooks reject offline submissions immediately and never replay them on reconnect. See [Phase 1 verification and deployment](docs/audits/security-remediation-phase-1.md), including the rollback-only database checks and the pre-deployment historical-data check.
 
 Daily reminders run once per day at 9:00 PM Singapore time through one project-wide `0 13 * * *` Cron job, a dedicated Edge Function, and a durable per-user/Singapore-day claim. The browser receives only the public VAPID key. See [daily reminder deployment and verification](supabase/DAILY_TRANSACTION_REMINDER.md) for the required Edge secrets, Vault/Cron SQL, deployment order, manual invocation procedure, and installed-iPhone checklist.
+
+Security Remediation Phase 2 caps new notification registrations at five devices per user, prevents endpoint ownership reassignment, and drains bounded batches of unclaimed reminder users. See [Phase 2 scope and verification](docs/audits/security-remediation-phase-2.md).
 
 ## Authentication and security
 

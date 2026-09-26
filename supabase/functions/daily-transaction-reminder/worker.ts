@@ -13,6 +13,10 @@ export type PushSubscriptionRecord = {
 
 export type DeliveryOutcome = "delivered" | "failed" | "disabled" | "no_subscription"
 
+export const MAX_PUSH_SUBSCRIPTIONS = 5
+export const REMINDER_BATCH_SIZE = 50
+export const MAX_REMINDER_BATCHES = 20
+
 export type ReminderWorkerDependencies = {
   claimReminders(): Promise<ReminderClaim[]>
   isReminderEnabled(userId: string): Promise<boolean>
@@ -23,6 +27,8 @@ export type ReminderWorkerDependencies = {
 }
 
 export type ReminderWorkerResult = {
+  batches: number
+  stop_reason: "batch_limit_reached" | "invalid_claim_batch" | null
   claimed: number
   delivered: number
   gone: number
@@ -32,9 +38,10 @@ export type ReminderWorkerResult = {
 }
 
 export async function runDailyReminderWorker(dependencies: ReminderWorkerDependencies): Promise<ReminderWorkerResult> {
-  const claims = await dependencies.claimReminders()
   const result: ReminderWorkerResult = {
-    claimed: claims.length,
+    batches: 0,
+    stop_reason: null,
+    claimed: 0,
     delivered: 0,
     gone: 0,
     failed: 0,
@@ -42,10 +49,24 @@ export async function runDailyReminderWorker(dependencies: ReminderWorkerDepende
     no_subscription: 0,
   }
 
-  // Keep outbound concurrency small enough for an Edge isolate.
-  for (let index = 0; index < claims.length; index += 5) {
-    await Promise.all(claims.slice(index, index + 5).map((claim) => processClaim(claim, dependencies, result)))
+  const seen = new Set<string>()
+  for (let batch = 0; batch < MAX_REMINDER_BATCHES; batch += 1) {
+    const claims = await dependencies.claimReminders()
+    if (claims.length === 0) return result
+    const ids = new Set(claims.map((claim) => claim.delivery_id))
+    if (claims.length > REMINDER_BATCH_SIZE || ids.size !== claims.length || claims.some((claim) => seen.has(claim.delivery_id))) {
+      result.stop_reason = "invalid_claim_batch"
+      return result
+    }
+    ids.forEach((id) => seen.add(id))
+    result.batches += 1
+    result.claimed += claims.length
+    // At most five users, each with at most five devices, send concurrently.
+    for (let index = 0; index < claims.length; index += 5) {
+      await Promise.all(claims.slice(index, index + 5).map((claim) => processClaim(claim, dependencies, result)))
+    }
   }
+  result.stop_reason = "batch_limit_reached"
   return result
 }
 
@@ -60,7 +81,7 @@ async function processClaim(
       result.disabled += 1
       return
     }
-    const subscriptions = await dependencies.listSubscriptions(claim.claimed_user_id)
+    const subscriptions = (await dependencies.listSubscriptions(claim.claimed_user_id)).slice(0, MAX_PUSH_SUBSCRIPTIONS)
     if (subscriptions.length === 0) {
       await dependencies.completeDelivery(claim.delivery_id, "no_subscription")
       result.no_subscription += 1

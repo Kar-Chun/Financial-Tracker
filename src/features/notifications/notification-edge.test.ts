@@ -10,6 +10,22 @@ const config = readFileSync(resolve(process.cwd(), "supabase/config.toml"), "utf
 const deployment = readFileSync(resolve(process.cwd(), "supabase/DAILY_TRANSACTION_REMINDER.md"), "utf8")
 
 describe("daily reminder Edge boundary", () => {
+  it("bounds database reads and pins the first Singapore date throughout draining", () => {
+    expect(edge).toContain("p_limit: REMINDER_BATCH_SIZE")
+    expect(edge).toContain(".limit(MAX_PUSH_SUBSCRIPTIONS)")
+    expect(edge).toContain("reminderDate ??= claims[0]?.reminder_local_date")
+    expect(edge).toContain("p_local_date: reminderDate")
+    expect(edge.indexOf("let reminderDate")).toBeLessThan(edge.indexOf("await runDailyReminderWorker"))
+  })
+
+  it("reports guard stops without logging recipients or sender errors", () => {
+    const logs = edge.match(/console\.(?:error|log)\(JSON\.stringify\([\s\S]*?\)\)/g) ?? []
+    expect(logs.length).toBeGreaterThan(0)
+    for (const log of logs) {
+      expect(log).not.toMatch(/endpoint|p256dh|\bauth\b|userId|claimed_user_id|subscription|\berror\s*[,}]/)
+    }
+    expect(edge).toContain("return json(result, 503)")
+  })
   it("authenticates the scheduled request before server database access", () => {
     const authentication = edge.indexOf("constantTimeEqual")
     const serviceClient = edge.indexOf("createClient(supabaseUrl, serviceRoleKey")

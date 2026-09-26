@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
+import { useFinancialMutation } from "@/lib/use-financial-mutation"
 import { getSavingsGoalDetail, getSavingsGoalsSummary, recordGoalAllocation, saveSavingsGoal, setSavingsGoalArchived } from "@/features/goals/goals-service"
 
 export const goalsQueryKey = ["goals"] as const
@@ -23,7 +24,7 @@ export function useSavingsGoalDetail(goalId: string | undefined) {
 
 function useGoalMutation<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResult>) {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useFinancialMutation({
     mutationFn,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: goalsQueryKey }),
   })

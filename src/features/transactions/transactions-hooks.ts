@@ -1,6 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
+import { useFinancialMutation } from "@/lib/use-financial-mutation"
 import {
   getCategories,
   getFrequentExpenseCategories,
@@ -119,10 +120,10 @@ function useInvalidateFinanceData() {
 
 export function useSaveTransaction() {
   const invalidate = useInvalidateFinanceData()
-  return useMutation({ mutationFn: saveTransaction, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: saveTransaction, onSuccess: invalidate })
 }
 
 export function useSoftDeleteTransaction() {
   const invalidate = useInvalidateFinanceData()
-  return useMutation({ mutationFn: softDeleteTransaction, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: softDeleteTransaction, onSuccess: invalidate })
 }

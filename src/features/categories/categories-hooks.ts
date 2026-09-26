@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 
+import { useFinancialMutation } from "@/lib/use-financial-mutation"
 import { saveCategory, setCategoryArchived } from "@/features/categories/categories-service"
 import { categoriesQueryKey } from "@/features/transactions/transactions-hooks"
 
@@ -18,10 +19,10 @@ function useInvalidateCategoryData() {
 
 export function useSaveCategory() {
   const invalidate = useInvalidateCategoryData()
-  return useMutation({ mutationFn: saveCategory, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: saveCategory, onSuccess: invalidate })
 }
 
 export function useSetCategoryArchived() {
   const invalidate = useInvalidateCategoryData()
-  return useMutation({ mutationFn: setCategoryArchived, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: setCategoryArchived, onSuccess: invalidate })
 }

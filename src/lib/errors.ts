@@ -3,6 +3,8 @@ type ErrorWithMessage = {
 }
 
 const friendlyErrors: Array<[string, string]> = [
+  ["Expense and Income require", "Choose a Bank or Cash account for an expense or income."],
+  ["Investment number", "Enter a valid investment value within the supported precision and range."],
   ["Account balance changed", "Account balance changed. Review the updated balance and try again."],
   ["Only Bank and Cash", "Only active Bank and Cash accounts can be reconciled."],
   ["Current account balance is unavailable", "The current balance could not be verified. Refresh the account and try again."],

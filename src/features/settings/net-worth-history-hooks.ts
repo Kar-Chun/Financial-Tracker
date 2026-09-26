@@ -1,5 +1,6 @@
-import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query"
+import { type QueryClient, useQueryClient } from "@tanstack/react-query"
 
+import { useFinancialMutation } from "@/lib/use-financial-mutation"
 import { resetNetWorthHistory } from "@/features/settings/net-worth-history-service"
 
 export async function invalidateNetWorthHistory(queryClient: QueryClient) {
@@ -9,7 +10,7 @@ export async function invalidateNetWorthHistory(queryClient: QueryClient) {
 export function useResetNetWorthHistory() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useFinancialMutation({
     mutationFn: resetNetWorthHistory,
     onSuccess: () => invalidateNetWorthHistory(queryClient),
   })

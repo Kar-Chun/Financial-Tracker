@@ -1,5 +1,6 @@
-import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query"
 
+import { useFinancialMutation } from "@/lib/use-financial-mutation"
 import {
   archiveAccount,
   deleteAccountPermanently,
@@ -48,30 +49,30 @@ export function useArchivedAccounts() {
 
 export function useSaveAccount() {
   const invalidate = useInvalidateAccountDependentData()
-  return useMutation({ mutationFn: saveAccount, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: saveAccount, onSuccess: invalidate })
 }
 
 export function useReconcileAccount() {
   const invalidate = useInvalidateAccountDependentData()
-  return useMutation({ mutationFn: reconcileAccountBalance, retry: false, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: reconcileAccountBalance, onSuccess: invalidate })
 }
 
 export function useArchiveAccount() {
   const invalidate = useInvalidateAccountDependentData()
-  return useMutation({ mutationFn: archiveAccount, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: archiveAccount, onSuccess: invalidate })
 }
 
 export function useRestoreAccount() {
   const invalidate = useInvalidateAccountDependentData()
-  return useMutation({ mutationFn: restoreAccount, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: restoreAccount, onSuccess: invalidate })
 }
 
 export function useDeleteAccountPermanently() {
   const invalidate = useInvalidateAccountDependentData()
-  return useMutation({ mutationFn: deleteAccountPermanently, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: deleteAccountPermanently, onSuccess: invalidate })
 }
 
 export function useSaveInvestmentValuation() {
   const invalidate = useInvalidateAccountDependentData()
-  return useMutation({ mutationFn: saveInvestmentValuation, onSuccess: invalidate })
+  return useFinancialMutation({ mutationFn: saveInvestmentValuation, onSuccess: invalidate })
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
+import { useFinancialMutation } from "@/lib/use-financial-mutation"
 import {
   enableDetailedTracking, getDetailedInvestmentAccount, getInvestmentPortfolio, previewDetailedConversion,
   recordCashEvent, recordTrade, saveHolding, saveManualFx, updatePrices,
@@ -33,25 +34,25 @@ export function usePreviewDetailedConversion() {
 }
 
 export function useEnableDetailedTracking() {
-  return useMutation({ mutationFn: enableDetailedTracking, onSuccess: useInvestmentInvalidation() })
+  return useFinancialMutation({ mutationFn: enableDetailedTracking, onSuccess: useInvestmentInvalidation() })
 }
 
 export function useSaveHolding() {
-  return useMutation({ mutationFn: saveHolding, onSuccess: useInvestmentInvalidation() })
+  return useFinancialMutation({ mutationFn: saveHolding, onSuccess: useInvestmentInvalidation() })
 }
 
 export function useRecordTrade() {
-  return useMutation({ mutationFn: recordTrade, onSuccess: useInvestmentInvalidation() })
+  return useFinancialMutation({ mutationFn: recordTrade, onSuccess: useInvestmentInvalidation() })
 }
 
 export function useUpdatePrices() {
-  return useMutation({ mutationFn: updatePrices, onSuccess: useInvestmentInvalidation() })
+  return useFinancialMutation({ mutationFn: updatePrices, onSuccess: useInvestmentInvalidation() })
 }
 
 export function useSaveManualFx() {
-  return useMutation({ mutationFn: saveManualFx, onSuccess: useInvestmentInvalidation() })
+  return useFinancialMutation({ mutationFn: saveManualFx, onSuccess: useInvestmentInvalidation() })
 }
 
 export function useRecordCashEvent() {
-  return useMutation({ mutationFn: recordCashEvent, onSuccess: useInvestmentInvalidation() })
+  return useFinancialMutation({ mutationFn: recordCashEvent, onSuccess: useInvestmentInvalidation() })
 }

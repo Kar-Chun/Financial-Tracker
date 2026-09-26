@@ -128,7 +128,7 @@ describe("Gemini provider failure diagnostics", () => {
     expect(() => new GeminiFinancialAIProvider("", "model")).toThrow(ProviderConfigurationError)
   })
 
-  it("retains sanitized non-2xx diagnostics for Edge Function logs", async () => {
+  it("retains only numeric HTTP metadata for Edge Function logs", async () => {
     const syntheticKey = ["AI", "zaNotARealKey123456789"].join("")
     const payload = { error: { code: 400, status: "INVALID_ARGUMENT", message: `Unknown field additionalProperties\nkey=${syntheticKey}` } }
     const provider = new GeminiFinancialAIProvider("server-secret", "gemini-2.5-flash", responseSequence([], payload, 400))
@@ -137,10 +137,7 @@ describe("Gemini provider failure diagnostics", () => {
     expect(caught).toBeInstanceOf(ProviderResponseError)
     expect(getProviderHttpDiagnostics(caught)).toEqual({
       httpStatus: 400,
-      providerStatus: "INVALID_ARGUMENT",
-      providerCode: 400,
-      providerMessage: "Unknown field additionalProperties key=[REDACTED_KEY]",
-      model: "gemini-2.5-flash",
+      retryable: false,
     })
   })
 

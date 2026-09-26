@@ -2,11 +2,10 @@ import { createClient } from "npm:@supabase/supabase-js@2"
 import { AssistantOrchestrationTimeoutError, runFinancialAssistant } from "./orchestrator.ts"
 import { claimAiRequest, completeAiRequest } from "./rate-limit.ts"
 import { AssistantRequestError, readValidatedAssistantRequest } from "./request-validation.ts"
+import { logAssistantError } from "./diagnostics.ts"
 import {
   GeminiFinancialAIProvider,
-  getProviderHttpDiagnostics,
   ProviderConfigurationError,
-  ProviderRateLimitError,
   ProviderTimeoutError,
 } from "./provider/gemini-provider.ts"
 
@@ -78,25 +77,13 @@ Deno.serve(async (request) => {
       await finishLease(lease, error instanceof ProviderTimeoutError || error instanceof AssistantOrchestrationTimeoutError ? "timeout" : "provider_error", requestId)
       lease = undefined
     }
-    const category = classifyError(error)
-    const provider = getProviderHttpDiagnostics(error)
-    console.error(JSON.stringify({
-      request_id: requestId,
-      category,
-      ...(provider ? {
-        http_status: provider.httpStatus,
-        gemini_error_status: provider.providerStatus,
-        gemini_error_code: provider.providerCode,
-        gemini_error_message: provider.providerMessage,
-        model: provider.model,
-      } : {}),
-    }))
+    const category = logAssistantError(error, requestId)
     if (category === "configuration") return json({ error: "AI Assistant is not configured yet. Your normal tracker features still work.", code: category }, 503)
     if (category === "quota") return json({ error: "AI Assistant quota is temporarily unavailable. Please try again later.", code: category }, 429)
     if (category === "timeout") return json({ error: "AI Assistant took too long to respond. Please try again.", code: category }, 504)
     if (category === "invalid_request") {
       const status = error instanceof AssistantRequestError ? error.status : 400
-      return json({ error: error instanceof Error ? error.message : "The request is invalid.", code: category }, status)
+      return json({ error: error instanceof AssistantRequestError ? error.message : "The request is invalid.", code: category }, status)
     }
     return json({ error: "AI Assistant is temporarily unavailable. Your normal tracker features still work.", code: category }, 503)
   }
@@ -121,14 +108,6 @@ function dateInTimeZone(timezone: string) {
   }).formatToParts(new Date())
   const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value
   return `${value("year")}-${value("month")}-${value("day")}`
-}
-
-function classifyError(error: unknown) {
-  if (error instanceof ProviderConfigurationError) return "configuration"
-  if (error instanceof ProviderRateLimitError) return "quota"
-  if (error instanceof ProviderTimeoutError || error instanceof AssistantOrchestrationTimeoutError) return "timeout"
-  if (error instanceof AssistantRequestError || error instanceof TypeError) return "invalid_request"
-  return "provider_error"
 }
 
 function json(body: unknown, status: number, extraHeaders: Record<string, string> = {}) {

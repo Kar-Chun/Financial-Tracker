@@ -290,6 +290,8 @@ git diff --check
 
 This project is a Vite single-page application. Vite produces the production site in `dist/`, and the root `vercel.json` rewrites direct route requests to `index.html` so React Router can handle routes such as `/dashboard`, `/transactions`, and `/analytics` after a refresh.
 
+Security Remediation Phase 3 defines low-risk browser headers and an initial **report-only** CSP in `vercel.json`. Its exact Supabase HTTPS origin must match the deployment's `VITE_SUPABASE_URL`; review it when changing projects or using a custom API domain. Gemini errors now log only structured operational metadata. See [Phase 3 resource inventory, verification and rollout](docs/audits/security-remediation-phase-3.md). Deployed headers/TLS and authenticated/iPhone compatibility still require the documented hosted checks; Vite development/preview does not automatically apply Vercel headers.
+
 Import the repository into Vercel and keep the detected Vite settings:
 
 - Build command: `npm run build`

@@ -1,10 +1,8 @@
 import type { FinancialAIProvider, ProviderRequest } from "./financial-ai-provider.ts"
 import type { FunctionCall, ProviderContent, ProviderTurn, ToolDeclaration } from "../types.ts"
 
-type GeminiError = { code?: number | string; message?: string; status?: string }
 type GeminiResponse = {
   candidates?: Array<{ content?: ProviderContent; finishReason?: string }>
-  error?: GeminiError
 }
 
 type GeminiRequestBody = {
@@ -16,10 +14,7 @@ type GeminiRequestBody = {
 
 export type ProviderHttpDiagnostics = {
   httpStatus: number
-  providerStatus?: string
-  providerCode?: number | string
-  providerMessage?: string
-  model: string
+  retryable: boolean
 }
 
 export class ProviderConfigurationError extends Error {}
@@ -61,18 +56,18 @@ export class GeminiFinancialAIProvider implements FinancialAIProvider {
           body: JSON.stringify(buildGeminiRequestBody(request)),
         },
       )
-      const payload = await readGeminiResponse(response)
       if (!response.ok) {
-        const diagnostics = getHttpDiagnostics(response.status, payload.error, this.model)
+        // Error bodies can echo prompts/tool data. Never retain or diagnose them.
+        const diagnostics = getHttpDiagnostics(response.status)
         if (response.status === 429) throw new ProviderRateLimitError("AI provider quota is temporarily unavailable.", diagnostics)
         throw new ProviderResponseError(`AI provider returned status ${response.status}.`, diagnostics)
       }
+      const payload = await readGeminiResponse(response)
 
       const candidate = payload.candidates?.[0]
       const content = candidate?.content
       if (!content || !Array.isArray(content.parts)) {
-        const finishReason = sanitizeProviderMessage(candidate?.finishReason)
-        throw new ProviderResponseError(finishReason ? `AI provider returned no content (${finishReason}).` : "AI provider returned an invalid response.")
+        throw new ProviderResponseError("AI provider returned an invalid response.")
       }
       const text = content.parts
         .map((part) => typeof part.text === "string" ? part.text : "")
@@ -111,7 +106,11 @@ export function buildGeminiRequestBody(request: ProviderRequest): GeminiRequestB
 }
 
 export function getProviderHttpDiagnostics(error: unknown): ProviderHttpDiagnostics | undefined {
-  return error instanceof ProviderResponseError ? error.diagnostics : undefined
+  const status = error instanceof ProviderResponseError ? error.diagnostics?.httpStatus : undefined
+  // Project only known fields, including at runtime. Never spread an error object.
+  return typeof status === "number" && Number.isInteger(status) && status >= 400 && status <= 599
+    ? getHttpDiagnostics(status)
+    : undefined
 }
 
 async function readGeminiResponse(response: Response): Promise<GeminiResponse> {
@@ -125,26 +124,12 @@ async function readGeminiResponse(response: Response): Promise<GeminiResponse> {
   }
 }
 
-function getHttpDiagnostics(httpStatus: number, error: GeminiError | undefined, model: string): ProviderHttpDiagnostics {
+function getHttpDiagnostics(httpStatus: number): ProviderHttpDiagnostics {
   return {
     httpStatus,
-    providerStatus: sanitizeProviderMessage(error?.status),
-    providerCode: typeof error?.code === "number" || typeof error?.code === "string" ? error.code : undefined,
-    providerMessage: sanitizeProviderMessage(error?.message),
-    model,
+    // Classification only: this does not schedule retries or change quotas.
+    retryable: httpStatus === 429 || httpStatus === 500 || httpStatus === 502 || httpStatus === 503 || httpStatus === 504,
   }
-}
-
-function sanitizeProviderMessage(value: unknown) {
-  if (typeof value !== "string" || !value.trim()) return undefined
-  return value
-    .replace(/AIza[0-9A-Za-z_-]+/g, "[REDACTED_KEY]")
-    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]")
-    .replace(/([?&](?:key|api_key)=)[^&\s]+/gi, "$1[REDACTED]")
-    .replace(/[\r\n\t]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 500)
 }
 
 function parseFunctionCall(value: unknown): FunctionCall | null {

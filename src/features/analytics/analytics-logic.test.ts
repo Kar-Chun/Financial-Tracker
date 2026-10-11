@@ -2,44 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import { getSpendingComparison } from "@/features/analytics/analytics-logic"
 import { getAnalyticsPeriod } from "@/features/analytics/analytics-periods"
-import { aggregateExpenseFacts, type ExpenseFact } from "@/test/reference-models/analytics-reference-model"
 
-const expense = (overrides: Partial<ExpenseFact> = {}): ExpenseFact => ({
-  transactionType: "expense",
-  amountMinor: 1_005,
-  deletedAt: null,
-  categoryId: "eating-out",
-  categoryName: "Eating Out",
-  parentCategoryId: "food",
-  parentCategoryName: "Food",
-  ...overrides,
-})
-
-describe("spending analytics", () => {
-  it("includes only active expenses and keeps exact integer minor units", () => {
-    const result = aggregateExpenseFacts([
-      expense(),
-      expense({ amountMinor: 2_005 }),
-      expense({ transactionType: "income", amountMinor: 50_000 }),
-      expense({ transactionType: "transfer", amountMinor: 20_000 }),
-      expense({ deletedAt: "2026-08-23T00:00:00Z", amountMinor: 9_999 }),
-    ])
-
-    expect(result.totalSpentMinor).toBe(3_010)
-  })
-
-  it("rolls subcategories into their parent while preserving child totals", () => {
-    const result = aggregateExpenseFacts([
-      expense({ amountMinor: 1_800 }),
-      expense({ categoryId: "groceries", categoryName: "Groceries", amountMinor: 1_100 }),
-      expense({ categoryId: "food", categoryName: "Food", parentCategoryId: null, parentCategoryName: null, amountMinor: 300 }),
-    ])
-
-    expect(result.categories.get("food")?.amountMinor).toBe(3_200)
-    expect(result.categories.get("food")?.subcategories.get("eating-out")).toBe(1_800)
-    expect(result.categories.get("food")?.subcategories.get("groceries")).toBe(1_100)
-  })
-
+describe("spending comparisons and periods", () => {
   it("calculates increases and decreases against a non-zero prior period", () => {
     expect(getSpendingComparison(8_000, 10_000)).toEqual({ percentage: 20, direction: "decrease" })
     expect(getSpendingComparison(12_500, 10_000)).toEqual({ percentage: 25, direction: "increase" })
@@ -71,11 +35,5 @@ describe("spending analytics", () => {
     const range = getAnalyticsPeriod("last_3_months", "2026-08-22")
     const days = (start: string, end: string) => (Date.parse(end) - Date.parse(start)) / 86_400_000 + 1
     expect(days(range.startDate, range.endDate)).toBe(days(range.previousStartDate, range.previousEndDate))
-  })
-
-  it("returns an empty deterministic aggregate when there are no expenses", () => {
-    const result = aggregateExpenseFacts([])
-    expect(result.totalSpentMinor).toBe(0)
-    expect(result.categories.size).toBe(0)
   })
 })

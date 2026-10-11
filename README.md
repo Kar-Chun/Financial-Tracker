@@ -1,326 +1,48 @@
 # Ledgerly
 
-Ledgerly is a secure personal finance tracker for understanding current assets, recording daily activity, planning monthly spending, earmarking cash for savings goals, and optionally tracking an investment portfolio in detail. V2 preserves every existing accounting model while adding an explicit holdings ledger.
+Ledgerly is a personal finance app for keeping track of your money, spending and plans. It works in the browser and can be installed on your phone's home screen.
 
-## Capabilities
+## What you can do
 
-- Email/password Supabase Auth with persistent sessions, confirmation handling, protected routes, and logout
-- Profiles with display name, locked base currency, and timezone
-- Bank, cash, and investment accounts with safe archive, restore, and deliberate test-account cleanup
-- Transaction-derived bank/cash balances; atomic income, expense, and same-currency transfers
-- Simple manual investment valuations plus optional Detailed holdings, trades, broker cash, prices, dividends, and manual valuation FX
-- Real dashboard metrics and timezone-aware daily net-worth snapshots
-- Spending analytics with period presets, equivalent-period comparisons, parent/subcategory breakdowns, responsive charts, and factual deterministic insights
-- Expense and income category management: create, rename, archive, restore, and one-level subcategories
-- Explicit warnings/exclusions where foreign values cannot safely be consolidated
-- Installable PWA support with iOS home-screen metadata and a static-shell service worker
-- Mobile bottom navigation, full-screen transaction entry, safe-area handling, and offline mutation protection
-- User-scoped last expense account and deterministic frequent expense category shortcuts
-- Independent monthly overall budgets, optional parent-category limits, spending pace, and safe daily guidance
-- Multiple base-currency savings goals with virtual allocations, progress, target-date guidance, history, and archival
-- An authenticated, read-only AI Financial Assistant grounded by allowlisted deterministic finance tools
-- Optional daily transaction reminders through standards-based PWA Web Push
-- Full personal-data export as CSVs and a versioned JSON backup in a local ZIP
+- Track bank, cash and investment accounts, record income and expenses, and transfer money between accounts.
+- See your net worth, daily spending and spending trends on the dashboard and in Analytics.
+- Set monthly budgets and plan savings goals without moving money between accounts.
+- Track investments with simple manual valuations or detailed holdings, trades, prices and exchange rates.
+- Ask the optional AI Assistant questions about your finances. It can explain your data but cannot change it.
+- Turn on a daily spending reminder at 9 PM Singapore time.
+- Export your data as CSV files and a JSON backup in a ZIP, downloaded or shared directly from your device.
 
-## Stack and architecture
+Ledgerly uses manual entries rather than bank connections or live market feeds. Foreign-currency cash is kept out of combined totals; investment values use manual valuations or exchange rates. An internet connection is required to save changes; offline financial writes are rejected and never queued for later.
 
-- React 19, strict TypeScript, and Vite
-- Tailwind CSS and focused shadcn/ui components
-- React Router with protected/public-only route guards
-- TanStack Query for server state and mutation invalidation
-- React Hook Form and Zod for forms
-- Supabase Auth, Postgres, RPC functions, and Row Level Security
-- Recharts for responsive analytics visualisation
-- vite-plugin-pwa and Workbox for static application-shell caching
-- Vitest and React Testing Library
+## Run locally
 
-Frontend code is feature-based under `src/features`. Supabase access lives in small feature services/hooks instead of page components. The versioned database contract lives under `supabase/migrations`.
-
-The Supabase schema declaration in `src/types/database.generated.ts` is generated from the linked live schema and must not be edited manually. After applying schema migrations to the confirmed project, regenerate it with:
+You'll need Node.js 20.19+ (20.x) or 22.12+, npm and a Supabase project with Ledgerly's migrations applied. The [setup and deployment guide](docs/development.md) covers the database, Auth and hosting.
 
 ```bash
-npm run db:types -- --project-ref YOUR_CONFIRMED_PROJECT_REF
+npm ci
 ```
 
-From Windows PowerShell, use the same workflow through `npm.cmd`:
-
-```powershell
-npm.cmd run db:types -- --project-ref YOUR_CONFIRMED_PROJECT_REF
-```
-
-The command requires your confirmed reference to match `supabase/.temp/project-ref`; it does not link projects or apply migrations. It uses the existing npm/Supabase CLI workflow, pinned to `2.117.0` (the version recorded in the current artifact), with non-interactive installation. Authenticate with the CLI first. Output goes to a unique temporary file; CLI failures, chatter, missing schema sections, and TypeScript errors prevent replacement. Only validated UTF-8 output replaces the destination, and temporary output is cleaned up. Raw CLI diagnostics are not printed. No service-role credentials are needed. Review the resulting diff and run tests, lint, and build before committing. When updating the pinned CLI version, review its generated output as well.
-
-`src/types/database.ts` is a small client-contract adapter for PostgreSQL function nullability and exact decimal-string `NUMERIC` inputs. Application read models remain feature/domain types, and complex JSON RPC responses are validated at runtime before financial data reaches the UI.
-
-## Environment
-
-Create `.env.local` with the browser-safe Supabase values and the Web Push public key:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-VITE_WEB_PUSH_VAPID_PUBLIC_KEY=your-public-vapid-key
-```
-
-`.env.local` is ignored by Git. Never place a Supabase `service_role` key, database password, or access token in frontend environment variables.
-
-## High-level structure
-
-```text
-src/
-|-- app/                 # Router and top-level providers
-|-- components/          # Layout, shared, and shadcn UI components
-|-- features/            # Auth, finance features, analytics, and the Assistant UI
-|-- lib/                 # Supabase, exact currency, date, error, and styling utilities
-|-- test/                # Shared Vitest setup
-`-- types/               # Database and finance contracts
-supabase/
-|-- functions/           # Server-side AI provider orchestration and read-only tools
-|-- migrations/          # Versioned schema, functions, RLS, and grants
-|-- RLS_VERIFICATION.md  # V1 two-user isolation procedure
-`-- V1_1_VERIFICATION.md # Analytics/category verification
-```
-
-## Apply Supabase migrations
-
-Apply migrations in filename order. For a safely confirmed project link:
+Copy `.env.example` to `.env.local` and set your Supabase URL and publishable key. The public VAPID key is optional for notifications; Gemini and Web Push private keys stay in Supabase Edge Function secrets.
 
 ```bash
-npx supabase@latest login
-npx supabase@latest link --project-ref YOUR_PROJECT_REF
-npx supabase@latest db push
-```
-
-Confirm the project reference before pushing. This repository is not linked automatically. Alternatively, use Supabase SQL Editor and run the files in order:
-
-1. `202608220001_create_finance_schema.sql`
-2. `202608220002_create_financial_functions.sql`
-3. `202608220003_enable_rls_and_grants.sql`
-4. `202608220004_fix_investment_transfer_accounting.sql`
-5. `202608230001_add_spending_analytics_and_category_management.sql`
-6. `202608230002_add_frequent_expense_categories.sql`
-7. `202608240001_add_monthly_budgets.sql`
-8. `202608240002_add_savings_goals.sql`
-9. `202608240003_add_detailed_investment_ledger.sql`
-10. `202608240004_integrate_detailed_investment_values.sql`
-11. `202608240005_add_ai_read_models.sql`
-12. `202608240006_add_ai_abuse_protection.sql`
-13. `202608270001_add_safe_account_lifecycle.sql`
-14. `202608280001_add_net_worth_history_reset.sql`
-15. `202609040001_add_bounded_dashboard_and_transaction_reads.sql`
-16. `202609040002_centralize_eligible_spending.sql`
-17. `202609090001_add_dashboard_today_spending.sql`
-18. `202609100001_add_transaction_note_suggestions.sql`
-19. `202609130001_add_account_reconciliation.sql`
-20. `202609220001_add_daily_transaction_reminders.sql`
-21. `202609230001_add_full_data_export.sql`
-22. `202609260001_harden_financial_input_boundaries.sql`
-23. `202609260002_harden_push_subscriptions_and_reminder_batches.sql`
-
-Do not recreate tables manually in the Table Editor.
-
-Security Remediation Phase 1 hardens ordinary Expense/Income account types and exact investment numeric inputs without rewriting history. Financial mutation hooks reject offline submissions immediately and never replay them on reconnect. See [Phase 1 verification and deployment](docs/audits/security-remediation-phase-1.md), including the rollback-only database checks and the pre-deployment historical-data check.
-
-Daily reminders run once per day at 9:00 PM Singapore time through one project-wide `0 13 * * *` Cron job, a dedicated Edge Function, and a durable per-user/Singapore-day claim. The browser receives only the public VAPID key. See [daily reminder deployment and verification](supabase/DAILY_TRANSACTION_REMINDER.md) for the required Edge secrets, Vault/Cron SQL, deployment order, manual invocation procedure, and installed-iPhone checklist.
-
-Security Remediation Phase 2 caps new notification registrations at five devices per user, prevents endpoint ownership reassignment, and drains bounded batches of unclaimed reminder users. See [Phase 2 scope and verification](docs/audits/security-remediation-phase-2.md).
-
-## Authentication and security
-
-**Settings > Data & Privacy > Export Ledgerly data** prepares a local ZIP containing human-readable CSV files, `backup.json` (format version 1), `manifest.json`, and a README. It includes retained archived/deleted financial records and stored snapshots. Exact minor-unit money and investment decimals are strings in the JSON. The export contains personal financial information; store it securely. Supported touch/standalone apps offer **Share / Save to Files** after preparation; desktop uses a download. No backup is uploaded or cached remotely. Import/Restore is not supported.
-
-The authenticated, read-only `export_user_data_v1()` RPC uses an explicit field allowlist and includes only the caller's records. Push credentials, Auth sessions, scheduler state and AI operational data are excluded. Apply the migration, regenerate types against the confirmed project with the existing `db:types` workflow, then rebuild. See [export inventory, format and verification](supabase/FULL_DATA_EXPORT.md) for all included data, size boundaries and deployment/manual checks.
-
-New Auth users receive a profile and default categories through a database trigger. If email confirmation is enabled, signup shows a confirmation message and protected routes remain unavailable until a session exists.
-
-Email confirmation uses Supabase's standard `{{ .ConfirmationURL }}` email link and the browser client's implicit session flow, not a custom token-hash or PKCE callback. Signup supplies `emailRedirectTo` as the active app origin plus `/login`, so production and local signup return to their respective apps. The SDK processes the returned session before auth parameters are removed from the visible URL; the existing public-route guard then opens Dashboard. Failed/expired links show a safe auth-specific message, never the returned tokens or raw error description. There is no separate callback route, password-recovery, magic-link, or email-change UI.
-
-RLS is enabled on every user/financial table. Direct financial and category mutations are withheld from browser roles. Validated `SECURITY DEFINER` RPCs use an empty `search_path`, derive ownership from `auth.uid()`, and validate every referenced row. Follow [V1 RLS verification](supabase/RLS_VERIFICATION.md) and [V1.1 verification](supabase/V1_1_VERIFICATION.md) after migration.
-
-## Money, balances, and investments
-
-Ordinary currency is stored as `BIGINT` integer minor units: SGD 1.00 is `100`. User input is parsed with integer/`BigInt` arithmetic, not `parseFloat(input) * 100`.
-
-Bank/cash balance = opening balance + non-deleted transaction entries through today. Income creates one positive entry, expense one negative entry, and a transfer two opposite entries in one atomic RPC. Transfers do not affect net worth, income, expenses, or net cash flow.
-
-Simple investment accounts use their latest manual native/base valuation plus transfer movements recorded after that valuation. A newer valuation resets that boundary, avoiding double-counting. Existing accounts remain Simple until the user explicitly completes Detailed setup.
-
-Foreign-currency bank/cash values remain visible in native currency but are excluded from consolidated base-currency net worth and spending totals.
-
-## Spending analytics definitions
-
-Analytics includes only non-deleted `expense` transactions against accounts in the profile base currency. Income, transfers, adjustments, and refunds are excluded. Foreign-currency expenses produce an exclusion warning but are not converted. Refund-specific analytics remains deferred until refund UX/semantics are designed.
-
-Migration `202609040002_centralize_eligible_spending.sql` makes `public.get_eligible_expense_facts` the internal fact source shared by Analytics, Budgets, Dashboard, and AI spending reads. It remains unavailable to browser roles and leaves each consumer's established date range, comparison, pace, and warning presentation unchanged.
-
-- This Month: month-to-date versus the same elapsed dates in the previous month (for example 1–22 August versus 1–22 July).
-- Last Month: the complete previous month versus the complete month before it.
-- Last 3/6 Months: the selected inclusive range versus the immediately preceding range with the same number of days.
-- This Year: year-to-date versus the same calendar dates in the prior year.
-
-A zero prior total is shown as no prior spending, never Infinity/NaN. The main category breakdown rolls children such as `Food › Eating Out` into `Food`; direct Food expenses also remain in that total. Expanding the parent reveals children and direct spend. Single-month periods use daily bars; longer periods use monthly bars.
-
-## Category management rules
-
-Settings separates expense and income categories. Category type and parent are immutable, nesting stops after one child level, and active names are unique case-insensitively within the same parent/type scope. Parents with active children cannot be archived until their children are archived. Archiving never deletes a category: history retains its readable label while new transaction forms offer active categories only.
-
-## Daily snapshots
-
-At most one snapshot exists per user/local calendar date. Financial RPCs refresh today, and dashboard loading self-heals it. There is no cron job or artificial row for unused days.
-
-Settings includes a deliberate **Reset Net Worth history** action for discarding misleading chart history after test-data cleanup. The authenticated RPC first verifies that every active Detailed investment has a complete represented base-currency value, deletes only the caller's snapshot rows, and then reuses the normal snapshot function to create exactly today's point. It does not modify accounts, transactions, investments, budgets, goals, or any current balance. With fewer than two points, Dashboard reports that there is not enough history instead of inventing a zero change.
-
-Migration `202608280001_add_net_worth_history_reset.sql` adds this controlled RPC without granting browser delete access to the snapshots table. Follow [Net Worth history reset verification](supabase/NET_WORTH_HISTORY_RESET_VERIFICATION.md) after applying it.
-
-## Bounded Dashboard and transaction reads
-
-Dashboard loading uses one authenticated aggregate RPC. It refreshes today's snapshot through the existing authoritative helper, returns current-month income and the existing Analytics-defined expense/category totals, limits recent transactions to six, and limits Net Worth history to the most recent 90 local-calendar days. It does not download lifetime transaction history.
-
-The Dashboard also returns eligible spending for the profile-local current day and the preceding six calendar days through the same internal expense-fact function. Today's Spending uses the current-day total; its seven-day average always divides the complete seven-day total by seven, including zero-spending days. Tapping the card opens the existing bounded Transactions list with the exact day and eligible-spending filter.
-
-Transactions use authenticated server-side filters and 40-row keyset pages ordered by transaction date, creation time, and ID (all descending). Date, type, account, and category filters are applied before pagination; loading more requests only the next cursor. Archived account/category names remain readable on historical rows. Migration `202609040001_add_bounded_dashboard_and_transaction_reads.sql` adds these read-only RPCs without changing transaction writes, RLS, or accounting definitions.
-
-When adding an Expense or Income, typing at least two non-whitespace characters in Note performs a 225 ms debounced, authenticated search of that user's non-deleted transactions. PostgreSQL ranks prefix, word-prefix, then contained matches; deduplicates Notes case-insensitively; and returns at most three lightweight suggestions. Selecting one fills Note and its most recently used still-active category only—Amount, Account, and Date never change. Migration `202609100001_add_transaction_note_suggestions.sql` adds the read-only RPC; Transfer autocomplete and empty-field recommendations remain intentionally unsupported.
-
-## Account lifecycle
-
-Archive preserves an account and all history but removes it from active summaries, investment totals, and new transaction selectors. The server permits archive only when the existing authoritative represented value is exactly zero: transaction-derived balance for Bank/Cash, latest valuation plus later transfers for Simple investments, or broker cash plus priced holdings for Detailed investments. Archived accounts remain visible under **Archived accounts** and can be restored without creating financial activity.
-
-Permanent deletion is a separate, typed-confirmation action intended for mistaken or test accounts. The authenticated atomic RPC rejects accounts referenced by active ordinary or legacy adjustment history. Marked reconciliation-only adjustments and complete already-soft-deleted transaction structures can be purged before removing only that account's valuations or Detailed holdings, trades, prices, and cash events. Shared manual FX rates and every unrelated account record remain untouched. Today's net-worth snapshot is refreshed after deletion; historical daily snapshots are intentionally not reconstructed.
-
-Migration `202608270001_add_safe_account_lifecycle.sql` replaces the archive check, adds restore/permanent-delete RPCs, and preserves direct-table write restrictions. Follow [account lifecycle verification](supabase/ACCOUNT_LIFECYCLE_VERIFICATION.md) after applying it.
-
-## Account reconciliation
-
-Open an active Bank/Cash account's name in Accounts, then choose **Reconcile balance** in its detail dialog. Enter the actual current balance in that account's native currency (negative balances are supported). Confirmation sends the reviewed balance/currency and the actual balance, not a browser-authoritative difference.
-
-The authenticated RPC locks the account, reuses `get_account_summaries()`, rejects stale previews, and creates one marked `adjustment` transaction with one signed entry dated in the profile timezone. Equal balances create nothing. Ordinary transaction create/edit/delete and reconciliation share a per-user transaction lock, including edits away from an old account. Today’s snapshot refresh uses the existing helper; foreign Bank/Cash remains excluded from base Net Worth without FX.
-
-Adjustments appear as read-only history under All. They do not affect spending, income, cash flow, budgets, Today's Spending, the seven-day average, or Note suggestions. Correct mistakes by reconciling again. Investment and archived accounts cannot be reconciled. Reconciliation-only history may be purged during deliberate permanent account deletion; active ordinary history still blocks deletion. Historical snapshots are not rebuilt. Goal allocations remain untouched; available goal cash naturally reflects the corrected Bank/Cash balance.
-
-Apply the new migration before deploying the frontend. Generated types are intentionally untouched; the existing application adapter declares the new RPC until normal type regeneration after migration. See [reconciliation verification](supabase/ACCOUNT_RECONCILIATION_VERIFICATION.md) and the accompanying rollback-only SQL test.
-
-## Monthly budgeting
-
-Each calendar month has an independent overall limit in the profile base currency; unused amounts never roll over. Optional category limits apply to an active parent expense category and all its direct children, but do not need to add up to the overall limit. Archived categories remain readable historically and cannot receive new limits.
-
-Budget spending uses the same definition as Analytics: non-deleted `expense` transactions on base-currency accounts in the selected month. Income, transfers, adjustments, refunds, soft-deleted expenses, and unconverted foreign-currency expenses are excluded. No `spent` value is stored; the authenticated summary RPC aggregates current transactions whenever the budget is read.
-
-For the current month, safe daily spend is `max(overall limit - spent, 0) / remaining calendar days including today`, rounded to integer minor units. Expected pace is `overall limit × elapsed calendar days / days in month`: actual spend at or below that value is **On track**, spend above pace but within the limit is **Spending ahead of pace**, and spend above the limit is **Over budget**. Historical months show final performance and future months do not show current guidance.
-
-Copy Previous Month creates the destination month's overall/category limits only. It never copies transactions, spending, unused balance, or rollover, rejects an existing destination, and skips categories that are no longer active/valid. Budget currency is snapshotted when a month is created so a later profile-currency change cannot silently reinterpret historical limits; the UI still keeps base currency locked.
-
-Migration `202608240001_add_monthly_budgets.sql` adds both budget tables, ownership RLS, validated mutation RPCs, and the aggregated monthly summary RPC. Follow [V1.4 budget verification](supabase/V1_4_VERIFICATION.md) for two-user and accounting checks.
-
-## Savings goals
-
-Savings goals virtually earmark money the user already owns. Allocating or reducing a goal creates only a signed `goal_allocations` history row; it never creates a transaction/entry, moves account money, changes net worth or snapshots, or affects budgets, Analytics, income, expenses, transfers, or cash flow. Goal currency is snapshotted from the authenticated user's current profile base currency and cannot be chosen by the browser.
-
-Allocated amount is the exact sum of signed allocation rows. Remaining is `max(target - allocated, 0)` and a goal is reached when allocation is at least its target; visual progress caps at 100% while the real percentage remains visible. Allocations above the target are valid, while reductions that would make the cumulative allocation negative are rejected atomically.
-
-Available goal cash reuses the application's represented balances for active base-currency Bank and Cash accounts. Investments and unconverted foreign balances are excluded. `unallocated cash = available cash - allocations for active goals in the profile base currency`; a negative result is a planning warning, never an automatic correction or hard block.
-
-For an unreached dated goal, the approximate monthly amount is `ceil(remaining / calendar months from the current profile-timezone month through the target month, inclusive)`. Passed targets show no misleading monthly guidance. Archiving preserves the goal and complete history but excludes its allocation from current totals; restoring includes the existing allocation again.
-
-Migration `202608240002_add_savings_goals.sql` adds goal/allocation tables, RLS, validated mutation RPCs, and aggregated summary/detail RPCs. Follow [V1.5 savings-goal verification](supabase/V1_5_VERIFICATION.md) for accounting-isolation and two-user checks.
-
-## V2 detailed investments
-
-Investment accounts have two deliberately separate tracking modes. **Simple** preserves the existing account-level manual valuation plus qualifying post-valuation transfers. **Detailed** uses only `broker cash + holdings at latest manual prices`; old Simple valuations remain historical and are never added to that total.
-
-Enabling Detailed tracking is explicit and one-way in V2. The user chooses a boundary date, opening broker cash, and opening holdings with quantity, historical average cost, and current price. The preview compares the current Simple represented value with the new opening state without forcing them to match. Opening state represents everything at/before the conversion boundary, so only later transfer entries affect broker cash.
-
-Detailed accounts are single-currency. Quantities, unit prices, and FX rates use PostgreSQL `NUMERIC`; represented money remains rounded integer minor units. Buys reduce broker cash by `quantity × unit price + fee`, increase ledger quantity, and add fees to weighted-average cost. Sells reject overselling, increase cash by proceeds less fees, remove weighted-average basis, and record realised gain/loss. Ledger rows are append-only. Neither operation is an ordinary expense/income transaction.
-
-Current holding value is ledger quantity times the latest historical manual price. Dividends are investment cash events that increase broker cash but do not enter ordinary monthly income, budgets, or spending Analytics. Signed broker-cash adjustments require a reason and are a reconciliation tool, not a replacement for account transfers.
-
-For foreign Detailed accounts, consolidated net worth requires the latest direct, user-owned `account currency → profile base currency` manual FX rate. Manual FX is valuation-only: it never converts transfers and no missing rate is treated as 1:1. Missing FX or any active holding price makes base value unavailable and safely excludes that account from consolidated totals until corrected. Price and FX updates refresh the existing one-per-local-day net-worth snapshot.
-
-Migrations `202608240003_add_detailed_investment_ledger.sql` and `202608240004_integrate_detailed_investment_values.sql` add the ledgers/RLS/RPCs and then connect the mutually exclusive Simple/Detailed formulas to account summaries and snapshots. Apply both in order. Follow [V2 investment verification](supabase/V2_0_VERIFICATION.md) for conversion, trade, transfer, FX, snapshot, and two-user checks.
-
-## V3 AI Financial Assistant
-
-`/assistant` is an optional, read-only interpretation layer. The browser invokes the authenticated `financial-assistant` Supabase Edge Function; the function validates the user JWT, recreates trusted instructions server-side, and lets the configured Gemini model request only explicitly registered read tools. Deterministic Postgres RPCs remain authoritative for balances, spending, budgets, goals, and investments. A server-side exact minor-unit calculator handles supported what-if arithmetic. The assistant has no financial write tool and is never called by normal tracker calculations or background loading.
-
-The function currently exposes compact financial overview, spending/comparison/category summaries, a capped transaction search, budget status, savings goals, investment summaries, a readable-name Detailed account lookup, and deterministic what-if scenarios. Transaction Notes and all other database text are passed only as structured, untrusted tool data. Read results are scoped by the user's JWT/RLS context; IDs and unrelated data are removed before provider calls where practical. Transaction search is capped at 20 rows.
-
-Conversation is held only in page memory and clears on refresh; there is no chat-history table or local-storage copy. When a user invokes the Assistant, only relevant tool results and a small recent conversation window are sent to the configured AI provider. The Monthly Review is an explicit user action, not an automatic Dashboard request. Missing keys, quota, timeouts, or provider outages disable only AI—the rest of Ledgerly remains independent.
-
-AI provider attempts are protected before Gemini is called. Migration `202608240006_add_ai_abuse_protection.sql` adds private operational usage/lease metadata and atomic authenticated RPCs. Defaults are 6 attempts per rolling minute, 30 per rolling hour, 100 per rolling 24 hours, 500 project-wide per rolling 24 hours, and one active request per user with a 60-second expiring lease. Administrators can change these server-side values in the singleton `ai_rate_limit_config` row without rebuilding the frontend. The browser cannot read or write either limiter table, and no prompt, response, finance value, Note, or tool payload is persisted.
-
-The Edge boundary accepts at most six recent history messages, 2,000 characters per message/question, and 16 KiB total request bytes. Gemini output is capped at 900 tokens, tool work is capped at three rounds/six calls, each provider call has a 15-second timeout, and the complete orchestration has a 45-second deadline. Rate-limit responses use HTTP 429 and never reveal other-user or exact project usage.
-
-The Gemini key belongs in Supabase Edge Function secrets, never `.env.local`, Vercel, or a `VITE_` variable. After applying migrations 11–12 and confirming the intended linked project, configure and deploy with placeholders:
-
-```bash
-npx supabase@latest secrets set GEMINI_API_KEY=YOUR_SCHOOL_GEMINI_KEY GEMINI_MODEL=YOUR_SUPPORTED_FLASH_MODEL
-npx supabase@latest functions deploy financial-assistant
-```
-
-If the repository is not linked, add `--project-ref YOUR_CONFIRMED_PROJECT_REF` to each command or link it first. Changing `GEMINI_MODEL` switches the model without a frontend rebuild. See [V3 manual verification](supabase/V3_0_VERIFICATION.md).
-
-V3 does not include AI writes, automatic categorisation/budgeting/allocation/trading, stock recommendations, live market/news grounding, persistent chat history, background reviews, voice, OCR, or multiple runtime providers.
-
-## V1.2 mobile and PWA behaviour
-
-Authenticated phone layouts use a four-item bottom bar for Home, Transactions, Analytics, and More, plus a separate safe-area-aware floating Add button. The button and every other create action open the protected `/transactions/new` route. The dedicated page defaults to Expense, puts the amount first, keeps Note visible, defaults the date using the profile timezone, and returns to the originating screen after Supabase confirms the save. Editing remains in the existing focused dialog.
-
-The user-facing **Note** field maps to the existing `transactions.description` column and `p_description` RPC parameter; no duplicate note column exists. When present, Note is the transaction row title while category/account remain secondary context. Without a Note, expense/income rows fall back to category and transfers fall back to their source-to-destination account labels.
-
-After a confirmed expense save, the app stores only that account UUID in local storage under a key scoped to the authenticated user. It is reused only when the account is still present in the user's RLS-filtered active account list and is a bank/cash account. Another user on the same device receives a different preference key.
-
-The `get_frequent_expense_categories` RPC ranks up to five active expense categories by usage count over the previous 90 local-calendar days, with most recent use as the tie-breaker. It derives the user from `auth.uid()`, excludes soft-deleted/non-expense transactions and archived/income categories, and performs no per-category query. With no history, Quick Add falls back to sensible active expense categories.
-
-The service worker precaches only the static application shell, generated JS/CSS, local fonts, and icons. It has no Supabase API runtime cache, background sync, financial mutation queue, or private financial response cache. Read-only screens may remain visible only where the browser already has them in memory. Every transaction, transfer, account, category, and valuation write checks connectivity before calling Supabase; offline attempts remain in the open form and are never replayed automatically.
-
-Install on supported browsers using their **Install app** or **Add to Home Screen** action. On iPhone/iPad, open the production site in Safari, tap **Share**, then **Add to Home Screen**. The installed app uses standalone display mode and safe-area spacing for notches and the home indicator.
-
-## Development and validation
-
-```bash
-npm install
 npm run dev
+```
+
+Open the local URL printed by Vite. On iPhone, use Safari's **Share > Add to Home Screen** to install the deployed app.
+
+## Development
+
+Built with React, TypeScript, Vite, Tailwind CSS and Supabase. Tests cover financial validation, privacy, authentication and important user flows.
+
+```bash
 npm test
 npm run lint
 npm run build
 git diff --check
 ```
 
-## Vercel deployment
+On Windows PowerShell, use `npm.cmd` if your execution policy blocks `npm.ps1`.
 
-This project is a Vite single-page application. Vite produces the production site in `dist/`, and the root `vercel.json` rewrites direct route requests to `index.html` so React Router can handle routes such as `/dashboard`, `/transactions`, and `/analytics` after a refresh.
+Financial calculations and ownership checks are enforced by database RPCs and Row Level Security. The service worker caches the static app shell; it does not cache private API responses or replay financial writes.
 
-Security Remediation Phase 3 defines low-risk browser headers and an initial **report-only** CSP in `vercel.json`. Its exact Supabase HTTPS origin must match the deployment's `VITE_SUPABASE_URL`; review it when changing projects or using a custom API domain. Gemini errors now log only structured operational metadata. See [Phase 3 resource inventory, verification and rollout](docs/audits/security-remediation-phase-3.md). Deployed headers/TLS and authenticated/iPhone compatibility still require the documented hosted checks; Vite development/preview does not automatically apply Vercel headers.
-
-Import the repository into Vercel and keep the detected Vite settings:
-
-- Build command: `npm run build`
-- Output directory: `dist`
-- Install command: `npm install`
-
-Configure these browser-safe environment variables in the Vercel project:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-VITE_WEB_PUSH_VAPID_PUBLIC_KEY=your-public-vapid-key
-```
-
-No Supabase secret, Gemini key, Web Push private key, scheduler secret, or service-role credential belongs in Vercel's frontend environment. Server secrets are configured only for their Supabase Edge Functions.
-
-After Vercel provides the production URL, open Supabase Dashboard > Authentication > URL Configuration:
-
-1. Set **Site URL** to the exact HTTPS production URL.
-2. Add that production origin followed by `/login` to **Redirect URLs** (the exact `emailRedirectTo` path).
-3. For local testing, also allow `http://localhost:5173/login`. Vite defaults to port 5173; if it starts on another port, allow that exact origin plus `/login` instead. `127.0.0.1` is a separate origin and only needs an entry if you actually use it.
-4. Allow an exact preview origin plus `/login` only when testing preview signups. Do not allow arbitrary Vercel projects or all domains.
-
-Under **Authentication > Email Templates > Confirm signup**, the confirmation link should be `<a href="{{ .ConfirmationURL }}">Confirm your email</a>`. Do not link directly to `SiteURL`/`RedirectTo`, or construct a `TokenHash`/`code` callback: those do not match this implementation. Hosted URL settings and email templates are not controlled by this repository and must be checked in the intended Supabase project. A missing/disallowed redirect can fall back to Site URL, so it must not remain a development address in production.
-
-Signup does not hardcode a host or require another Vercel environment variable. After updating hosted settings and deploying the frontend, request a **fresh** signup email from production and verify that confirmation opens `/login`, establishes the session, then opens `/dashboard` with no auth credentials left in the URL. Repeat locally using the allowed Vite port, test an expired link, and test logout followed by another user's login. Old emails may still contain their original redirect. Do not share full confirmation URLs or tokens when troubleshooting. Do not deploy until migration status and the existing production environment variables have been confirmed.
-
-V2 does not change `vercel.json` or require additional Vercel environment variables. Apply both V2 migrations in order, then rebuild/redeploy. Existing installed-app users may need to close and reopen once after the service-worker update.
-
-## Intentionally deferred
-
-The app does not include automatic prices/FX, mixed-currency brokerage accounts, brokerage sync, contribution-adjusted returns (TWR/XIRR), tax lots/FIFO/LIFO, margin, derivatives, tax reporting, bank imports, or AI investment advice. Existing deferred personal-finance features remain deferred.
+Optional features have focused guides for [daily reminders](supabase/DAILY_TRANSACTION_REMINDER.md) and the [export format](supabase/FULL_DATA_EXPORT.md).

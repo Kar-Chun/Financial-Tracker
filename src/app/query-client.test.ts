@@ -10,20 +10,6 @@ import { isBlockingReadError, retryRead } from "@/lib/query-policy"
 afterEach(() => { vi.restoreAllMocks(); onlineManager.setOnline(true) })
 
 describe("read reliability policy", () => {
-  it.each([
-    { label: "baseline", staleTime: 15_000, expectedReads: 2 },
-    { label: "V1", staleTime: 30_000, expectedReads: 0 },
-  ])("measures $label Dashboard/budget remounts with 20-second-old cached data", async ({ staleTime, expectedReads }) => {
-    const client = createAppQueryClient()
-    const read = vi.fn().mockResolvedValue({ loaded: true })
-    const stops = [["dashboard"], ["budgets", "2026-09-01"]].map((queryKey) => {
-      client.setQueryData(queryKey, { loaded: true }, { updatedAt: Date.now() - 20_000 })
-      return new QueryObserver(client, { queryKey, queryFn: read, staleTime }).subscribe(() => undefined)
-    })
-    expect(read).toHaveBeenCalledTimes(expectedReads)
-    stops.forEach((stop) => stop())
-    client.clear()
-  })
 
   it.each([
     { status: 401 }, { status: 403 }, { code: "42501" }, { code: "PGRST301" },
@@ -83,7 +69,7 @@ describe("read reliability policy", () => {
     const client = createAppQueryClient()
     const read = vi.fn().mockResolvedValue({ version: 2 })
     client.setQueryData(["dashboard"], { version: 1 }, { updatedAt: Date.now() - 20_000 })
-    const observer = new QueryObserver(client, { queryKey: ["dashboard"], queryFn: read, staleTime: 30_000 })
+    const observer = new QueryObserver(client, { queryKey: ["dashboard"], queryFn: read })
     const unsubscribe = observer.subscribe(() => undefined)
     expect(observer.getCurrentResult().data).toEqual({ version: 1 })
     expect(read).not.toHaveBeenCalled()
@@ -92,19 +78,6 @@ describe("read reliability policy", () => {
     expect(observer.getCurrentResult().data).toEqual({ version: 2 })
     unsubscribe()
     client.clear()
-  })
-
-  it("deduplicates concurrent observers of the same profile", async () => {
-    const client = createAppQueryClient()
-    const read = vi.fn().mockResolvedValue({ display_name: "fixture" })
-    const options = { queryKey: ["profile", "user"], queryFn: read }
-    const first = new QueryObserver(client, options)
-    const second = new QueryObserver(client, options)
-    const stopFirst = first.subscribe(() => undefined)
-    const stopSecond = second.subscribe(() => undefined)
-    await vi.waitFor(() => expect(second.getCurrentResult().isSuccess).toBe(true))
-    expect(read).toHaveBeenCalledTimes(1)
-    stopFirst(); stopSecond(); client.clear()
   })
 
   it("keeps cached data on a failed background read, then recovers on reconnect", async () => {

@@ -7,11 +7,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { UserMenu } from "@/components/layout/user-menu"
 import { signOut } from "@/features/auth/auth-service"
-import { SettingsPage } from "@/features/settings/settings-page"
 
 const mockValues = vi.hoisted(() => ({
   profile: { id: "user-a", display_name: "Alex Rivera", base_currency: "SGD", timezone: "Asia/Singapore" },
-  profileMutation: { mutate: vi.fn(), isPending: false },
 }))
 
 vi.mock("@/features/auth/auth-context", () => ({
@@ -19,11 +17,8 @@ vi.mock("@/features/auth/auth-context", () => ({
 }))
 vi.mock("@/features/auth/profile-service", () => ({
   useProfile: () => ({ data: mockValues.profile }),
-  useUpdateProfile: () => mockValues.profileMutation,
 }))
 vi.mock("@/features/auth/auth-service", () => ({ signOut: vi.fn() }))
-vi.mock("@/features/categories/category-management", () => ({ CategoryManagement: () => <section>Category management</section> }))
-vi.mock("@/components/shared/pwa-install-card", () => ({ PwaInstallCard: () => <section>PWA installation</section> }))
 
 describe("UserMenu", () => {
   beforeEach(() => vi.mocked(signOut).mockReset())
@@ -36,11 +31,10 @@ describe("UserMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Settings" }))
-    expect(await screen.findByRole("heading", { name: "Settings" })).toBeInTheDocument()
-    expect(screen.getByText("Category management")).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Settings destination" })).toBeInTheDocument()
   })
 
-  it("signs out, clears sensitive queries, and removes the protected destination", async () => {
+  it("signs out, clears sensitive queries, and navigates to login", async () => {
     vi.mocked(signOut).mockResolvedValue()
     const queryClient = renderUserMenu()
     queryClient.setQueryData(["dashboard"], { netWorth: 100_000 })
@@ -62,7 +56,7 @@ function renderUserMenu() {
         <UserMenu compact />
         <Routes>
           <Route path="/dashboard" element={null} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings" element={<h1>Settings destination</h1>} />
           <Route path="/login" element={<p>Login destination</p>} />
         </Routes>
       </MemoryRouter>

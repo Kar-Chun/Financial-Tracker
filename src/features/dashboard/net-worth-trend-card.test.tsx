@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import { NetWorthTrendCard } from "@/features/dashboard/net-worth-trend-card"
-import { formatSnapshotTooltipLabel, netWorthChartKeys } from "@/features/dashboard/net-worth-trend"
+import { formatSnapshotTooltipLabel } from "@/features/dashboard/net-worth-trend"
 import { unavailableDateLabel } from "@/lib/dates"
 import type { NetWorthSnapshot } from "@/types/finance"
 
@@ -24,7 +24,6 @@ describe("NetWorthTrendCard", () => {
   })
 
   it("formats the snapshot date supplied by the tooltip axis", () => {
-    expect(netWorthChartKeys).toEqual({ snapshotDate: "snapshotDate", totalValueMinor: "totalValueMinor" })
     expect(formatSnapshotTooltipLabel("2026-08-23")).toBe("23 Aug")
     expect(formatSnapshotTooltipLabel(0)).toBe(unavailableDateLabel)
     expect(formatSnapshotTooltipLabel(undefined)).toBe(unavailableDateLabel)

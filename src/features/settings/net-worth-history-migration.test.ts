@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 const migration = readFileSync(resolve("supabase/migrations/202608280001_add_net_worth_history_reset.sql"), "utf8")
 const schema = readFileSync(resolve("supabase/migrations/202608220001_create_finance_schema.sql"), "utf8")
 
-describe("Net Worth history reset migration", () => {
+describe("Net Worth history reset migration (static SQL checks)", () => {
   it("derives ownership from auth.uid and exposes only the authenticated no-argument RPC", () => {
     expect(migration).toContain("v_user_id uuid := auth.uid()")
     expect(migration).toContain("security definer\nset search_path = ''")

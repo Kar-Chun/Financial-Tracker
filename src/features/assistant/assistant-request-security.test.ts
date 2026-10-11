@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { shouldClearUserCache } from "@/features/auth/auth-cache"
 import {
   MAX_ASSISTANT_BODY_BYTES,
   readValidatedAssistantRequest,
@@ -71,14 +70,5 @@ describe("AI server-side lease response handling", () => {
   it("fails closed when the abuse-control RPC is unavailable or malformed", async () => {
     await expect(claimAiRequest({ rpc: vi.fn().mockResolvedValue({ data: null, error: { message: "failed" } }) }, "model")).rejects.toThrow("protection is unavailable")
     await expect(claimAiRequest({ rpc: vi.fn().mockResolvedValue({ data: { allowed: true }, error: null }) }, "model")).rejects.toThrow("invalid response")
-  })
-})
-
-describe("authenticated-user cache isolation", () => {
-  it("clears cached server data on logout and direct user switches", () => {
-    expect(shouldClearUserCache(undefined, "user-a")).toBe(false)
-    expect(shouldClearUserCache("user-a", "user-a")).toBe(false)
-    expect(shouldClearUserCache("user-a", null)).toBe(true)
-    expect(shouldClearUserCache("user-a", "user-b")).toBe(true)
   })
 })

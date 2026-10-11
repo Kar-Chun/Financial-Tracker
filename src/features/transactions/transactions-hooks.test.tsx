@@ -3,10 +3,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  invalidateTransactionFinanceData,
   transactionListQueryKey,
+  transactionNoteSuggestionDelay,
   transactionNoteSuggestionsQueryKey,
   useTransactionNoteSuggestions,
   useTransactions,
@@ -46,6 +48,9 @@ beforeEach(() => {
 })
 
 describe("transaction Note suggestion query", () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
   it("waits for two characters and debounces the bounded request", async () => {
     serviceMocks.getTransactionNoteSuggestions.mockResolvedValue([])
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -57,12 +62,13 @@ describe("transaction Note suggestion query", () => {
       { initialProps: { query: "w" }, wrapper },
     )
 
-    await new Promise((resolve) => setTimeout(resolve, 260))
+    await advanceSuggestionDelay()
     expect(serviceMocks.getTransactionNoteSuggestions).not.toHaveBeenCalled()
 
     rerender({ query: "wa" })
     expect(serviceMocks.getTransactionNoteSuggestions).not.toHaveBeenCalled()
-    await waitFor(() => expect(serviceMocks.getTransactionNoteSuggestions).toHaveBeenCalledWith("wa", "expense"))
+    await advanceSuggestionDelay()
+    expect(serviceMocks.getTransactionNoteSuggestions).toHaveBeenCalledWith("wa", "expense")
   })
 
   it("does not let an older request replace results for newer input", async () => {
@@ -79,14 +85,19 @@ describe("transaction Note suggestion query", () => {
       ({ query }) => useTransactionNoteSuggestions({ query, transactionType: "expense", userId: "user-a" }),
       { initialProps: { query: "wa" }, wrapper },
     )
-    await waitFor(() => expect(serviceMocks.getTransactionNoteSuggestions).toHaveBeenCalledWith("wa", "expense"))
+    await advanceSuggestionDelay()
+    expect(serviceMocks.getTransactionNoteSuggestions).toHaveBeenCalledWith("wa", "expense")
 
     rerender({ query: "wat" })
     expect(result.current.data).toBeUndefined()
-    await waitFor(() => expect(serviceMocks.getTransactionNoteSuggestions).toHaveBeenCalledWith("wat", "expense"))
-    await waitFor(() => expect(result.current.data?.[0]?.note).toBe("Watsons"))
+    await advanceSuggestionDelay()
+    expect(serviceMocks.getTransactionNoteSuggestions).toHaveBeenCalledWith("wat", "expense")
+    expect(result.current.data?.[0]?.note).toBe("Watsons")
 
-    await act(async () => older.resolve([noteSuggestion("Watermelon Juice")]))
+    await act(async () => {
+      older.resolve([noteSuggestion("Watermelon Juice")])
+      await vi.advanceTimersByTimeAsync(1)
+    })
     expect(result.current.data?.[0]?.note).toBe("Watsons")
   })
 
@@ -99,7 +110,7 @@ describe("transaction Note suggestion query", () => {
       () => useTransactionNoteSuggestions({ query: "wa", transactionType: "transfer", userId: "user-a" }),
       { wrapper },
     )
-    await new Promise((resolve) => setTimeout(resolve, 260))
+    await advanceSuggestionDelay()
     expect(serviceMocks.getTransactionNoteSuggestions).not.toHaveBeenCalled()
     expect(transactionNoteSuggestionsQueryKey("user-a", "expense", "wa"))
       .not.toEqual(transactionNoteSuggestionsQueryKey("user-b", "expense", "wa"))
@@ -117,7 +128,8 @@ describe("transaction Note suggestion query", () => {
       () => useTransactionNoteSuggestions({ query: "wa", transactionType: "expense", userId: "user-a" }),
       { wrapper },
     )
-    await waitFor(() => expect(result.current.isError).toBe(true))
+    await advanceSuggestionDelay()
+    expect(result.current.isError).toBe(true)
     expect(result.current.data).toBeUndefined()
     unmount()
 
@@ -127,10 +139,35 @@ describe("transaction Note suggestion query", () => {
       () => useTransactionNoteSuggestions({ query: "wa", transactionType: "expense", userId: "user-a" }),
       { wrapper },
     )
-    await new Promise((resolve) => setTimeout(resolve, 260))
+    await advanceSuggestionDelay()
     expect(serviceMocks.getTransactionNoteSuggestions).not.toHaveBeenCalled()
   })
 })
+
+describe("transaction mutation refresh", () => {
+  it("marks every affected cached financial query stale", async () => {
+    const queryClient = new QueryClient()
+    const keys = [
+      ["transactions"], ["accounts"], ["dashboard"], ["analytics"],
+      ["budgets"], ["goals"], ["investments"],
+    ] as const
+    keys.forEach((queryKey) => queryClient.setQueryData(queryKey, { loaded: true }))
+
+    await invalidateTransactionFinanceData(queryClient)
+
+    keys.forEach((queryKey) => expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true))
+  })
+})
+
+async function advanceSuggestionDelay() {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(transactionNoteSuggestionDelay)
+  })
+  await act(async () => {
+    // The debounced render starts the query; flush its notification separately.
+    await vi.advanceTimersByTimeAsync(1)
+  })
+}
 
 describe("paginated transaction query", () => {
   it("loads the next cursor and restarts from page one when a server filter changes", async () => {

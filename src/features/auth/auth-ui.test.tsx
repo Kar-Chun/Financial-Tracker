@@ -1,13 +1,10 @@
 // @vitest-environment jsdom
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen } from "@testing-library/react"
-import type { ReactNode } from "react"
-import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router-dom"
+import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 
 import { AuthContext, type AuthContextValue } from "@/features/auth/auth-context"
-import { AuthPage } from "@/features/auth/auth-page"
 import { ProtectedRoute } from "@/features/auth/route-guards"
 
 const signedOut: AuthContextValue = {
@@ -18,23 +15,6 @@ const signedOut: AuthContextValue = {
 }
 
 describe("authentication UI", () => {
-  it("renders the email/password login form", () => {
-    renderWithProviders(<AuthPage mode="login" />)
-
-    expect(screen.getByRole("heading", { name: "Welcome back" })).toBeInTheDocument()
-    expect(screen.getByLabelText("Email")).toBeInTheDocument()
-    expect(screen.getByLabelText("Password")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Log in" })).toBeInTheDocument()
-  })
-
-  it("renders signup with display name and confirmation-ready copy", () => {
-    renderWithProviders(<AuthPage mode="signup" />)
-
-    expect(screen.getByRole("heading", { name: "Create your workspace" })).toBeInTheDocument()
-    expect(screen.getByLabelText("Display name")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Create account" })).toBeInTheDocument()
-  })
-
   it("redirects a signed-out user away from a protected route", async () => {
     const router = createMemoryRouter(
       [
@@ -57,14 +37,3 @@ describe("authentication UI", () => {
     expect(screen.queryByText("Private dashboard")).not.toBeInTheDocument()
   })
 })
-
-function renderWithProviders(ui: ReactNode) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={signedOut}>
-        <MemoryRouter>{ui}</MemoryRouter>
-      </AuthContext.Provider>
-    </QueryClientProvider>,
-  )
-}

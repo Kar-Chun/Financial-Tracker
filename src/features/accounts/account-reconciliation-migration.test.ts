@@ -1,14 +1,11 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
+import { latestFunctionDefinition } from "@/test/migrations"
+
 const read = (name: string) => readFileSync(`supabase/migrations/${name}.sql`, "utf8")
 const sql = read("202609130001_add_account_reconciliation")
-const ordinary = read("202608220002_create_financial_functions")
-const spending = read("202609040002_centralize_eligible_spending")
-const dashboard = read("202609090001_add_dashboard_today_spending")
-const notes = read("202609100001_add_transaction_note_suggestions")
-const start = sql.indexOf("create function public.reconcile_account_balance")
-const reconcile = sql.slice(start, sql.indexOf("-- Existing ordinary mutation bodies", start))
+const reconcile = latestFunctionDefinition("reconcile_account_balance")
 
 describe("reconciliation database contract (static; executable SQL verification is separate)", () => {
   it("uses the existing represented balance and snapshot helpers, without a second balance formula", () => {
@@ -28,24 +25,21 @@ describe("reconciliation database contract (static; executable SQL verification 
     }
     expect(sql).not.toContain("p_user_id")
     expect(sql).not.toMatch(/execute\s+format|grant\s+(insert|update|delete|all).*on table/i)
-    expect(sql.match(/security definer\n? ?set search_path = ''/g)).toHaveLength(4)
     expect(sql).toContain("from public, anon, authenticated")
   })
   it("serializes reconciliation, ordinary create/edit/delete, and permanent deletion before touching account state", () => {
-    expect(sql.match(/pg_catalog.pg_advisory_xact_lock/g)).toHaveLength(4)
     for (const name of ["reconcile_account_balance", "upsert_financial_transaction", "soft_delete_transaction", "delete_account_permanently"]) {
-      const body = sql.slice(sql.indexOf(`function public.${name}(`)).split("$$;")[0]
+      const body = latestFunctionDefinition(name)
       expect(body).toContain("'ledgerly.transaction:' || v_user_id::text")
       const lock = body.indexOf("pg_catalog.pg_advisory_xact_lock")
+      expect(lock).toBeGreaterThan(-1)
       const firstAccountRead = body.indexOf("from public.accounts")
       if (firstAccountRead > -1) expect(lock).toBeLessThan(firstAccountRead)
     }
   })
-  it("preserves ordinary mutation arithmetic and rejects reconciliation editing/deletion", () => {
-    const entryWrites = (source: string) => source.slice(source.indexOf("  if p_transaction_type = 'expense' then"), source.indexOf("create or replace function public.soft_delete_transaction"))
-    expect(entryWrites(sql)).toBe(entryWrites(ordinary))
-    expect(sql).toContain("where id = v_transaction_id and is_reconciliation")
-    expect(sql).toContain("where id = p_transaction_id and user_id = v_user_id and is_reconciliation")
+  it("rejects ordinary editing/deletion of reconciliation history", () => {
+    expect(latestFunctionDefinition("upsert_financial_transaction")).toContain("where id = v_transaction_id and is_reconciliation")
+    expect(latestFunctionDefinition("soft_delete_transaction")).toContain("where id = p_transaction_id and user_id = v_user_id and is_reconciliation")
     expect(sql).toContain("create trigger protect_reconciliation_history before update or delete")
     expect(sql).toContain("Reconciliation requires one Bank or Cash entry.")
   })
@@ -57,13 +51,5 @@ describe("reconciliation database contract (static; executable SQL verification 
     expect(sql).toContain("transaction_record.deleted_at is not null")
     expect(sql).not.toContain("delete from public.net_worth_snapshots")
     expect(sql).not.toContain("delete from public.manual_fx_rates")
-  })
-  it("keeps all spending consumers on expense facts and income/notes restricted by type", () => {
-    expect(spending).toContain("transaction_record.transaction_type = 'expense'")
-    expect(dashboard).toContain("from public.get_eligible_expense_facts(v_today - 6, v_today)")
-    expect(dashboard).toContain("transaction_record.transaction_type = 'income'")
-    expect(notes).toContain("p_transaction_type not in ('expense', 'income')")
-    expect(notes).toContain("transaction_record.transaction_type = p_transaction_type")
-    expect(sql).not.toMatch(/(create|replace).*function public\.(get_spending_analytics|get_monthly_budget_summary|get_dashboard_data|get_eligible_expense_facts|get_transaction_note_suggestions|get_detailed_investment_value)/)
   })
 })

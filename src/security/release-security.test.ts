@@ -2,27 +2,28 @@ import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 
-const migrationDirectory = resolve(process.cwd(), "supabase/migrations")
-const migrationNames = readdirSync(migrationDirectory).filter((name) => name.endsWith(".sql")).sort()
-const migrations = migrationNames.map((name) => readFileSync(resolve(migrationDirectory, name), "utf8")).join("\n")
+import { migrationNames, migrationSources } from "@/test/migrations"
 
-describe("release database security posture", () => {
-  it("keeps migrations ordered and appends bounded reads after the lifecycle/history controls", () => {
-    expect(migrationNames).toEqual([...migrationNames].sort())
-    expect(migrationNames.slice(-12)).toEqual([
-      "202608240006_add_ai_abuse_protection.sql",
-      "202608270001_add_safe_account_lifecycle.sql",
-      "202608280001_add_net_worth_history_reset.sql",
-      "202609040001_add_bounded_dashboard_and_transaction_reads.sql",
-      "202609040002_centralize_eligible_spending.sql",
-      "202609090001_add_dashboard_today_spending.sql",
-      "202609100001_add_transaction_note_suggestions.sql",
-      "202609130001_add_account_reconciliation.sql",
-      "202609220001_add_daily_transaction_reminders.sql",
-      "202609230001_add_full_data_export.sql",
-      "202609260001_harden_financial_input_boundaries.sql",
-      "202609260002_harden_push_subscriptions_and_reminder_batches.sql",
-    ])
+const migrationDirectory = resolve(process.cwd(), "supabase/migrations")
+const migrations = migrationSources.join("\n")
+
+describe("release database security posture (static migration checks)", () => {
+  it("uses valid, unique migration versions without freezing the migration inventory", () => {
+    expect(migrationNames.length).toBeGreaterThan(0)
+    for (const name of migrationNames) expect(name).toMatch(/^\d{12,14}_[a-z0-9_]+\.sql$/)
+    const versions = migrationNames.map((name) => name.split("_")[0])
+    expect(new Set(versions).size).toBe(versions.length)
+
+    const prerequisites = [
+      ["202609040002_centralize_eligible_spending.sql", "202609090001_add_dashboard_today_spending.sql"],
+      ["202609130001_add_account_reconciliation.sql", "202609260001_harden_financial_input_boundaries.sql"],
+      ["202609220001_add_daily_transaction_reminders.sql", "202609260002_harden_push_subscriptions_and_reminder_batches.sql"],
+    ]
+    for (const [earlier, later] of prerequisites) {
+      const prerequisite = migrationNames.indexOf(earlier)
+      expect(prerequisite, earlier).toBeGreaterThanOrEqual(0)
+      expect(migrationNames.indexOf(later), later).toBeGreaterThan(prerequisite)
+    }
   })
 
   it("enables RLS on every user, financial, investment, and AI operational table", () => {

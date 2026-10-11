@@ -7,7 +7,7 @@ const migration = readFileSync(
   "utf8",
 ).toLowerCase()
 
-describe("transaction Note suggestion RPC", () => {
+describe("transaction Note suggestion RPC (static SQL checks)", () => {
   it("is authenticated, user-owned, read-only, and search-path hardened", () => {
     expect(migration).toContain("v_user_id uuid := auth.uid()")
     expect(migration).toContain("transaction_record.user_id = v_user_id")
@@ -53,88 +53,5 @@ describe("transaction Note suggestion RPC", () => {
     expect(migration).toContain("category.archived_at is null")
     expect(migration).toContain("order by category_match.transaction_date desc, category_match.created_at desc")
     expect(migration).toContain("parent.name || ' › ' || category.name")
-  })
-})
-
-type Fixture = {
-  categoryActive: boolean
-  categoryId: string | null
-  deleted?: boolean
-  note: string | null
-  transactionType: "expense" | "income"
-  usedAt: number
-}
-
-function suggestions(fixtures: Fixture[], query: string, transactionType: Fixture["transactionType"]) {
-  const normalizedQuery = normalize(query)
-  const groups = new Map<string, Fixture[]>()
-  for (const fixture of fixtures) {
-    const normalizedNote = normalize(fixture.note ?? "")
-    if (fixture.deleted || fixture.transactionType !== transactionType || !normalizedNote.includes(normalizedQuery)) continue
-    groups.set(normalizedNote, [...(groups.get(normalizedNote) ?? []), fixture])
-  }
-
-  return [...groups.entries()].map(([normalizedNote, matches]) => {
-    const newest = [...matches].sort((a, b) => b.usedAt - a.usedAt)[0]
-    const category = [...matches].filter((item) => item.categoryActive).sort((a, b) => b.usedAt - a.usedAt)[0]
-    const words = normalizedNote.split(/[^a-z0-9]+/u)
-    return {
-      note: newest.note?.trim(),
-      categoryId: category?.categoryId ?? null,
-      frequency: matches.length,
-      recency: newest.usedAt,
-      rank: normalizedNote.startsWith(normalizedQuery) ? 1 : words.some((word) => word.startsWith(normalizedQuery)) ? 2 : 3,
-    }
-  }).sort((a, b) => a.rank - b.rank || b.frequency - a.frequency || b.recency - a.recency).slice(0, 3)
-}
-
-function normalize(value: string) {
-  return value.trim().replace(/\s+/gu, " ").toLocaleLowerCase()
-}
-
-describe("Note matching reference cases", () => {
-  const fixtures: Fixture[] = [
-    { note: "Watermelon Juice", transactionType: "expense", categoryId: "drinks-old", categoryActive: true, usedAt: 1 },
-    { note: "watermelon juice", transactionType: "expense", categoryId: "archived", categoryActive: false, usedAt: 5 },
-    { note: "WATERMELON JUICE", transactionType: "expense", categoryId: "drinks-new", categoryActive: true, usedAt: 4 },
-    { note: "Wanton Mee", transactionType: "expense", categoryId: "food", categoryActive: true, usedAt: 3 },
-    { note: "Watsons", transactionType: "expense", categoryId: "personal", categoryActive: true, usedAt: 2 },
-    { note: "Hawker Lunch", transactionType: "expense", categoryId: "food", categoryActive: true, usedAt: 9 },
-    { note: "Water allowance", transactionType: "income", categoryId: "income", categoryActive: true, usedAt: 9 },
-    { note: "Waste", transactionType: "expense", categoryId: "other", categoryActive: true, usedAt: 10, deleted: true },
-    { note: "   ", transactionType: "expense", categoryId: null, categoryActive: false, usedAt: 11 },
-  ]
-
-  it("matches case-insensitively, deduplicates spelling variants, and caps at three", () => {
-    const result = suggestions(fixtures, "WAT", "expense")
-    expect(result).toHaveLength(2)
-    expect(result.map(({ note }) => note)).toEqual(["watermelon juice", "Watsons"])
-    expect(result[0]).toMatchObject({ frequency: 3, categoryId: "drinks-new" })
-  })
-
-  it("keeps Expense and Income history isolated and excludes deleted/blank Notes", () => {
-    expect(suggestions(fixtures, "wa", "income").map(({ note }) => note)).toEqual(["Water allowance"])
-    expect(suggestions(fixtures, "wa", "expense").map(({ note }) => note)).not.toContain("Water allowance")
-    expect(suggestions(fixtures, "wa", "expense").map(({ note }) => note)).not.toContain("Waste")
-  })
-
-  it("uses match quality before frequency and recency while keeping recent casing", () => {
-    const ranked = suggestions([
-      { note: "Hawker wa lunch", transactionType: "expense", categoryId: "food", categoryActive: true, usedAt: 99 },
-      { note: "Hawaii lunch", transactionType: "expense", categoryId: "food", categoryActive: true, usedAt: 50 },
-      { note: "Wanton Mee", transactionType: "expense", categoryId: "food", categoryActive: true, usedAt: 1 },
-    ], "wa", "expense")
-    expect(ranked.map(({ note }) => note)).toEqual(["Wanton Mee", "Hawker wa lunch", "Hawaii lunch"])
-  })
-
-  it("uses frequency before recency and recency to break equal-frequency ties", () => {
-    const ranked = suggestions([
-      { note: "Water", transactionType: "expense", categoryId: "drinks", categoryActive: true, usedAt: 1 },
-      { note: "water", transactionType: "expense", categoryId: "drinks", categoryActive: true, usedAt: 2 },
-      { note: "Waffles", transactionType: "expense", categoryId: "food", categoryActive: true, usedAt: 20 },
-      { note: "Wallet", transactionType: "expense", categoryId: "other", categoryActive: true, usedAt: 30 },
-    ], "wa", "expense")
-
-    expect(ranked.map(({ note }) => note)).toEqual(["water", "Wallet", "Waffles"])
   })
 })

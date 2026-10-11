@@ -8,7 +8,7 @@ const migration = readFileSync(resolve(directory, "202609230001_add_full_data_ex
 const allMigrations = readdirSync(directory).filter((file) => file.endsWith(".sql"))
   .map((file) => readFileSync(resolve(directory, file), "utf8")).join("\n")
 
-describe("export boundary schema coverage", () => {
+describe("export boundary schema coverage (static SQL/source checks)", () => {
   it("keeps export data out of logging, AI, remote storage and numeric coercion", () => {
     const source = ["export-service.ts", "export-package.ts", "export-file.ts", "data-export-settings.tsx"]
       .map((file) => readFileSync(resolve(process.cwd(), "src/features/data-export", file), "utf8")).join("\n")

@@ -2,22 +2,24 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 
-const ledger = readFileSync(resolve("supabase/migrations/202608240003_add_detailed_investment_ledger.sql"), "utf8")
-const integration = readFileSync(resolve("supabase/migrations/202608240004_integrate_detailed_investment_values.sql"), "utf8")
+import { latestFunctionDefinition } from "@/test/migrations"
 
-describe("V2 investment migration security and accounting invariants", () => {
-  it("enables ownership RLS on every new user financial table", () => {
-    for (const table of ["manual_fx_rates", "investment_holdings", "investment_trades", "investment_prices", "investment_cash_events"]) {
-      expect(ledger).toContain(`alter table public.${table} enable row level security`)
-      expect(ledger).toContain(`create policy ${table}_select_own`)
-    }
-    expect(ledger).not.toMatch(/grant\s+(insert|update|delete|all)\s+on table/iu)
-  })
+const schema = readFileSync(resolve("supabase/migrations/202608240003_add_detailed_investment_ledger.sql"), "utf8")
+const investmentRpcNames = [
+  "preview_detailed_investment_conversion", "enable_detailed_investment_tracking", "upsert_investment_holding",
+  "record_investment_trade", "update_investment_prices", "upsert_manual_fx_rate", "record_investment_cash_event",
+]
+const ledger = [...investmentRpcNames, "get_detailed_investment_value"]
+  .map(latestFunctionDefinition).join("\n")
+const integration = ["get_account_summaries", "refresh_snapshot_for_user", "upsert_investment_valuation"]
+  .map(latestFunctionDefinition).join("\n")
 
+describe("investment migration security and accounting invariants (static SQL checks)", () => {
   it("derives mutation ownership from auth and validates account/holding relationships", () => {
-    expect(ledger.match(/auth\.uid\(\)/gu)?.length).toBeGreaterThanOrEqual(8)
-    expect(ledger).toContain("account_id = v_account.id and user_id = v_user_id")
-    expect(ledger).toContain("for update")
+    for (const name of investmentRpcNames) expect(latestFunctionDefinition(name)).toContain("auth.uid()")
+    const trade = latestFunctionDefinition("record_investment_trade")
+    expect(trade).toContain("account_id = v_account.id and user_id = v_user_id")
+    expect(trade).toContain("for update")
   })
 
   it("keeps Simple and Detailed formulas mutually exclusive", () => {
@@ -40,10 +42,10 @@ describe("V2 investment migration security and accounting invariants", () => {
   })
 
   it("keeps immutable activity ledgers and authenticated RPC-only writes", () => {
-    expect(ledger).toContain("investment_trades_immutable")
-    expect(ledger).toContain("investment_cash_events_immutable")
-    expect(ledger).toContain("raise exception 'Investment ledger entries are immutable. Record a controlled correction instead.'")
-    expect(ledger).toContain("grant execute on function public.preview_detailed_investment_conversion")
+    expect(schema).toContain("investment_trades_immutable")
+    expect(schema).toContain("investment_cash_events_immutable")
+    expect(latestFunctionDefinition("prevent_investment_ledger_mutation")).toContain("raise exception 'Investment ledger entries are immutable. Record a controlled correction instead.'")
+    expect(schema).toContain("grant execute on function public.preview_detailed_investment_conversion")
   })
 
   it("isolates investment activity from ordinary finance ledgers", () => {

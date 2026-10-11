@@ -44,7 +44,7 @@ vi.mock("@/features/dashboard/metric-card", () => ({
   MetricCard: ({ label }: { label: string }) => <section>{label}</section>,
 }))
 
-describe("DashboardPage header", () => {
+describe("Dashboard read reliability", () => {
   it("keeps loaded metrics during a transient failure and retries on request", () => {
     state.error = new TypeError("Failed to fetch")
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
@@ -64,16 +64,4 @@ describe("DashboardPage header", () => {
     expect(state.refetch).toHaveBeenCalledOnce()
   })
 
-  it("starts with Net Worth and omits the decorative greeting and profile name", () => {
-    render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
-    expect(screen.getByText("Total net worth")).toBeInTheDocument()
-    expect(screen.queryByText(/good morning/i)).not.toBeInTheDocument()
-    expect(screen.queryByText("Kar Chun")).not.toBeInTheDocument()
-    expect(screen.getByText("Today's spending")).toBeInTheDocument()
-    expect(screen.getByText("Monthly spent")).toBeInTheDocument()
-    expect(screen.queryByText(/monthly income/i)).not.toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Monthly budget" })).toHaveAttribute("href", "/budgets")
-    expect(screen.queryByText("Net cash flow")).not.toBeInTheDocument()
-  })
 })

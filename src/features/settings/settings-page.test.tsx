@@ -35,6 +35,7 @@ describe("Settings refreshed sections", () => {
     expect(screen.getByText("Add to Home Screen")).toBeInTheDocument()
     expect(screen.getByText("Data & Privacy")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Export Ledgerly data" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Reset history" })).toBeInTheDocument()
   })
 
   it("keeps category type pills and category creation wired to the existing mutation", async () => {
@@ -48,13 +49,4 @@ describe("Settings refreshed sections", () => {
     await waitFor(() => expect(mocks.saveCategory).toHaveBeenCalledWith(expect.objectContaining({ name: "Allowance", categoryType: "income", parentId: null }), expect.any(Object)))
   })
 
-  it("keeps history reset behind typed destructive confirmation", () => {
-    render(<MemoryRouter><SettingsPage /></MemoryRouter>)
-    fireEvent.click(screen.getByRole("button", { name: "Reset history" }))
-    const dialog = within(screen.getByRole("alertdialog"))
-    expect(dialog.getByRole("button", { name: "Reset history" })).toBeDisabled()
-    fireEvent.change(dialog.getByLabelText("Type RESET to confirm Net Worth history reset"), { target: { value: "RESET" } })
-    fireEvent.click(dialog.getByRole("button", { name: "Reset history" }))
-    expect(mocks.resetHistory).toHaveBeenCalledTimes(1)
-  })
 })

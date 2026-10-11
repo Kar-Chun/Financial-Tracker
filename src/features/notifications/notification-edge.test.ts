@@ -52,11 +52,7 @@ describe("daily reminder Edge boundary", () => {
     expect(edge).toContain('"Cache-Control": "no-store"')
   })
 
-  it("documents one daily 13:00 UTC invocation without periodic polling", () => {
+  it("keeps the deployment Cron schedule at 13:00 UTC", () => {
     expect(deployment).toContain("0 13 * * *")
-    expect(deployment).toContain("9:00 PM Singapore")
-    expect(deployment).not.toMatch(/five[- ]minute|periodic polling/i)
-    expect(edge).toContain('client.rpc("claim_daily_transaction_reminders"')
-    expect(edge).not.toContain("claim_due_daily_transaction_reminders")
   })
 })

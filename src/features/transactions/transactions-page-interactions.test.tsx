@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -62,19 +62,26 @@ describe("refreshed transaction controls", () => {
   })
 
   it("retains month, account and archived category filters", async () => {
+    // Row rendering has separate coverage; this case exercises the real filter controls.
+    hooks.transactions.mockReturnValue({ data: { pages: [] } })
     openPage()
-    fireEvent.change(screen.getByLabelText("Filter month"), { target: { value: "2026-08" } })
+    const filters = within(screen.getByRole("region", { name: "Transaction filters" }))
+    const accountFilter = filters.getByRole("combobox", { name: "All accounts" })
+    const categoryFilter = filters.getByRole("combobox", { name: "All categories" })
+    fireEvent.change(filters.getByLabelText("Filter month"), { target: { value: "2026-08" } })
     expect(hooks.transactions).toHaveBeenLastCalledWith(expect.objectContaining({ startDate: "2026-08-01", endDate: "2026-08-31" }), "user-a")
-    fireEvent.click(screen.getByRole("combobox", { name: "All accounts" }))
-    const bank = await screen.findByRole("option", { name: "Daily bank" })
+    fireEvent.click(accountFilter)
+    const accountOptions = within(await screen.findByRole("listbox"))
+    const bank = accountOptions.getByRole("option", { name: "Daily bank" })
     fireEvent.pointerDown(bank, { pointerType: "mouse" })
     fireEvent.click(bank)
-    expect(hooks.transactions).toHaveBeenLastCalledWith(expect.objectContaining({ accountId: "bank" }), "user-a")
-    fireEvent.click(screen.getByRole("combobox", { name: "All categories" }))
-    const category = await screen.findByRole("option", { name: "Old category (Archived)" })
+    expect(hooks.transactions).toHaveBeenLastCalledWith(expect.objectContaining({ accountId: "bank", startDate: "2026-08-01", endDate: "2026-08-31" }), "user-a")
+    fireEvent.click(categoryFilter)
+    const categoryOptions = within(await screen.findByRole("listbox"))
+    const category = categoryOptions.getByRole("option", { name: "Old category (Archived)" })
     fireEvent.pointerDown(category, { pointerType: "mouse" })
     fireEvent.click(category)
-    expect(hooks.transactions).toHaveBeenLastCalledWith(expect.objectContaining({ categoryId: "old", accountId: "bank" }), "user-a")
+    expect(hooks.transactions).toHaveBeenLastCalledWith(expect.objectContaining({ categoryId: "old", accountId: "bank", startDate: "2026-08-01", endDate: "2026-08-31" }), "user-a")
   })
 
   it("keeps the exact eligible day drilldown and clears it with Show full month", () => {

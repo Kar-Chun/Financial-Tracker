@@ -34,7 +34,7 @@ vi.mock("@/features/auth/profile-service", () => ({
 }))
 
 describe("investments empty state", () => {
-  it("renders a clean creation path after the only test account is deleted", () => {
+  it("offers account creation when the investment portfolio is empty", () => {
     render(<MemoryRouter><InvestmentsPage /></MemoryRouter>)
 
     expect(screen.getByRole("heading", { name: "No investment accounts yet" })).toBeInTheDocument()

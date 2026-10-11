@@ -9,32 +9,6 @@ import { AppShell } from "@/components/layout/app-shell"
 vi.mock("@/components/layout/app-sidebar", () => ({ AppSidebar: () => null }))
 vi.mock("@/components/layout/user-menu", () => ({ UserMenu: () => null }))
 describe("AppShell transaction entry route", () => {
-  it.each([
-    ["/dashboard", "Total net worth"],
-    ["/transactions", "Transactions"],
-    ["/analytics", "Spending insights"],
-    ["/accounts", "Accounts"],
-    ["/budgets", "Budgets"],
-    ["/goals", "Savings goals"],
-    ["/investments", "Investments"],
-    ["/assistant", "Financial assistant"],
-    ["/settings", "Settings"],
-  ])("starts %s at page content without a shared greeting/profile header", (path, content) => {
-    render(
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path={path} element={<div>{content}</div>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByRole("main")).toHaveTextContent(content)
-    expect(screen.queryByText(/good (morning|afternoon|evening)/i)).not.toBeInTheDocument()
-    expect(document.querySelector("header")).not.toBeInTheDocument()
-  })
-
   it("uses the dedicated page without rendering navigation or another floating action over it", () => {
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>

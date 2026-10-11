@@ -1,22 +1,22 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
-
 import { describe, expect, it } from "vitest"
 
-const migration = readFileSync(
-  join(process.cwd(), "supabase/migrations/202609040001_add_bounded_dashboard_and_transaction_reads.sql"),
-  "utf8",
-).toLowerCase()
+import { latestFunctionDefinition, migrationSources } from "@/test/migrations"
 
-describe("bounded Dashboard and transaction read migration", () => {
+const migration = ["get_dashboard_data", "get_transactions_page"]
+  .map((name) => latestFunctionDefinition(name)).join("\n").toLowerCase()
+const migrationHistory = migrationSources.join("\n").toLowerCase()
+
+describe("bounded Dashboard and transaction reads (static SQL checks)", () => {
   it("authenticates both RPCs and exposes them only to authenticated users", () => {
-    expect(migration).toContain("v_user_id uuid := auth.uid()")
-    expect(migration.match(/authentication is required/g)).toHaveLength(2)
-    expect(migration).toContain("security definer\nset search_path = ''")
-    expect(migration).toContain("revoke all on function public.get_transactions_page")
-    expect(migration).toContain("grant execute on function public.get_transactions_page")
-    expect(migration).toContain("revoke all on function public.get_dashboard_data() from public, anon")
-    expect(migration).toContain("grant execute on function public.get_dashboard_data() to authenticated")
+    for (const name of ["get_dashboard_data", "get_transactions_page"]) {
+      const body = latestFunctionDefinition(name).toLowerCase()
+      expect(body).toContain("v_user_id uuid := auth.uid()")
+      expect(body).toContain("authentication is required")
+    }
+    expect(migrationHistory).toContain("revoke all on function public.get_transactions_page")
+    expect(migrationHistory).toContain("grant execute on function public.get_transactions_page")
+    expect(migrationHistory).toContain("revoke all on function public.get_dashboard_data() from public, anon")
+    expect(migrationHistory).toContain("grant execute on function public.get_dashboard_data() to authenticated")
   })
 
   it("uses stable keyset pagination with a bounded look-ahead", () => {
